@@ -1,0 +1,64 @@
+#compdef apy
+
+_apy() {
+  zstyle ":completion:*:*:apy:*" sort false
+
+  local -a opts_help subcmds
+
+  opts_help=( '(-h --help)'{-h,--help}'[Show help]' )
+
+  opts=( \
+    $opts_help
+    '(-d --debug)'{-d,--debug}'[Start in debug mode]' \
+    )
+
+  subcmds=( \
+    'add:Add notes interactively from terminal' \
+    'add-from-file:Add notes from Markdown file For input file' \
+    'info:Print some basic statistics' \
+    'list:Print notes that match the given query' \
+    'list-cards:simple tool to list cards that match query' \
+    'review:Review marked notes (or notes that match' \
+    'sync:Synchronize collection with AnkiWeb' \
+    )
+
+  _arguments $opts_help '*:: :->subcmds' && return 0
+
+  if (( CURRENT == 1 )); then
+    _describe -t commands 'apy commands' subcmds
+    return
+  fi
+
+  case "$words[1]" in
+    add)
+      opts=( \
+        '(-t --tags)'{-t,--text}'[Specify tags]' \
+        '(-m --model)'{-m,--model}'[Specify model]' \
+        $opts_help \
+        );;
+    add-from-file)
+      opts=( \
+        '::Markdown input file:_files -g "*.md"' \
+        '(-t --tags)'{-t,--text}'[Specify tags]' \
+        $opts_help \
+        );;
+    info)
+      opts=( $opts_help );;
+    list*)
+      opts=( \
+        '::Query' \
+        $opts_help \
+        );;
+    review)
+      opts=( \
+        '(-q --query)'{-q,--query}'[Query string]' \
+        $opts_help \
+        );;
+    sync)
+      opts=( $opts_help );;
+  esac
+
+  _arguments $opts
+}
+
+_apy "$@"
