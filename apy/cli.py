@@ -845,7 +845,7 @@ def main(ctx, debug):
         ctx.invoke(info)
 
 
-@cli.command()
+@main.command()
 @click.option('-t', '--tags', default='marked',
               help='Specify tags for new cards.')
 @click.option('-m', '--model', default='Basic',
@@ -873,7 +873,7 @@ def add(tags, model):
                              remove_actions=['Abort'])
 
 
-@cli.command('add-from-file')
+@main.command('add-from-file')
 @click.argument('file', type=click.Path(exists=True, dir_okay=False))
 @click.option('-t', '--tags', default='',
               help='Specify default tags.')
@@ -893,14 +893,14 @@ def add_from_file(file, tags):
                              remove_actions=['Abort'])
 
 
-@cli.command('check-media')
+@main.command('check-media')
 def check_media():
     """Check media"""
     with Anki(BASE) as a:
         a.check_media()
 
 
-@cli.command()
+@main.command()
 def info():
     """Print some basic statistics."""
     with Anki(BASE) as a:
@@ -917,7 +917,7 @@ def info():
             click.echo(f"  - {m}")
 
 
-@cli.command()
+@main.command()
 @click.option('-q', '--query', default='tag:marked',
               help=('Review cards that match query [default: marked cards].'))
 def review(query):
@@ -1024,7 +1024,7 @@ def _review_note(anki, note, i=None, number_of_notes=None,
             raise click.Abort()
 
 
-@cli.command('list')
+@main.command('list')
 @click.argument('query', required=False, default='tag:marked')
 def list_notes(query):
     """List notes that match a given query."""
@@ -1033,7 +1033,7 @@ def list_notes(query):
             note.print_short()
 
 
-@cli.command('list-cards')
+@main.command('list-cards')
 @click.argument('query', required=False, default='tag:marked')
 def list_cards(query):
     """List cards that match a given query."""
@@ -1046,7 +1046,7 @@ def list_cards(query):
                        + question[:80])
 
 
-@cli.command()
+@main.command()
 def sync():
     """Synchronize collection with AnkiWeb."""
     with Anki(BASE) as a:
@@ -1055,4 +1055,4 @@ def sync():
 
 if __name__ == '__main__':
     # pylint: disable=no-value-for-parameter
-    cli()
+    apy()
