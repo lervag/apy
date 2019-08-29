@@ -12,8 +12,20 @@ class Anki:
         import sys
         from sqlite3 import OperationalError
         sys.path.append('/usr/share/anki')
-        from anki import Collection
+        import anki
         from aqt.profiles import ProfileManager
+
+        # Update LaTeX commands
+        # (based on "Edit LaTeX build process"; addon #1546037973)
+        anki.latex.pngCommands = [
+            ["latex", "-interaction=nonstopmode", "tmp.tex"],
+            ["dvipng", "-D", "200", "-T", "tight", "-bg", "Transparent",
+             "tmp.dvi", "-o", "tmp.png"]
+        ]
+        anki.latex.svgCommands = [
+            ["latex", "-interaction=nonstopmode", "tmp.tex"],
+            ["dvisvgm", "--no-fonts", "-Z", "2", "tmp.dvi", "-o", "tmp.svg"]
+        ]
 
         self.modified = False
 
@@ -28,7 +40,7 @@ class Anki:
         save_cwd = os.getcwd()
         path = pm.collectionPath()
         try:
-            self.col = Collection(path)
+            self.col = anki.Collection(path)
         except AssertionError:
             click.echo('Path to database is not valid!')
             click.echo(f'path = {path}')
@@ -50,11 +62,7 @@ class Anki:
     def __exit__(self, exception_type, exception_value, traceback):
         if self.modified:
             click.echo('Database was modified.')
-            if self.pm.profile['syncKey']:
-                if click.confirm('Sync collection?', default=True):
-                    self.sync()
-                else:
-                    click.secho('Remember to sync!', fg='blue')
+            click.secho('Remember to sync!', fg='blue')
             self.col.close()
 
 
@@ -124,6 +132,12 @@ class Anki:
             click.echo('failed!')
         else:
             click.echo('done!')
+
+
+    def check_media(self):
+        """Check media (will rebuild missing LaTeX files)"""
+        # This needs more work
+        self.col.media.check()
 
 
     def find_cards(self, query):
@@ -351,7 +365,11 @@ class MyNote:
         import os
         import re
 
-        width = os.get_terminal_size()[0]
+        try:
+            width = os.get_terminal_size()[0]
+        except OSError:
+            width = 120
+
         first_field = html_to_screen(self.n.values()[0])
         first_field = first_field.replace('\n', ' ')
         first_field = re.sub(r'\s\s\s+', ' ', first_field)
@@ -873,6 +891,13 @@ def add_from_file(file, tags):
             for i, note in enumerate(notes):
                 _review_note(a, note, i, number_of_notes,
                              remove_actions=['Abort'])
+
+
+@cli.command('check-media')
+def check_media():
+    """Check media"""
+    with Anki(BASE) as a:
+        a.check_media()
 
 
 @cli.command()
