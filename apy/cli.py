@@ -835,7 +835,7 @@ CONTEXT_SETTINGS = dict(help_option_names=['-h', '--help'])
 @click.option('-d', '--debug', is_flag=True,
               help="Use my temporary Anki base folder")
 @click.pass_context
-def cli(ctx, debug):
+def main(ctx, debug):
     """A script to interact with the Anki database."""
     if debug:
         # pylint: disable=global-statement
