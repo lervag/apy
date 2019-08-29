@@ -1,0 +1,10 @@
+[master]
+init-hook='import sys; sys.path.append("/usr/share/anki")'
+
+[reports]
+output-format=colorized
+
+[messages control]
+disable=
+  invalid-name,
+  too-many-branches
