@@ -63,7 +63,8 @@ class Anki:
 
         if self.modified:
             click.echo('Database was modified.')
-            click.secho('Remember to sync!', fg='blue')
+            if self.pm.profile['syncKey']:
+                click.secho('Remember to sync!', fg='blue')
             self.col.close()
 
 
