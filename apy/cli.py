@@ -1,21 +1,35 @@
 """A script to interact with the Anki database"""
 
+import os
 import click
 
 
-BASE = '/home/lervag/documents/anki'
-
+BASE = os.environ.get('APY_BASE')
 CONTEXT_SETTINGS = dict(help_option_names=['-h', '--help'])
+
 @click.group(context_settings=CONTEXT_SETTINGS, invoke_without_command=True)
-@click.option('-d', '--debug', is_flag=True,
-              help="Use my temporary Anki base folder")
+@click.option('-b', '--base', help="Set Anki base directory")
 @click.pass_context
-def main(ctx, debug):
-    """A script to interact with the Anki database."""
-    if debug:
+def main(ctx, base):
+    """A script to interact with the Anki database.
+
+    The base directory may be specified with the -b / --base option. For
+    convenience, it may also be specified with the environment variable
+    APY_BASE. E.g., one may add to ones ~/.bashrc file:
+
+        export APY_BASE=/my/anki/base/path
+
+    A few sub commands will open an editor. Vim is used by default, but one may
+    specify a different editor with the EDITOR environment variable, e.g. add
+    to ones ~/.bashrc file:
+
+        export EDITOR=emacs
+    """
+    if base:
         # pylint: disable=global-statement
         global BASE
-        BASE = '/home/lervag/.local/share/Anki2'
+        BASE = base
+
     if ctx.invoked_subcommand is None:
         ctx.invoke(info)
 
