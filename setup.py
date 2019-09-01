@@ -1,5 +1,4 @@
-# coding: utf-8
-"""Setup script for sintefpy"""
+"""Setup script for apy"""
 
 import codecs
 from setuptools import setup, find_packages
