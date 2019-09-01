@@ -22,11 +22,13 @@ setup(
     classifiers=[
         'Programming Language :: Python :: 3',
     ],
+    install_requires=[
+        'click',
+    ],
     entry_points='''
         [console_scripts]
         apy=apy.cli:main
     ''',
     packages=find_packages(exclude=('tests', 'tests.*')),
-    install_requires=[],
     tests_require=['pytest']
 )
