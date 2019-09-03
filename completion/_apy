@@ -3,18 +3,19 @@
 _apy() {
   zstyle ":completion:*:*:apy:*" sort false
 
-  local -a opts_help subcmds
+  local -a opts opts_help subcmds
 
   opts_help=( '(-h --help)'{-h,--help}'[Show help]' )
 
   opts=( \
     $opts_help
-    '(-d --debug)'{-d,--debug}'[Start in debug mode]' \
+    '(-b --base)'{-b,--base}'[Set base directory]:Anki base directory:_files -/' \
     )
 
   subcmds=( \
     'add:Add notes interactively from terminal' \
     'add-from-file:Add notes from Markdown file For input file' \
+    'check-media:Check media' \
     'info:Print some basic statistics' \
     'list:Print notes that match the given query' \
     'list-cards:simple tool to list cards that match query' \
@@ -22,7 +23,7 @@ _apy() {
     'sync:Synchronize collection with AnkiWeb' \
     )
 
-  _arguments $opts_help '*:: :->subcmds' && return 0
+  _arguments $opts '*:: :->subcmds' && return 0
 
   if (( CURRENT == 1 )); then
     _describe -t commands 'apy commands' subcmds
@@ -54,7 +55,7 @@ _apy() {
         '(-q --query)'{-q,--query}'[Query string]' \
         $opts_help \
         );;
-    sync)
+    *)
       opts=( $opts_help );;
   esac
 
