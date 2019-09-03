@@ -21,6 +21,23 @@ pip install .
 pip install -e .
 ```
 
+There is also a zsh completion file available. To use it, one may symlink or
+copy it to a location that is already in ones `fpath` variable, or one may add
+the `apy/completion` directory to the `fpath` list.
+
+As an example, one may first symlink the `_apy` file:
+
+```sh
+mkdir -p ~/.local/zsh-functions
+ln -s /path/to/apy/completion/_apy ~/.local/zsh-functions
+```
+
+Then add the following line to ones `.zshrc` file:
+
+```sh
+fpath=($HOME/.local/zsh-functions $fpath)
+```
+
 ## Usage
 
 ```sh
