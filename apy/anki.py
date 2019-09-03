@@ -18,7 +18,7 @@ class Anki:
         # (based on "Edit LaTeX build process"; addon #1546037973)
         anki.latex.pngCommands = [
             ["latex", "-interaction=nonstopmode", "tmp.tex"],
-            ["dvipng", "-D", "200", "-T", "tight", "-bg", "Transparent",
+            ["dvipng", "-D", "150", "-T", "tight", "-bg", "Transparent",
              "tmp.dvi", "-o", "tmp.png"]
         ]
         anki.latex.svgCommands = [
