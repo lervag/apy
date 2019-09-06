@@ -75,6 +75,9 @@ A couple of relevant applications that use Ankiconnect:
 * [Anki-editor](https://github.com/louietan/anki-editor) is an emacs plugin for
   making Anki cards with Org.
 
+* [anki-cli](https://github.com/towercity/anki-cli) is a simple nodejs based
+  command-line interface for Anki.
+
 _The Dealbreaker_: I wanted a script that does not require Anki to be running.
 
 ### Anki::Import - Anki note generation made easy
