@@ -140,8 +140,35 @@ class Anki:
 
     def check_media(self):
         """Check media (will rebuild missing LaTeX files)"""
-        # This needs more work
-        self.col.media.check()
+        import os
+        import click
+        from apy.utilities import cd
+
+        with cd(self.col.media.dir()):
+            click.echo('Checking media DB ... ', nl=False)
+            nohave, unused, warnings = self.col.media.check()
+            click.echo('done!')
+
+            if not warnings + unused + nohave:
+                click.secho('No unused or missing files found.', fg='white')
+                return
+
+            for warning in warnings:
+                click.secho(warning, fg='red')
+
+            for file in nohave:
+                click.secho(f'Missing: {file}', fg='red')
+
+            if unused:
+                for file in unused:
+                    click.secho(f'Unused: {file}', fg='red')
+
+                if not click.confirm('Delete unused media?'):
+                    return
+
+                for file in unused:
+                    if os.path.isfile(file):
+                        os.remove(file)
 
 
     def find_cards(self, query):
