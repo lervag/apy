@@ -203,6 +203,30 @@ def markdown_to_html(plain):
 
     return str(html_tree)
 
+def plain_to_html(plain):
+    """Convert plain text to html"""
+    import re
+
+    # Minor clean up
+    plain = plain.replace(r'&lt;', '<')
+    plain = plain.replace(r'&gt;', '>')
+    plain = plain.replace(r'&nbsp;', ' ')
+    plain = re.sub(r'\<b\>\s*\<\/b\>', '', plain)
+    plain = re.sub(r'\<i\>\s*\<\/i\>', '', plain)
+    plain = re.sub(r'\<div\>\s*\<\/div\>', '', plain)
+
+    # Convert newlines to <br> tags
+    plain = plain.replace('\n', '<br />')
+
+    # For convenience: Fix mathjax escaping
+    # plain = plain.replace(r"\[", r"[")
+    # plain = plain.replace(r"\]", r"]")
+    # plain = plain.replace(r"\(", r"(")
+    # plain = plain.replace(r"\)", r")")
+
+
+    return plain.strip()
+
 def clean_html(html):
     """Remove some extra things from html"""
     import re

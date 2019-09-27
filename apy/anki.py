@@ -297,7 +297,7 @@ class Anki:
         """Add new note to collection"""
         import click
 
-        from apy.convert import markdown_to_html
+        from apy.convert import markdown_to_html, plain_to_html
         from apy.note import Note
 
         note = self.col.newNote()
@@ -305,7 +305,7 @@ class Anki:
         if markdown:
             note.fields = [markdown_to_html(x) for x in fields]
         else:
-            note.fields = list(fields)
+            note.fields = [plain_to_html(x) for x in fields]
 
         tags = tags.strip().split()
         for tag in tags:

@@ -143,7 +143,7 @@ class Note:
 
         from apy.utilities import editor
         from apy.convert import markdown_file_to_notes
-        from apy.convert import markdown_to_html
+        from apy.convert import markdown_to_html, plain_to_html
 
         with tempfile.NamedTemporaryFile(mode='w+',
                                          dir=os.getcwd(),
@@ -177,8 +177,9 @@ class Note:
 
         for i, value in enumerate(note['fields'].values()):
             if note['markdown']:
-                value = markdown_to_html(value)
-            self.n.fields[i] = value
+                self.n.fields[i] = markdown_to_html(value)
+            else:
+                self.n.fields[i] = plain_to_html(value)
 
         self.n.flush()
         self.a.modified = True
