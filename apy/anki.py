@@ -22,8 +22,9 @@ class Anki:
              "tmp.dvi", "-o", "tmp.png"]
         ]
         anki.latex.svgCommands = [
-            ["latex", "-interaction=nonstopmode", "tmp.tex"],
-            ["dvisvgm", "--no-fonts", "-Z", "2", "tmp.dvi", "-o", "tmp.svg"]
+            ["lualatex", "-interaction=nonstopmode", "tmp.tex"],
+            ["pdfcrop", "tmp.pdf", "tmp.pdf"],
+            ["pdf2svg", "tmp.pdf", "tmp.svg"]
         ]
 
         self.modified = False
