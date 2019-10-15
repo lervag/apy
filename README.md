@@ -11,13 +11,13 @@ Note:
 * This script and its author(s) are not affiliated/associated with the main
   Anki project in any way.
 
-**Table of Contents**
+## Table of Contents
 
-- [Install instructions](#install-instructions)
-- [Usage](#usage)
-- [Zsh completion](#zsh-completion)
-- [Relevant resources](#relevant-resources)
-- [Alternatives](#alternatives)
+* [Install instructions](#install-instructions)
+* [Usage](#usage)
+* [Zsh completion](#zsh-completion)
+* [Relevant resources](#relevant-resources)
+* [Alternatives](#alternatives)
 
 ## Install instructions
 
