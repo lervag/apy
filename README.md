@@ -13,6 +13,8 @@ Note:
 
 ## Install instructions
 
+To install `apy`, do:
+
 ```bash
 # For users
 pip install .
@@ -20,6 +22,19 @@ pip install .
 # For developers
 pip install -e .
 ```
+
+**Important**: `apy` uses the python API from the Anki desktop app. So please
+  make sure to install [Anki](https://apps.ankiweb.net/#download). If Anki
+  desktop is not available, you should see errors like `ModuleNotFoundError: No
+  module named 'anki'`
+
+## Usage
+
+```sh
+apy --help
+```
+
+## Zsh completion
 
 There is also a zsh completion file available. To use it, one may symlink or
 copy it to a location that is already in ones `fpath` variable, or one may add
@@ -36,12 +51,6 @@ Then add the following line to ones `.zshrc` file:
 
 ```sh
 fpath=($HOME/.local/zsh-functions $fpath)
-```
-
-## Usage
-
-```sh
-apy --help
 ```
 
 ## Relevant resources
