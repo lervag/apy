@@ -8,7 +8,7 @@ class Anki:
         import os
         import sys
         from sqlite3 import OperationalError
-        sys.path.append('/usr/share/anki')
+        sys.path.append(os.environ.get('APY_ANKI_PATH', '/usr/share/anki'))
         import anki
         from aqt.profiles import ProfileManager
 

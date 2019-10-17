@@ -32,9 +32,18 @@ pip install -e .
 ```
 
 **Important**: `apy` uses the python API from the Anki desktop app. So please
-  make sure to install [Anki](https://apps.ankiweb.net/#download). If Anki
-  desktop is not available, you should see errors like `ModuleNotFoundError: No
-  module named 'anki'`
+  make sure to install the Anki source. Note that the releases on
+  [Ankiweb](https://apps.ankiweb.net/#download) only include precompiled
+  binaries. Ankiweb recommends that one uses these precompiled binaries, but
+  for `apy` to work one needs the Anki source to be available. These are
+  typically included if one installs from repositories (e.g. with `sudo apt
+  install anki` or `pacman -S anki`). One may also download the source either
+  from the ["Development" tab on Ankiweb](https://apps.ankiweb.net/#dev) or
+  from [github](https://github.com/dae/anki).
+
+`apy` assumes that the Anki source is available at `/usr/share/anki`. If you
+put it somewhere else, then you must set the environment variable
+`APY_ANKI_PATH`, e.g. `export APY_ANKI_PATH=/my/path/to/anki`.
 
 ## Usage
 
