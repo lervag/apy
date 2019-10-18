@@ -23,6 +23,9 @@ setup(
     ],
     install_requires=[
         'click',
+        'beautifulsoup4',
+        'Markdown',
+        'readchar',
     ],
     entry_points='''
         [console_scripts]
