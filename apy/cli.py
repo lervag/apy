@@ -95,6 +95,23 @@ def check_media():
         a.check_media()
 
 
+@main.command('edit-css')
+@click.option('-m', '--model-name', default='Basic',
+              help='Specify for which model to edit CSS template.')
+@click.option('-s', '--sync-after', is_flag=True,
+              help='Perform sync after any change.')
+def edit_css(model_name, sync_after):
+    """Edit the CSS template for the specified model."""
+    from apy.anki import Anki
+
+    with Anki(BASE) as a:
+        a.edit_model_css(model_name)
+
+        if a.modified and sync_after:
+            a.sync()
+            a.modified = False
+
+
 @main.command()
 def info():
     """Print some basic statistics."""

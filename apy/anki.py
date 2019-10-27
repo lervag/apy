@@ -212,6 +212,33 @@ class Anki:
         return model
 
 
+    def edit_model_css(self, model_name):
+        """Edit the CSS part of a given model."""
+        import tempfile
+        import click
+        from apy.utilities import editor
+
+        model = self.get_model(model_name)
+
+        with tempfile.NamedTemporaryFile(mode='w+', prefix='_apy_edit_',
+                                         suffix='.css', delete=False) as tf:
+            tf.write(model['css'])
+            tf.flush()
+
+            retcode = editor(tf.name)
+            if retcode != 0:
+                click.echo(f'Editor return with exit code {retcode}!')
+                return
+
+            with open(tf.name, 'r') as f:
+                new_content = f.read()
+
+        if model['css'] != new_content:
+            model['css'] = new_content
+            self.col.models.save(model, templates=True)
+            self.modified = True
+
+
     def add_notes_with_editor(self, tags='', model_name=None, template=None):
         """Add new notes to collection with editor"""
         import os
