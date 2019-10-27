@@ -191,17 +191,21 @@ class Anki:
         self.modified = True
 
 
-    def set_model(self, model_string):
+    def get_model(self, model_name):
+        """Get model from model name"""
+        return self.col.models.get(self.model_name_to_id.get(model_name))
+
+    def set_model(self, model_name):
         """Set current model based on model name"""
         import click
 
         current = self.col.models.current()
-        if current['name'] == model_string:
+        if current['name'] == model_name:
             return current
 
-        model = self.col.models.get(self.model_name_to_id.get(model_string))
+        model = self.get_model(model_name)
         if model is None:
-            click.secho(f'Model "{model_string}" was not recognized!')
+            click.secho(f'Model "{model_name}" was not recognized!')
             raise click.Abort()
 
         self.col.models.setCurrent(model)
