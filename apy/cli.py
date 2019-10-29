@@ -19,9 +19,14 @@ def main(ctx, base):
 
         export APY_BASE=/my/anki/base/path
 
-    A few sub commands will open an editor. Vim is used by default, but one may
-    specify a different editor with the EDITOR environment variable, e.g. add
-    to ones ~/.bashrc file:
+    A few sub commands will open an editor for input. Vim is used by default.
+    The input is parsed when one saves and quits. To abort, one should exit the
+    editor with a non-zero exit code. In Vim, one can do this with the `:cquit`
+    command.
+
+    One may specify a different editor with the EDITOR environment variable.
+    For example, to use emacs one can add this to ones `~/.bashrc` (or similar)
+    file:
 
         export EDITOR=emacs
     """
