@@ -4,7 +4,7 @@
 class Anki:
     """My Anki collection wrapper class."""
 
-    def __init__(self, base=None):
+    def __init__(self, base=None, path=None):
         import os
         import sys
         from sqlite3 import OperationalError
@@ -29,16 +29,21 @@ class Anki:
 
         self.modified = False
 
-        # Initialize a profile manager to get an interface to the profile
-        # settings and main database path
-        pm = ProfileManager(base)
-        pm.setupMeta()
-        pm.load(pm.profiles()[0])
-        self.pm = pm
-
-        # Load the main Anki database/collection
+        # Save CWD (because Anki changes it)
         save_cwd = os.getcwd()
-        path = pm.collectionPath()
+
+        if path is None:
+            # Initialize a profile manager to get an interface to the profile
+            # settings and main database path; also required for syncing
+            self.pm = ProfileManager(base)
+            self.pm.setupMeta()
+            self.pm.load(self.pm.profiles()[0])
+
+            # Load the main Anki database/collection
+            path = self.pm.collectionPath()
+        else:
+            self.pm = None
+
         try:
             self.col = anki.Collection(path)
         except AssertionError:
@@ -49,7 +54,7 @@ class Anki:
             click.echo('Database is NA/locked!')
             raise click.Abort()
 
-        # Restore CWD (because it get's changed by Anki)
+        # Restore CWD (because Anki changes it)
         os.chdir(save_cwd)
 
         self.model_names = [m['name'] for m in self.col.models.all()]
@@ -64,13 +69,16 @@ class Anki:
 
         if self.modified:
             click.echo('Database was modified.')
-            if self.pm.profile['syncKey']:
+            if self.pm is not None and self.pm.profile['syncKey']:
                 click.secho('Remember to sync!', fg='blue')
             self.col.close()
 
 
     def sync(self):
         """Sync collection to AnkiWeb"""
+        if self.pm is None:
+            return
+
         import click
 
         if not self.pm.profile['syncKey']:
