@@ -29,6 +29,8 @@ def main(ctx, base):
     file:
 
         export EDITOR=emacs
+
+    Note: Use `apy subcmd --help` to get detailed help for a given subcommand.
     """
     if base:
         # pylint: disable=global-statement
