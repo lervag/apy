@@ -1,33 +1,31 @@
 """An Anki collection wrapper class."""
+import os
+import sys
+
+sys.path.append(os.environ.get('APY_ANKI_PATH', '/usr/share/anki'))
 
 
 class Anki:
     """My Anki collection wrapper class."""
 
     def __init__(self, base=None, path=None):
-        import os
-        import sys
+        self.modified = False
+
+        self._init_load_collection(base, path)
+        self._init_load_config()
+
+        self.model_names = [m['name'] for m in self.col.models.all()]
+        self.model_name_to_id = {m['name']: m['id']
+                                 for m in self.col.models.all()}
+
+    def _init_load_collection(self, base, path):
+        """Load the Anki collection"""
         from sqlite3 import OperationalError
-        sys.path.append(os.environ.get('APY_ANKI_PATH', '/usr/share/anki'))
+
         import anki
         from aqt.profiles import ProfileManager
 
         import click
-
-        # Update LaTeX commands
-        # (based on "Edit LaTeX build process"; addon #1546037973)
-        anki.latex.pngCommands = [
-            ["latex", "-interaction=nonstopmode", "tmp.tex"],
-            ["dvipng", "-D", "150", "-T", "tight", "-bg", "Transparent",
-             "tmp.dvi", "-o", "tmp.png"]
-        ]
-        anki.latex.svgCommands = [
-            ["lualatex", "-interaction=nonstopmode", "tmp.tex"],
-            ["pdfcrop", "tmp.pdf", "tmp.pdf"],
-            ["pdf2svg", "tmp.pdf", "tmp.svg"]
-        ]
-
-        self.modified = False
 
         # Save CWD (because Anki changes it)
         save_cwd = os.getcwd()
@@ -57,9 +55,18 @@ class Anki:
         # Restore CWD (because Anki changes it)
         os.chdir(save_cwd)
 
-        self.model_names = [m['name'] for m in self.col.models.all()]
-        self.model_name_to_id = {m['name']: m['id']
-                                 for m in self.col.models.all()}
+    def _init_load_config(self):
+        """Load custom configuration"""
+        import anki
+        from apy.config import cfg
+
+        # Update LaTeX commands
+        # * Idea based on Anki addon #1546037973 ("Edit LaTeX build process")
+        if 'pngCommands' in cfg:
+            anki.latex.pngCommands = cfg['pngCommands']
+        if 'svgCommands' in cfg:
+            anki.latex.pngCommands = cfg['svgCommands']
+
 
     def __enter__(self):
         return self

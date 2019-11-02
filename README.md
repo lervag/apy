@@ -51,6 +51,30 @@ put it somewhere else, then you must set the environment variable
 apy --help
 ```
 
+## Configuration
+
+`apy` loads configuration from `~/.config/apy/apy.json`. The following keys are
+currently recognized:
+
+- `pngCommands`/`svgCommands`: Set LaTeX commands to generate PNG/SVG files. This is inspired by the [Edit LaTeX build process](https://ankiweb.net/shared/info/937148547) addon to Anki.
+
+An example configuration:
+
+```json
+{
+  "pngCommands": [
+    ["latex", "-interaction=nonstopmode", "tmp.tex"],
+    ["dvipng", "-D", "150", "-T", "tight", "-bg", "Transparent",
+      "tmp.dvi", "-o", "tmp.png"]
+  ],
+  "svgCommands": [
+    ["lualatex", "-interaction=nonstopmode", "tmp.tex"],
+    ["pdfcrop", "tmp.pdf", "tmp.pdf"],
+    ["pdf2svg", "tmp.pdf", "tmp.svg"]
+  ]
+}
+```
+
 ## Zsh completion
 
 There is also a zsh completion file available. To use it, one may symlink or

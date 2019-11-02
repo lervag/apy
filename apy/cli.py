@@ -123,6 +123,14 @@ def edit_css(model_name, sync_after):
 def info():
     """Print some basic statistics."""
     from apy.anki import Anki
+    from apy.config import cfg_file, cfg
+
+    if cfg_file.exists():
+        click.echo(f"Config file:             {cfg_file}")
+        for key in cfg.keys():
+            click.echo(f"Config loaded:           {key}")
+    else:
+        click.echo(f"Config file:             Not found")
 
     with Anki(BASE) as a:
         click.echo(f"Collecton path:          {a.col.path}")
