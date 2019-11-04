@@ -14,9 +14,13 @@ class Anki:
         self._init_load_collection(base, path)
         self._init_load_config()
 
-        self.model_names = [m['name'] for m in self.col.models.all()]
         self.model_name_to_id = {m['name']: m['id']
                                  for m in self.col.models.all()}
+        self.model_names = self.model_name_to_id.keys()
+
+        self.deck_name_to_id = {d['name']: d['id']
+                                for d in self.col.decks.all()}
+        self.deck_names = self.deck_name_to_id.keys()
 
     def _init_load_collection(self, base, path):
         """Load the Anki collection"""
@@ -210,6 +214,22 @@ class Anki:
 
         self.col.remNotes(ids)
         self.modified = True
+
+
+    def set_deck(self, deck_name):
+        """Set active deck to deck_name."""
+        import click
+
+        did = self.deck_name_to_id.get(deck_name, -1)
+        if did < 1:
+            click.secho(f'No such deck: {deck_name}!', fg='red')
+            raise click.Abort()
+
+        self.col.decks.select(did)
+
+    def get_current_deck(self):
+        """Get current active deck name."""
+        return self.col.decks.current()['name']
 
 
     def get_model(self, model_name):

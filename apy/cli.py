@@ -136,6 +136,11 @@ def info():
         click.echo(f"Number of cards (due):   {len(a.col.findNotes('is:due'))}")
         click.echo(f"Number of marked cards:  {len(a.col.findNotes('tag:marked'))}")
 
+        click.echo(f"Number of decks:         {a.col.decks.count()}")
+        for d in sorted(a.deck_names):
+            click.echo(f"  - {d}")
+        breakpoint()
+
         models = sorted(a.model_names)
         click.echo(f"Number of models:        {len(models)}")
         for m in models:
