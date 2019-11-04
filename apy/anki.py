@@ -20,6 +20,7 @@ class Anki:
 
     def _init_load_collection(self, base, path):
         """Load the Anki collection"""
+        from pathlib import Path
         from sqlite3 import OperationalError
 
         import anki
@@ -31,6 +32,13 @@ class Anki:
         save_cwd = os.getcwd()
 
         if path is None:
+            basepath = Path(base)
+            if not (basepath / 'prefs21.db').exists():
+                click.echo('Invalid base path!')
+                breakpoint()
+                click.echo(f'path = {basepath.absolute()}')
+                raise click.Abort()
+
             # Initialize a profile manager to get an interface to the profile
             # settings and main database path; also required for syncing
             self.pm = ProfileManager(base)
@@ -92,7 +100,6 @@ class Anki:
             click.echo('No sync auth registered in profile')
             return
 
-        import os
         from anki.sync import (Syncer, MediaSyncer,
                                RemoteServer, RemoteMediaServer)
 
@@ -156,7 +163,6 @@ class Anki:
 
     def check_media(self):
         """Check media (will rebuild missing LaTeX files)"""
-        import os
         import click
         from apy.utilities import cd
 
@@ -256,7 +262,6 @@ class Anki:
 
     def add_notes_with_editor(self, tags='', model_name=None, template=None):
         """Add new notes to collection with editor"""
-        import os
         import tempfile
 
         import click
