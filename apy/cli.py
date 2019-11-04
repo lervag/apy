@@ -1,10 +1,9 @@
 """A script to interact with the Anki database"""
 
-import os
 import click
+from apy.config import cfg
 
 
-BASE = os.environ.get('APY_BASE')
 CONTEXT_SETTINGS = dict(help_option_names=['-h', '--help'])
 
 @click.group(context_settings=CONTEXT_SETTINGS, invoke_without_command=True)
@@ -14,10 +13,9 @@ def main(ctx, base):
     """A script to interact with the Anki database.
 
     The base directory may be specified with the -b / --base option. For
-    convenience, it may also be specified with the environment variable
-    APY_BASE. E.g., one may add to ones ~/.bashrc file:
-
-        export APY_BASE=/my/anki/base/path
+    convenience, it may also be specified in the config file
+    `~/.config/apy/apy.json` or with the environment variable APY_BASE or
+    ANKI_BASE.
 
     A few sub commands will open an editor for input. Vim is used by default.
     The input is parsed when one saves and quits. To abort, one should exit the
@@ -33,9 +31,7 @@ def main(ctx, base):
     Note: Use `apy subcmd --help` to get detailed help for a given subcommand.
     """
     if base:
-        # pylint: disable=global-statement
-        global BASE
-        BASE = base
+        cfg['base'] = base
 
     if ctx.invoked_subcommand is None:
         ctx.invoke(info)
@@ -61,7 +57,7 @@ def add(tags, model):
     """
     from apy.anki import Anki
 
-    with Anki(BASE) as a:
+    with Anki(cfg['base']) as a:
         notes = a.add_notes_with_editor(tags, model)
         number_of_notes = len(notes)
         click.echo(f'Added {number_of_notes} notes')
@@ -83,7 +79,7 @@ def add_from_file(file, tags):
     """
     from apy.anki import Anki
 
-    with Anki(BASE) as a:
+    with Anki(cfg['base']) as a:
         notes = a.add_notes_from_file(file, tags)
         number_of_notes = len(notes)
         click.echo(f'Added {number_of_notes} notes')
@@ -98,7 +94,7 @@ def check_media():
     """Check media"""
     from apy.anki import Anki
 
-    with Anki(BASE) as a:
+    with Anki(cfg['base']) as a:
         a.check_media()
 
 
@@ -111,7 +107,7 @@ def edit_css(model_name, sync_after):
     """Edit the CSS template for the specified model."""
     from apy.anki import Anki
 
-    with Anki(BASE) as a:
+    with Anki(cfg['base']) as a:
         a.edit_model_css(model_name)
 
         if a.modified and sync_after:
@@ -123,7 +119,7 @@ def edit_css(model_name, sync_after):
 def info():
     """Print some basic statistics."""
     from apy.anki import Anki
-    from apy.config import cfg_file, cfg
+    from apy.config import cfg_file
 
     if cfg_file.exists():
         click.echo(f"Config file:             {cfg_file}")
@@ -132,7 +128,7 @@ def info():
     else:
         click.echo(f"Config file:             Not found")
 
-    with Anki(BASE) as a:
+    with Anki(cfg['base']) as a:
         click.echo(f"Collecton path:          {a.col.path}")
         click.echo(f"Scheduler version:       {a.col.schedVer()}")
         click.echo(f"Number of notes:         {a.col.noteCount()}")
@@ -153,7 +149,7 @@ def review(query):
     """Review marked notes."""
     from apy.anki import Anki
 
-    with Anki(BASE) as a:
+    with Anki(cfg['base']) as a:
         notes = list(a.find_notes(query))
         number_of_notes = len(notes)
         for i, note in enumerate(notes):
@@ -261,7 +257,7 @@ def list_notes(query):
     """List notes that match a given query."""
     from apy.anki import Anki
 
-    with Anki(BASE) as a:
+    with Anki(cfg['base']) as a:
         for note in a.find_notes(query):
             note.print_short()
 
@@ -273,7 +269,7 @@ def list_cards(query):
     from apy.anki import Anki
     from apy.convert import html_to_screen, clean_html
 
-    with Anki(BASE) as a:
+    with Anki(cfg['base']) as a:
         for cid in a.find_cards(query):
             c = a.col.getCard(cid)
             question = html_to_screen(clean_html(c.q())).replace('\n', ' ')
@@ -287,7 +283,7 @@ def sync():
     """Synchronize collection with AnkiWeb."""
     from apy.anki import Anki
 
-    with Anki(BASE) as a:
+    with Anki(cfg['base']) as a:
         a.sync()
 
 
