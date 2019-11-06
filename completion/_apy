@@ -16,6 +16,7 @@ _apy() {
     'add:Add notes interactively from terminal' \
     'add-from-file:Add notes from Markdown file For input file' \
     'check-media:Check media' \
+    'edit-css:Edit CSS template for specified model' \
     'info:Print some basic statistics' \
     'list:Print notes that match the given query' \
     'list-cards:simple tool to list cards that match query' \
@@ -41,6 +42,12 @@ _apy() {
       opts=( \
         '::Markdown input file:_files -g "*.md"' \
         '(-t --tags)'{-t,--text}'[Specify tags]' \
+        $opts_help \
+        );;
+    edit-css)
+      opts=( \
+        '(-m --model)'{-m,--model}'[Specify model]' \
+        '(-s --sync-after)'{-s,--sync-after}'[Synchronize after edit]' \
         $opts_help \
         );;
     info)
