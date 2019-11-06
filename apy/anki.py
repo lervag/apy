@@ -77,7 +77,7 @@ class Anki:
         if 'pngCommands' in cfg:
             anki.latex.pngCommands = cfg['pngCommands']
         if 'svgCommands' in cfg:
-            anki.latex.pngCommands = cfg['svgCommands']
+            anki.latex.svgCommands = cfg['svgCommands']
 
 
     def __enter__(self):

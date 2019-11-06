@@ -210,6 +210,7 @@ def plain_to_html(plain):
     # Minor clean up
     plain = plain.replace(r'&lt;', '<')
     plain = plain.replace(r'&gt;', '>')
+    plain = plain.replace(r'&amp;', '&')
     plain = plain.replace(r'&nbsp;', ' ')
     plain = re.sub(r'\<b\>\s*\<\/b\>', '', plain)
     plain = re.sub(r'\<i\>\s*\<\/i\>', '', plain)
@@ -247,11 +248,13 @@ def html_to_screen(html, parseable=False):
     import click
 
     plain = html
-    if is_generated_html(plain):
+    generated = is_generated_html(plain)
+    if generated:
         plain = html_to_markdown(plain)
 
     plain = plain.replace(r'&lt;', '<')
     plain = plain.replace(r'&gt;', '>')
+    plain = plain.replace(r'&amp;', '&')
     plain = plain.replace(r'&nbsp;', ' ')
 
     plain = plain.replace('<br>', '\n')
@@ -260,11 +263,12 @@ def html_to_screen(html, parseable=False):
     plain = plain.replace('<div>', '\n')
     plain = plain.replace('</div>', '')
 
-    # For convenience: Fix mathjax escaping
-    plain = plain.replace(r"\[", r"[")
-    plain = plain.replace(r"\]", r"]")
-    plain = plain.replace(r"\(", r"(")
-    plain = plain.replace(r"\)", r")")
+    # For convenience: Fix mathjax escaping (but only if the html is generated)
+    if generated:
+        plain = plain.replace(r"\[", r"[")
+        plain = plain.replace(r"\]", r"]")
+        plain = plain.replace(r"\(", r"(")
+        plain = plain.replace(r"\)", r")")
 
     plain = re.sub(r'\<b\>\s*\<\/b\>', '', plain)
 
