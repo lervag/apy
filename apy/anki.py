@@ -39,7 +39,6 @@ class Anki:
             basepath = Path(base)
             if not (basepath / 'prefs21.db').exists():
                 click.echo('Invalid base path!')
-                breakpoint()
                 click.echo(f'path = {basepath.absolute()}')
                 raise click.Abort()
 
@@ -361,11 +360,12 @@ class Anki:
 
             notes.append(self._add_note(field_values,
                                         f"{tags} {note['tags']}",
-                                        note['markdown']))
+                                        note['markdown'],
+                                        note.get('deck')))
 
         return notes
 
-    def _add_note(self, fields, tags, markdown=True):
+    def _add_note(self, fields, tags, markdown=True, deck=None):
         """Add new note to collection"""
         import click
 
@@ -373,6 +373,9 @@ class Anki:
         from apy.note import Note
 
         note = self.col.newNote()
+
+        if deck is not None:
+            note.model()['did'] = self.deck_name_to_id[deck]
 
         if markdown:
             note.fields = [markdown_to_html(x) for x in fields]

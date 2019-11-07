@@ -41,35 +41,40 @@ def markdown_file_to_notes(filename):
     """
     defaults, notes = _parse_file(filename)
 
-    # Set default markdown flag
-    def_markdown = True
+    # Parse markdown flag
     if 'markdown' in defaults:
-        def_markdown = defaults['markdown'] in ('true', 'yes')
-        defaults.pop('markdown')
+        defaults['markdown'] = defaults['markdown'] in ('true', 'yes')
     elif 'md' in defaults:
-        def_markdown = defaults['md'] in ('true', 'yes')
+        defaults['markdown'] = defaults['md'] in ('true', 'yes')
         defaults.pop('md')
 
+    # Remove comma from tag list
     if 'tags' in defaults:
         defaults['tags'] = defaults['tags'].replace(',', '')
 
+    # Add some explicit defaults (unless added in file)
+    defaults = {**defaults, **{
+        'markdown': True,
+        'model': 'Basic',
+        'tags': 'marked',
+    }}
+
     # Ensure each note has all necessary properties
     for note in notes:
-        if 'model' not in note:
-            note['model'] = defaults.get('model', 'Basic')
-
-        if 'tags' in note:
-            note['tags'] = note['tags'].replace(',', '')
-        else:
-            note['tags'] = defaults.get('tags', 'marked')
-
+        # Parse markdown flag
         if 'markdown' in note:
             note['markdown'] = note['markdown'] in ('true', 'yes')
         elif 'md' in note:
             note['markdown'] = note['md'] in ('true', 'yes')
             note.pop('md')
-        else:
-            note['markdown'] = def_markdown
+
+        # Remove comma from tag list
+        if 'tags' in note:
+            note['tags'] = note['tags'].replace(',', '')
+
+        # note = {**defaults, **note}
+        note.update({k: v for k, v in defaults.items()
+                     if not k in note})
 
     return notes
 
