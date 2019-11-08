@@ -1,2 +1,3 @@
+tests/data
 *.pyc
 apy.egg-info/
