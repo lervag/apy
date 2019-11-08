@@ -20,8 +20,12 @@ class Note:
         lines = [
             f'# Note ID: {self.n.id}',
             f'model: {self.model_name}',
-            f'tags: {self.get_tag_string()}',
         ]
+
+        if self.a.n_decks > 1:
+            lines += [f'deck: {self.get_deck()}']
+
+        lines += [f'tags: {self.get_tag_string()}']
 
         if not any([is_generated_html(x) for x in self.n.values()]):
             lines += ['markdown: false']
@@ -43,10 +47,12 @@ class Note:
         from apy.convert import is_generated_html
         from apy.convert import html_to_screen
 
-        lines = [
-            f'model: {self.model_name}',
-            f'tags: {self.get_tag_string()}',
-        ]
+        lines = [f'model: {self.model_name}']
+
+        if self.a.n_decks > 1:
+            lines += [f'deck: {self.get_deck()}']
+
+        lines += [f'tags: {self.get_tag_string()}']
 
         if not any([is_generated_html(x) for x in self.n.values()]):
             lines += ['markdown: false']
@@ -76,8 +82,13 @@ class Note:
             click.style(f'# Note ID: {self.n.id}', fg='green'),
             click.style('model: ', fg='yellow')
             + f'{self.model_name} ({len(self.n.cards())} cards)',
-            click.style('tags: ', fg='yellow') + self.get_tag_string(),
         ]
+
+        if self.a.n_decks > 1:
+            lines += [click.style('deck: ', fg='yellow')+self.get_deck()]
+
+        lines += [click.style('tags: ', fg='yellow')
+                  + self.get_tag_string()]
 
         if not any([is_generated_html(x) for x in self.n.values()]):
             lines += [f"{click.style('markdown:', fg='yellow')} false"]
@@ -234,6 +245,11 @@ class Note:
 
         self.n.flush()
         self.a.modified = True
+
+
+    def get_deck(self):
+        """Return which deck the note belongs to"""
+        return self.a.col.decks.name(self.n.cards()[0].did)
 
 
     def get_field(self, index_or_name):

@@ -39,38 +39,53 @@ def main(ctx, base):
 
 @main.command()
 @click.option('-t', '--tags', default='marked',
-              help='Specify tags for new cards.')
+              help='Specify default tags for new cards.')
 @click.option('-m', '--model', default='Basic',
-              help=('Specify model for new cards.'))
-def add(tags, model):
+              help=('Specify default model for new cards.'))
+@click.option('-d', '--deck',
+              help=('Specify defauly deck for new cards.'))
+def add(tags, model, deck):
     """Add notes interactively from terminal.
 
     Examples:
 
     \b
-        # Add notes with tags 'my-tag' and 'new-tag'
-        apy add -t "my-tag new-tag"
+        # Add notes to deck "MyDeck" with tags 'my-tag' and 'new-tag'
+        apy add -t "my-tag new-tag" -d MyDeck
 
     \b
-        # Ask for the model for each new card
-        apy add -m ASK
+        # Ask for the model and the deck for each new card
+        apy add -m ASK -d ask
     """
     from apy.anki import Anki
 
     with Anki(cfg['base']) as a:
-        notes = a.add_notes_with_editor(tags, model)
-        number_of_notes = len(notes)
-        click.echo(f'Added {number_of_notes} notes')
+        notes = a.add_notes_with_editor(tags, model, deck)
+
+        decks = [a.col.decks.name(c.did) for n in notes for c in n.cards()]
+        n_notes = len(notes)
+        n_decks = len(decks)
+
+        if a.n_decks > 1:
+            if n_notes == 1:
+                click.echo(f'Added note to deck: {decks[0]}')
+            elif n_decks > 1:
+                click.echo(f'Added {n_notes} notes to {n_decks} different decks')
+            else:
+                click.echo(f'Added {n_notes} notes to deck: {decks[0]}')
+        else:
+            click.echo(f'Added {n_notes} notes')
+
         if click.confirm('Review added notes?'):
             for i, note in enumerate(notes):
-                _review_note(a, note, i, number_of_notes,
+                _review_note(a, note, i, n_notes,
                              remove_actions=['Abort'])
 
 
 @main.command('add-from-file')
 @click.argument('file', type=click.Path(exists=True, dir_okay=False))
-@click.option('-t', '--tags', default='',
-              help='Specify default tags.')
+@click.option('-t', '--tags', default='marked',
+              help='Specify default tags for new cards.')
 def add_from_file(file, tags):
     """Add notes from Markdown file.
 
@@ -81,11 +96,24 @@ def add_from_file(file, tags):
 
     with Anki(cfg['base']) as a:
         notes = a.add_notes_from_file(file, tags)
-        number_of_notes = len(notes)
-        click.echo(f'Added {number_of_notes} notes')
+
+        decks = [a.col.decks.name(c.did) for n in notes for c in n.n.cards()]
+        n_notes = len(notes)
+        n_decks = len(decks)
+
+        if a.n_decks > 1:
+            if n_notes == 1:
+                click.echo(f'Added note to deck: {decks[0]}')
+            elif n_decks > 1:
+                click.echo(f'Added {n_notes} notes to {n_decks} different decks')
+            else:
+                click.echo(f'Added {n_notes} notes to deck: {decks[0]}')
+        else:
+            click.echo(f'Added {n_notes} notes')
+
         if click.confirm('Review added notes?'):
             for i, note in enumerate(notes):
-                _review_note(a, note, i, number_of_notes,
+                _review_note(a, note, i, n_notes,
                              remove_actions=['Abort'])
 
 

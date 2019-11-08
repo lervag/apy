@@ -21,6 +21,7 @@ class Anki:
         self.deck_name_to_id = {d['name']: d['id']
                                 for d in self.col.decks.all()}
         self.deck_names = self.deck_name_to_id.keys()
+        self.n_decks = len(self.deck_names)
 
     def _init_load_collection(self, base, path):
         """Load the Anki collection"""
@@ -215,22 +216,6 @@ class Anki:
         self.modified = True
 
 
-    def set_deck(self, deck_name):
-        """Set active deck to deck_name."""
-        import click
-
-        did = self.deck_name_to_id.get(deck_name, -1)
-        if did < 1:
-            click.secho(f'No such deck: {deck_name}!', fg='red')
-            raise click.Abort()
-
-        self.col.decks.select(did)
-
-    def get_current_deck(self):
-        """Get current active deck name."""
-        return self.col.decks.current()['name']
-
-
     def get_model(self, model_name):
         """Get model from model name"""
         return self.col.models.get(self.model_name_to_id.get(model_name))
@@ -279,7 +264,8 @@ class Anki:
             self.modified = True
 
 
-    def add_notes_with_editor(self, tags='', model_name=None, template=None):
+    def add_notes_with_editor(self, tags='', model_name=None, deck_name=None,
+                              template=None):
         """Add new notes to collection with editor"""
         import tempfile
 
@@ -296,23 +282,29 @@ class Anki:
 
             model = self.set_model(model_name)
 
-            input_lines = [
-                f'model: {model_name}',
-                f'tags: {tags}',
-            ]
+            if deck_name is None:
+                deck_name = self.col.decks.current()['name']
+            elif deck_name.lower() == 'ask':
+                deck_name = choose(sorted(self.deck_names), "Choose deck:")
+
+            input_string = [f'model: {model_name}']
+
+            if self.n_decks > 1:
+                input_string += [f'deck: {deck_name}']
+
+            input_string += [f'tags: {tags}']
 
             if model_name != 'Basic':
-                input_lines += ['markdown: false']
+                input_string += ['markdown: false']
 
-            input_lines += ['\n# Note\n']
+            input_string += ['\n# Note\n']
 
-            input_lines += [x for y in
-                            [[f'## {field["name"]}', ''] for field in model['flds']]
-                            for x in y]
-            if model_name == 'Basic':
-                input_lines.insert(-3, "**CATEGORY**")
+            input_string += [x for y in
+                             [[f'## {field["name"]}', '']
+                              for field in model['flds']]
+                             for x in y]
 
-            input_string = '\n'.join(input_lines) + '\n'
+            input_string = '\n'.join(input_string) + '\n'
 
         with tempfile.NamedTemporaryFile(mode='w+',
                                          dir=os.getcwd(),
