@@ -30,6 +30,8 @@ def test_add_basic():
     """Test adding two Basic notes from file"""
     a = get_empty()
     input_file = testDir + '/data/basic.md'
-    a.add_notes_from_file(input_file)
+    notes = a.add_notes_from_file(input_file)
+
     assert a.col.cardCount() == 2
     assert a.col.noteCount() == 2
+    assert notes[1].n.model()['name'] == 'Basic (type in the answer)'

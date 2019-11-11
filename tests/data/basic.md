@@ -1,7 +1,8 @@
 tags: marked
-model: Basic
+model: Basic (type in the answer)
 
 # Basic note
+model: Basic
 
 ## Front
 Question 1
