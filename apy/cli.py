@@ -62,7 +62,7 @@ def add(tags, model, deck):
     with Anki(cfg['base']) as a:
         notes = a.add_notes_with_editor(tags, model, deck)
 
-        decks = [a.col.decks.name(c.did) for n in notes for c in n.cards()]
+        decks = [a.col.decks.name(c.did) for n in notes for c in n.n.cards()]
         n_notes = len(notes)
         n_decks = len(decks)
 
