@@ -225,7 +225,7 @@ class Anki:
         """Set current model based on model name"""
         import click
 
-        current = self.col.models.current()
+        current = self.col.models.current(forDeck=False)
         if current['name'] == model_name:
             return current
 
@@ -365,7 +365,7 @@ class Anki:
         from apy.convert import markdown_to_html, plain_to_html
         from apy.note import Note
 
-        note = self.col.newNote()
+        note = self.col.newNote(forDeck=False)
 
         if deck is not None:
             note.model()['did'] = self.deck_name_to_id[deck]
