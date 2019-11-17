@@ -9,6 +9,7 @@ from apy.anki import Anki
 
 pytestmark = pytest.mark.filterwarnings("ignore")
 testDir = os.path.dirname(__file__)
+testCol = testDir + '/data/test_base/Test/collection.anki2'
 
 
 def get_empty():
@@ -35,3 +36,10 @@ def test_add_basic():
     assert a.col.cardCount() == 2
     assert a.col.noteCount() == 2
     assert notes[1].n.model()['name'] == 'Basic (type in the answer)'
+
+def test_add_different_models():
+    """Test adding with different models"""
+    with Anki(path=testCol, debug=True) as a:
+        n_cards = a.col.cardCount()
+        a.add_notes_from_file(testDir + '/data/models.md')
+        assert a.col.cardCount() == n_cards + 6
