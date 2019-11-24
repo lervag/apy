@@ -15,7 +15,10 @@ def main(ctx, base):
     The base directory may be specified with the -b / --base option. For
     convenience, it may also be specified in the config file
     `~/.config/apy/apy.json` or with the environment variable APY_BASE or
-    ANKI_BASE.
+    ANKI_BASE. This should point to the base directory where Anki stores it's
+    database and related files. See the Anki documentation for information 
+    about where this is located on different systems 
+    (https://apps.ankiweb.net/docs/manual.html#file-locations).
 
     A few sub commands will open an editor for input. Vim is used by default.
     The input is parsed when one saves and quits. To abort, one should exit the
