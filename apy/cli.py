@@ -1,7 +1,8 @@
 """A script to interact with the Anki database"""
 
 import click
-from apy.config import cfg
+from apy.anki import Anki
+from apy.config import cfg, cfg_file
 
 
 CONTEXT_SETTINGS = dict(help_option_names=['-h', '--help'])
@@ -16,8 +17,8 @@ def main(ctx, base):
     convenience, it may also be specified in the config file
     `~/.config/apy/apy.json` or with the environment variable APY_BASE or
     ANKI_BASE. This should point to the base directory where Anki stores it's
-    database and related files. See the Anki documentation for information 
-    about where this is located on different systems 
+    database and related files. See the Anki documentation for information
+    about where this is located on different systems
     (https://apps.ankiweb.net/docs/manual.html#file-locations).
 
     A few sub commands will open an editor for input. Vim is used by default.
@@ -60,8 +61,6 @@ def add(tags, model, deck):
         # Ask for the model and the deck for each new card
         apy add -m ASK -d ask
     """
-    from apy.anki import Anki
-
     with Anki(cfg['base']) as a:
         notes = a.add_notes_with_editor(tags, model, deck)
 
@@ -95,8 +94,6 @@ def add_from_file(file, tags):
     For input file syntax specification, see docstring for
     parse_notes_from_markdown().
     """
-    from apy.anki import Anki
-
     with Anki(cfg['base']) as a:
         notes = a.add_notes_from_file(file, tags)
 
@@ -123,8 +120,6 @@ def add_from_file(file, tags):
 @main.command('check-media')
 def check_media():
     """Check media"""
-    from apy.anki import Anki
-
     with Anki(cfg['base']) as a:
         a.check_media()
 
@@ -136,8 +131,6 @@ def check_media():
               help='Perform sync after any change.')
 def edit_css(model_name, sync_after):
     """Edit the CSS template for the specified model."""
-    from apy.anki import Anki
-
     with Anki(cfg['base']) as a:
         a.edit_model_css(model_name)
 
@@ -149,9 +142,6 @@ def edit_css(model_name, sync_after):
 @main.command()
 def info():
     """Print some basic statistics."""
-    from apy.anki import Anki
-    from apy.config import cfg_file
-
     if cfg_file.exists():
         click.echo(f"Config file:             {cfg_file}")
         for key in cfg.keys():
@@ -182,8 +172,6 @@ def info():
               help=('Review cards that match query [default: marked cards].'))
 def review(query):
     """Review marked notes."""
-    from apy.anki import Anki
-
     with Anki(cfg['base']) as a:
         notes = list(a.find_notes(query))
         number_of_notes = len(notes)
@@ -290,8 +278,6 @@ def _review_note(anki, note, i=None, number_of_notes=None,
 @click.argument('query', required=False, default='tag:marked')
 def list_notes(query):
     """List notes that match a given query."""
-    from apy.anki import Anki
-
     with Anki(cfg['base']) as a:
         for note in a.find_notes(query):
             note.print_short()
@@ -301,7 +287,6 @@ def list_notes(query):
 @click.argument('query', required=False, default='tag:marked')
 def list_cards(query):
     """List cards that match a given query."""
-    from apy.anki import Anki
     from apy.convert import html_to_screen, clean_html
 
     with Anki(cfg['base']) as a:
@@ -316,8 +301,6 @@ def list_cards(query):
 @main.command()
 def sync():
     """Synchronize collection with AnkiWeb."""
-    from apy.anki import Anki
-
     with Anki(cfg['base']) as a:
         a.sync()
 
