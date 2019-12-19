@@ -42,7 +42,7 @@ def main(ctx, base):
 
 
 @main.command()
-@click.option('-t', '--tags', default='marked',
+@click.option('-t', '--tags', default='',
               help='Specify default tags for new cards.')
 @click.option('-m', '--model', default='Basic',
               help=('Specify default model for new cards.'))
@@ -86,7 +86,7 @@ def add(tags, model, deck):
 
 @main.command('add-from-file')
 @click.argument('file', type=click.Path(exists=True, dir_okay=False))
-@click.option('-t', '--tags', default='marked',
+@click.option('-t', '--tags', default='',
               help='Specify default tags for new cards.')
 def add_from_file(file, tags):
     """Add notes from Markdown file.
