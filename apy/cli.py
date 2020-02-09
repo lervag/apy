@@ -201,23 +201,33 @@ def _review_note(anki, note, i=None, number_of_notes=None,
         actions = {key: val for key, val in actions.items()
                    if val not in remove_actions}
 
+    refresh = True
     while True:
-        click.clear()
-        if i is None:
-            click.secho('Reviewing note\n', fg='white')
-        elif number_of_notes is None:
-            click.secho(f'Reviewing note {i+1}\n', fg='white')
+        if refresh:
+            click.clear()
+            if i is None:
+                click.secho('Reviewing note\n', fg='white')
+            elif number_of_notes is None:
+                click.secho(f'Reviewing note {i+1}\n', fg='white')
+            else:
+                click.secho(f'Reviewing note {i+1} of {number_of_notes}\n',
+                            fg='white')
+
+            column = 0
+            for x, y in actions.items():
+                menu = click.style(x, fg='blue') + ': ' + y
+                if column < 3:
+                    click.echo(f'{menu:28s}', nl=False)
+                else:
+                    click.echo(menu)
+                column = (column + 1) % 4
+
+            width = os.get_terminal_size()[0]
+            click.echo('\n' + '-'*width + '\n')
+
+            note.print()
         else:
-            click.secho(f'Reviewing note {i+1} of {number_of_notes}\n',
-                        fg='white')
-
-        for x, y in actions.items():
-            click.echo(click.style(x, fg='blue') + ': ' + y)
-
-        width = os.get_terminal_size()[0]
-        click.echo('\n' + '-'*width + '\n')
-
-        note.print()
+            refresh = True
 
         choice = readchar.readchar()
         action = actions.get(choice)
