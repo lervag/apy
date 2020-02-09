@@ -189,6 +189,7 @@ def _review_note(anki, note, i=None, number_of_notes=None,
         'c': 'Continue',
         'e': 'Edit',
         'd': 'Delete',
+        'f': 'Show images',
         'm': 'Toggle markdown',
         '*': 'Toggle marked',
         'z': 'Toggle suspend',
@@ -243,6 +244,11 @@ def _review_note(anki, note, i=None, number_of_notes=None,
             if click.confirm('Are you sure you want to delete the note?'):
                 note.delete()
             return True
+
+        if action == 'Show images':
+            note.show_images()
+            refresh = False
+            continue
 
         if action == 'Toggle markdown':
             note.toggle_markdown()

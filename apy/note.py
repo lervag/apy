@@ -1,5 +1,7 @@
 """A Note wrapper class"""
 
+import functools
+
 
 class Note:
     """A Note wrapper class"""
@@ -145,6 +147,31 @@ class Note:
         click.echo(click.style(model, fg=color) + first_field)
 
 
+    def show_images(self):
+        """Show in the fields"""
+        from pathlib import Path
+        import subprocess
+        from bs4 import BeautifulSoup
+        from apy.utilities import cd
+
+        images = []
+        for val in self.n.values():
+            source = val + "\n".join(self.get_lateximg_from_field(val))
+            images += [Path(x['src']) for x in
+                       BeautifulSoup(source, 'html.parser').find_all('img')]
+
+        with cd(self.a.col.media.dir()):
+            for file in images:
+                if file.suffix == '.svg':
+                    subprocess.Popen(['display', '-density', '300', file],
+                                     stdout=subprocess.DEVNULL,
+                                     stderr=subprocess.DEVNULL)
+                else:
+                    subprocess.Popen(['feh', file],
+                                     stdout=subprocess.DEVNULL,
+                                     stderr=subprocess.DEVNULL)
+
+
     def edit(self):
         """Edit tags and fields of current note"""
         import os
@@ -275,6 +302,7 @@ class Note:
         return ', '.join(self.n.tags)
 
 
+    @functools.lru_cache
     def get_lateximg_from_field(self, html):
         """Get LaTeX image tags from field"""
         from anki import latex
