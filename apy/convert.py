@@ -159,6 +159,7 @@ def markdown_to_html(plain):
     from bs4 import BeautifulSoup
     import markdown
     from markdown.extensions.abbr import AbbrExtension
+    from markdown.extensions.abbr import AbbrExtension
     from markdown.extensions.codehilite import CodeHiliteExtension
     from markdown.extensions.def_list import DefListExtension
     from markdown.extensions.fenced_code import FencedCodeExtension
@@ -178,6 +179,7 @@ def markdown_to_html(plain):
     plain = plain.replace(r"\)", r"\\)")
 
     html = markdown.markdown(plain, extensions=[
+        'tables',
         AbbrExtension(),
         CodeHiliteExtension(
             noclasses=True,
