@@ -152,19 +152,32 @@ def info():
     with Anki(cfg['base']) as a:
         click.echo(f"Collecton path:          {a.col.path}")
         click.echo(f"Scheduler version:       {a.col.schedVer()}")
-        click.echo(f"Number of notes:         {a.col.noteCount()}")
-        click.echo(f"Number of cards:         {a.col.cardCount()}")
-        click.echo(f"Number of cards (due):   {len(a.col.findNotes('is:due'))}")
-        click.echo(f"Number of marked cards:  {len(a.col.findNotes('tag:marked'))}")
 
-        click.echo(f"Number of decks:         {a.col.decks.count()}")
-        for d in sorted(a.deck_names):
-            click.echo(f"  - {d}")
+        if a.col.decks.count() > 1:
+            click.echo("Decks:")
+            for name in sorted(a.deck_names):
+                click.echo(f"  - {name}")
 
+        sum_notes = a.col.noteCount()
+        sum_cards = a.col.cardCount()
+        sum_due = len(a.col.findNotes('is:due'))
+        sum_marked = len(a.col.findNotes('tag:marked'))
+
+        click.echo(f"\n{'Model':26s} {'notes':>8s} {'cards':>8s} "
+                   f"{'due':>8s} {'marked':>8s}")
+        click.echo("-"*62)
         models = sorted(a.model_names)
-        click.echo(f"Number of models:        {len(models)}")
         for m in models:
-            click.echo(f"  - {m}")
+            nnotes = len(a.col.findNotes(f"note:'{m}'"))
+            ncards = len(a.col.findCards(f"note:'{m}'"))
+            ndue = len(a.col.findCards(f"note:'{m}' is:due"))
+            nmarked = len(a.col.findCards(f"note:'{m}' tag:marked"))
+            click.echo(f"{m:26s} {nnotes:8d} {ncards:8d} "
+                       f"{ndue:8d} {nmarked:8d}")
+        click.echo("-"*62)
+        click.echo(f"{'Sum':26s} {sum_notes:8d} {sum_cards:8d} "
+                   f"{sum_due:8d} {sum_marked:8d}")
+        click.echo("-"*62)
 
 
 @main.command()
