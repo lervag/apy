@@ -1,8 +1,11 @@
 """A script to interact with the Anki database"""
 
+import re
+import os
 import click
 from apy.anki import Anki
 from apy.config import cfg, cfg_file
+from apy.convert import html_to_screen, clean_html
 
 
 CONTEXT_SETTINGS = dict(help_option_names=['-h', '--help'])
@@ -169,9 +172,9 @@ def info():
         models = sorted(a.model_names)
         for m in models:
             nnotes = len(a.col.findNotes(f"note:'{m}'"))
-            ncards = len(a.col.findCards(f"note:'{m}'"))
-            ndue = len(a.col.findCards(f"note:'{m}' is:due"))
-            nmarked = len(a.col.findCards(f"note:'{m}' tag:marked"))
+            ncards = len(a.find_cards(f"note:'{m}'"))
+            ndue = len(a.find_cards(f"note:'{m}' is:due"))
+            nmarked = len(a.find_cards(f"note:'{m}' tag:marked"))
             click.echo(f"{m:26s} {nnotes:8d} {ncards:8d} "
                        f"{ndue:8d} {nmarked:8d}")
         click.echo("-"*62)
@@ -195,7 +198,6 @@ def review(query):
 def _review_note(anki, note, i=None, number_of_notes=None,
                  remove_actions=None):
     """Review note i of n"""
-    import os
     import readchar
 
     actions = {
@@ -305,26 +307,55 @@ def _review_note(anki, note, i=None, number_of_notes=None,
 
 @main.command('list')
 @click.argument('query', required=False, default='tag:marked')
-def list_notes(query):
+@click.option('-v', '--verbose', is_flag=True,
+              help='Be verbose, show more info')
+def list_notes(query, verbose):
     """List notes that match a given query."""
+    try:
+        width = os.get_terminal_size()[0]
+    except OSError:
+        width = 120
+
     with Anki(cfg['base']) as a:
         for note in a.find_notes(query):
-            note.print_short()
+            first_field = html_to_screen(clean_html(note.n.values()[0]))
+            first_field = first_field.replace('\n', ' ')
+            first_field = re.sub(r'\s\s\s+', ' ', first_field)
+            first_field = first_field[:width-14] + click.style('', reset=True)
+
+            first = 'Q: '
+            if note.suspended:
+                first = click.style(first, fg='red')
+            elif 'marked' in note.n.tags:
+                first = click.style(first, fg='yellow')
+
+            click.echo(f'{first}{first_field}')
+            if verbose:
+                click.echo(f'model: {note.model_name}\n')
 
 
 @main.command('list-cards')
 @click.argument('query', required=False, default='tag:marked')
-def list_cards(query):
+@click.option('-v', '--verbose', is_flag=True,
+              help='Be verbose, show more info')
+def list_cards(query, verbose):
     """List cards that match a given query."""
-    from apy.convert import html_to_screen, clean_html
+    try:
+        width = os.get_terminal_size()[0] - 3
+    except OSError:
+        width = 120
 
     with Anki(cfg['base']) as a:
         for cid in a.find_cards(query):
             c = a.col.getCard(cid)
             question = html_to_screen(clean_html(c.q())).replace('\n', ' ')
-            # answer = html_to_screen(clean_html(c.a())).replace('\n', ' ')
-            click.echo(f'lapses: {c.lapses:2d}  ease: {c.factor/10}%  Q: '
-                       + question[:80])
+            answer = html_to_screen(clean_html(c.a())).replace('\n', ' ')
+            click.echo(f'Q: {question[:width]}')
+            if verbose:
+                click.echo(f'A: {answer[:width]}')
+                click.echo(f'ease: {c.factor/10}% '
+                           f'lapses: {c.lapses} '
+                           f'model: {c.model()["name"]}\n')
 
 
 @main.command()

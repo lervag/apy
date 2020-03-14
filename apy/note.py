@@ -117,35 +117,6 @@ class Note:
 
         click.echo('\n'.join(lines))
 
-    def print_short(self):
-        """Print short version to screen"""
-        import os
-        import re
-
-        import click
-
-        from apy.convert import html_to_screen
-
-        try:
-            width = os.get_terminal_size()[0]
-        except OSError:
-            width = 120
-
-        first_field = html_to_screen(self.n.values()[0])
-        first_field = first_field.replace('\n', ' ')
-        first_field = re.sub(r'\s\s\s+', ' ', first_field)
-        first_field = first_field[:width-14] + click.style('', reset=True)
-
-        if self.suspended:
-            color = 'red'
-        elif 'marked' in self.n.tags:
-            color = 'yellow'
-        else:
-            color = 'green'
-
-        model = f'{self.model_name[:13]:14s}'
-        click.echo(click.style(model, fg=color) + first_field)
-
 
     def show_images(self):
         """Show in the fields"""
