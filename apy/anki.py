@@ -1,8 +1,21 @@
 """An Anki collection wrapper class."""
 import os
-import sys
+import re
+import tempfile
+from pathlib import Path
+from sqlite3 import OperationalError
 
-sys.path.append(os.environ.get('APY_ANKI_PATH', '/usr/share/anki'))
+import click
+import anki
+from anki.sync import Syncer, MediaSyncer, RemoteServer, RemoteMediaServer
+from aqt.profiles import ProfileManager
+
+from apy.config import cfg
+from apy.note import Note
+from apy.convert import html_to_screen, clean_html
+from apy.convert import markdown_file_to_notes
+from apy.convert import markdown_to_html, plain_to_html
+from apy.utilities import editor, choose, cd
 
 
 class Anki:
@@ -26,13 +39,6 @@ class Anki:
 
     def _init_load_collection(self, base, path):
         """Load the Anki collection"""
-        from pathlib import Path
-        from sqlite3 import OperationalError
-
-        import anki
-        from aqt.profiles import ProfileManager
-
-        import click
 
         # Save CWD (because Anki changes it)
         save_cwd = os.getcwd()
@@ -68,11 +74,9 @@ class Anki:
         # Restore CWD (because Anki changes it)
         os.chdir(save_cwd)
 
-    def _init_load_config(self):
+    @staticmethod
+    def _init_load_config():
         """Load custom configuration"""
-        import anki
-        from apy.config import cfg
-
         # Update LaTeX commands
         # * Idea based on Anki addon #1546037973 ("Edit LaTeX build process")
         if 'pngCommands' in cfg:
@@ -85,8 +89,6 @@ class Anki:
         return self
 
     def __exit__(self, exception_type, exception_value, traceback):
-        import click
-
         if self.modified and not self._debug:
             click.echo('Database was modified.')
             if self.pm is not None and self.pm.profile['syncKey']:
@@ -99,14 +101,9 @@ class Anki:
         if self.pm is None:
             return
 
-        import click
-
         if not self.pm.profile['syncKey']:
             click.echo('No sync auth registered in profile')
             return
-
-        from anki.sync import (Syncer, MediaSyncer,
-                               RemoteServer, RemoteMediaServer)
 
         # Initialize servers and sync clients
         hkey = self.pm.profile['syncKey']
@@ -168,9 +165,6 @@ class Anki:
 
     def check_media(self):
         """Check media (will rebuild missing LaTeX files)"""
-        import click
-        from apy.utilities import cd
-
         with cd(self.col.media.dir()):
             click.echo('Checking media DB ... ', nl=False)
             nohave, unused, warnings = self.col.media.check()
@@ -204,7 +198,6 @@ class Anki:
 
     def find_notes(self, query):
         """Find notes in Collection and return Note objects"""
-        from apy.note import Note
         return (Note(self, self.col.getNote(i))
                 for i in self.col.findNotes(query))
 
@@ -223,8 +216,6 @@ class Anki:
 
     def set_model(self, model_name):
         """Set current model based on model name"""
-        import click
-
         current = self.col.models.current(forDeck=False)
         if current['name'] == model_name:
             return current
@@ -240,10 +231,6 @@ class Anki:
 
     def edit_model_css(self, model_name):
         """Edit the CSS part of a given model."""
-        import tempfile
-        import click
-        from apy.utilities import editor
-
         model = self.get_model(model_name)
 
         with tempfile.NamedTemporaryFile(mode='w+', prefix='_apy_edit_',
@@ -265,16 +252,42 @@ class Anki:
             self.modified = True
 
 
+    def list_notes(self, query, verbose=False):
+        """List notes that match a query"""
+        for note in self.find_notes(query):
+            first_field = html_to_screen(clean_html(note.n.values()[0]))
+            first_field = first_field.replace('\n', ' ')
+            first_field = re.sub(r'\s\s\s+', ' ', first_field)
+            first_field = first_field[:cfg['width']-14] \
+                + click.style('', reset=True)
+
+            first = 'Q: '
+            if note.suspended:
+                first = click.style(first, fg='red')
+            elif 'marked' in note.n.tags:
+                first = click.style(first, fg='yellow')
+
+            click.echo(f'{first}{first_field}')
+            if verbose:
+                click.echo(f'model: {note.model_name}\n')
+
+    def list_cards(self, query, verbose=False):
+        """List cards that match a query"""
+        for cid in self.find_cards(query):
+            c = self.col.getCard(cid)
+            question = html_to_screen(clean_html(c.q())).replace('\n', ' ')
+            answer = html_to_screen(clean_html(c.a())).replace('\n', ' ')
+            click.echo(f'Q: {question[:cfg["width"]]}')
+            if verbose:
+                click.echo(f'A: {answer[:cfg["width"]]}')
+                click.echo(f'ease: {c.factor/10}% '
+                           f'lapses: {c.lapses} '
+                           f'model: {c.model()["name"]}\n')
+
+
     def add_notes_with_editor(self, tags='', model_name=None, deck_name=None,
                               template=None):
         """Add new notes to collection with editor"""
-        import tempfile
-
-        import click
-
-        from apy.utilities import editor, choose
-        from apy.note import Note
-
         if isinstance(template, Note):
             input_string = template.get_template()
         else:
@@ -324,14 +337,11 @@ class Anki:
 
     def add_notes_from_file(self, filename, tags=''):
         """Add new notes to collection from Markdown file"""
-        from apy.convert import markdown_file_to_notes
         return self.add_notes_from_list(markdown_file_to_notes(filename),
                                         tags)
 
     def add_notes_from_list(self, parsed_notes, tags=''):
         """Add new notes to collection from note list (from parsed file)"""
-        import click
-
         notes = []
         for note in parsed_notes:
             model_name = note['model']
@@ -360,11 +370,6 @@ class Anki:
 
     def _add_note(self, fields, tags, markdown=True, deck=None):
         """Add new note to collection"""
-        import click
-
-        from apy.convert import markdown_to_html, plain_to_html
-        from apy.note import Note
-
         note = self.col.newNote(forDeck=False)
 
         if deck is not None:

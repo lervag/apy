@@ -1,6 +1,22 @@
 """A Note wrapper class"""
 
+import os
 import functools
+import tempfile
+import subprocess
+from pathlib import Path
+from bs4 import BeautifulSoup
+
+import click
+from anki import latex
+
+from apy.convert import html_to_markdown
+from apy.convert import html_to_screen
+from apy.convert import is_generated_html
+from apy.convert import markdown_file_to_notes
+from apy.convert import markdown_to_html
+from apy.convert import plain_to_html
+from apy.utilities import cd, editor, choose
 
 
 class Note:
@@ -16,9 +32,6 @@ class Note:
 
     def __repr__(self):
         """Convert note to Markdown format"""
-        from apy.convert import is_generated_html
-        from apy.convert import html_to_screen
-
         lines = [
             f'# Note ID: {self.n.id}',
             f'model: {self.model_name}',
@@ -46,9 +59,6 @@ class Note:
 
     def get_template(self):
         """Convert note to Markdown format as a template for new notes"""
-        from apy.convert import is_generated_html
-        from apy.convert import html_to_screen
-
         lines = [f'model: {self.model_name}']
 
         if self.a.n_decks > 1:
@@ -75,11 +85,6 @@ class Note:
 
     def print(self):
         """Print to screen (similar to __repr__ but with colors)"""
-        import click
-
-        from apy.convert import is_generated_html
-        from apy.convert import html_to_screen
-
         lines = [
             click.style(f'# Note ID: {self.n.id}', fg='green'),
             click.style('model: ', fg='yellow')
@@ -120,11 +125,6 @@ class Note:
 
     def show_images(self):
         """Show in the fields"""
-        from pathlib import Path
-        import subprocess
-        from bs4 import BeautifulSoup
-        from apy.utilities import cd
-
         images = []
         for val in self.n.values():
             source = val + "\n".join(self.get_lateximg_from_field(val))
@@ -145,15 +145,6 @@ class Note:
 
     def edit(self):
         """Edit tags and fields of current note"""
-        import os
-        import tempfile
-
-        import click
-
-        from apy.utilities import editor
-        from apy.convert import markdown_file_to_notes
-        from apy.convert import markdown_to_html, plain_to_html
-
         with tempfile.NamedTemporaryFile(mode='w+',
                                          dir=os.getcwd(),
                                          prefix='edit_note_',
@@ -224,11 +215,6 @@ class Note:
 
     def toggle_markdown(self, index=None):
         """Toggle markdown on a field"""
-        from apy.utilities import choose
-        from apy.convert import is_generated_html
-        from apy.convert import html_to_markdown
-        from apy.convert import markdown_to_html
-
         if index is None:
             fields = self.fields
             field = choose(fields, 'Toggle markdown for field:')
@@ -252,9 +238,6 @@ class Note:
 
     def get_field(self, index_or_name):
         """Return field with given index or name"""
-        from apy.convert import is_generated_html
-        from apy.convert import html_to_markdown
-
         if isinstance(index_or_name, str):
             index = self.fields.index(index_or_name)
         else:
@@ -276,7 +259,6 @@ class Note:
     @functools.lru_cache
     def get_lateximg_from_field(self, html):
         """Get LaTeX image tags from field"""
-        from anki import latex
         links = []
 
         # pylint: disable=protected-access

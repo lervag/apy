@@ -1,5 +1,16 @@
 """Convert between formats/targets"""
 
+import re
+import base64
+import markdown
+import click
+from bs4 import BeautifulSoup, Tag
+from markdown.extensions.abbr import AbbrExtension
+from markdown.extensions.codehilite import CodeHiliteExtension
+from markdown.extensions.def_list import DefListExtension
+from markdown.extensions.fenced_code import FencedCodeExtension
+from markdown.extensions.footnotes import FootnoteExtension
+
 
 def markdown_file_to_notes(filename):
     """Parse notes data from Markdown file
@@ -80,8 +91,6 @@ def markdown_file_to_notes(filename):
 
 def _parse_file(filename):
     """Get data from file"""
-    import re
-
     defaults = {}
     notes = []
     note = {}
@@ -95,13 +104,13 @@ def _parse_file(filename):
             if match:
                 codeblock = False
             continue
-        else:
-            match = re.match(r'```\w*\s*$', line)
-            if match:
-                codeblock = True
-                if field:
-                    note['fields'][field] += line
-                continue
+
+        match = re.match(r'```\w*\s*$', line)
+        if match:
+            codeblock = True
+            if field:
+                note['fields'][field] += line
+            continue
 
         if not field:
             match = re.match(r'(\w+): (.*)', line)
@@ -138,7 +147,6 @@ def _parse_file(filename):
                 note['fields'][field] = note['fields'][field].strip()
 
             if title in note:
-                import click
                 click.echo(f'Error when parsing {filename}!')
                 raise click.Abort()
 
@@ -154,17 +162,6 @@ def _parse_file(filename):
 
 def markdown_to_html(plain):
     """Convert Markdown to HTML"""
-    import re
-    import base64
-    from bs4 import BeautifulSoup
-    import markdown
-    from markdown.extensions.abbr import AbbrExtension
-    from markdown.extensions.abbr import AbbrExtension
-    from markdown.extensions.codehilite import CodeHiliteExtension
-    from markdown.extensions.def_list import DefListExtension
-    from markdown.extensions.fenced_code import FencedCodeExtension
-    from markdown.extensions.footnotes import FootnoteExtension
-
     # Don't convert if plain text is really plain
     if re.match(r"[a-zA-Z0-9æøåÆØÅ ,.?+-]*$", plain):
         return plain
@@ -212,8 +209,6 @@ def markdown_to_html(plain):
 
 def plain_to_html(plain):
     """Convert plain text to html"""
-    import re
-
     # Minor clean up
     plain = plain.replace(r'&lt;', '<')
     plain = plain.replace(r'&gt;', '>')
@@ -237,23 +232,17 @@ def plain_to_html(plain):
 
 def clean_html(html):
     """Remove some extra things from html"""
-    import re
     return re.sub(r'\<style\>.*\<\/style\>', '', html, flags=re.S)
 
 def html_to_markdown(html):
     """Extract Markdown from generated HTML"""
-    import base64
-    from bs4 import BeautifulSoup
     tag = _get_first_tag(BeautifulSoup(html, 'html.parser'))
     encoded_bytes = tag['data-original-markdown'].encode()
-    markdown = base64.b64decode(encoded_bytes).decode('utf-8')
-    return markdown.replace("<br>", "\n").replace("<br />", "\n")
+    converted = base64.b64decode(encoded_bytes).decode('utf-8')
+    return converted.replace("<br>", "\n").replace("<br />", "\n")
 
 def html_to_screen(html, parseable=False):
     """Convert html for printing to screen"""
-    import re
-    import click
-
     plain = html
     generated = is_generated_html(plain)
     if generated:
@@ -300,7 +289,6 @@ def html_to_screen(html, parseable=False):
 
 def is_generated_html(html):
     """Check if text is a generated HTML"""
-    from bs4 import BeautifulSoup
     if html is None:
         return False
 
@@ -313,7 +301,6 @@ def is_generated_html(html):
 
 def _get_first_tag(tree):
     """Get first tag among children of tree"""
-    from bs4 import Tag
     for child in tree.children:
         if isinstance(child, Tag):
             return child

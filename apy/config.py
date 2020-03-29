@@ -18,3 +18,8 @@ if 'base' not in cfg:
         if var in os.environ:
             cfg['base'] = os.path.abspath(os.environ[var])
             break
+
+try:
+    cfg['width'] = os.get_terminal_size()[0] - 3
+except OSError:
+    cfg['width'] = 120
