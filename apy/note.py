@@ -8,6 +8,7 @@ from pathlib import Path
 from bs4 import BeautifulSoup
 
 import click
+import readchar
 from anki import latex
 
 from apy.convert import html_to_markdown
@@ -279,3 +280,118 @@ class Note:
         # pylint: enable=protected-access
 
         return links
+
+    def review(self, i=None, number_of_notes=None, remove_actions=None):
+        """Interactive review of the note
+
+        This method is used by the review command.
+
+        if the arguments "i" and "number_of_notes" are supplied, then they are
+        displayed to show review progress.
+
+        The "remove_actions" argument can be used to remove a default action
+        from the action menu.
+        """
+        actions = {
+            'c': 'Continue',
+            'e': 'Edit',
+            'd': 'Delete',
+            'f': 'Show images',
+            'm': 'Toggle markdown',
+            '*': 'Toggle marked',
+            'z': 'Toggle suspend',
+            'a': 'Add new',
+            's': 'Save and stop',
+            'x': 'Abort',
+        }
+
+        if remove_actions:
+            actions = {key: val for key, val in actions.items()
+                       if val not in remove_actions}
+
+        refresh = True
+        while True:
+            if refresh:
+                click.clear()
+                if i is None:
+                    click.secho('Reviewing note\n', fg='white')
+                elif number_of_notes is None:
+                    click.secho(f'Reviewing note {i+1}\n', fg='white')
+                else:
+                    click.secho(f'Reviewing note {i+1} of {number_of_notes}\n',
+                                fg='white')
+
+                column = 0
+                for x, y in actions.items():
+                    menu = click.style(x, fg='blue') + ': ' + y
+                    if column < 3:
+                        click.echo(f'{menu:28s}', nl=False)
+                    else:
+                        click.echo(menu)
+                    column = (column + 1) % 4
+
+                width = os.get_terminal_size()[0]
+                click.echo('\n' + '-'*width + '\n')
+
+                self.print()
+            else:
+                refresh = True
+
+            choice = readchar.readchar()
+            action = actions.get(choice)
+
+            if action == 'Continue':
+                return True
+
+            if action == 'Edit':
+                self.edit()
+                continue
+
+            if action == 'Delete':
+                if click.confirm('Are you sure you want to delete the note?'):
+                    self.delete()
+                return True
+
+            if action == 'Show images':
+                self.show_images()
+                refresh = False
+                continue
+
+            if action == 'Toggle markdown':
+                self.toggle_markdown()
+                continue
+
+            if action == 'Toggle marked':
+                self.toggle_marked()
+                continue
+
+            if action == 'Toggle suspend':
+                self.toggle_suspend()
+                continue
+
+            if action == 'Add new':
+                click.echo('-'*width + '\n')
+
+                notes = self.a.add_notes_with_editor(
+                    tags=self.get_tag_string(),
+                    model_name=self.model_name,
+                    template=self)
+
+                number_of_notes = len(notes)
+                click.echo(f'Added {number_of_notes} notes')
+                click.confirm('Press any key to continue.',
+                              prompt_suffix='', show_default=False)
+                continue
+
+            if action == 'Save and stop':
+                click.echo('Stopped')
+                return False
+
+            if action == 'Abort':
+                if self.a.modified:
+                    if not click.confirm(
+                            'Abort: Changes will be lost. Continue [y/n]?',
+                            show_default=False):
+                        continue
+                    self.a.modified = False
+                raise click.Abort()

@@ -1,8 +1,6 @@
 """A script to interact with the Anki database"""
 
-import os
 import click
-import readchar
 
 from apy.anki import Anki
 from apy.config import cfg, cfg_file
@@ -83,9 +81,7 @@ def add(tags, model, deck):
 
         if click.confirm('Review added notes?'):
             for i, note in enumerate(notes):
-                _review_note(a, note, i, n_notes,
-                             remove_actions=['Abort'])
-
+                note.review(i, n_notes, remove_actions=['Abort'])
 
 @main.command('add-from-file')
 @click.argument('file', type=click.Path(exists=True, dir_okay=False))
@@ -116,16 +112,13 @@ def add_from_file(file, tags):
 
         if click.confirm('Review added notes?'):
             for i, note in enumerate(notes):
-                _review_note(a, note, i, n_notes,
-                             remove_actions=['Abort'])
-
+                note.review(i, n_notes, remove_actions=['Abort'])
 
 @main.command('check-media')
 def check_media():
     """Check media"""
     with Anki(cfg['base']) as a:
         a.check_media()
-
 
 @main.command('edit-css')
 @click.option('-m', '--model-name', default='Basic',
@@ -140,7 +133,6 @@ def edit_css(model_name, sync_after):
         if a.modified and sync_after:
             a.sync()
             a.modified = False
-
 
 @main.command()
 def info():
@@ -182,128 +174,7 @@ def info():
                    f"{sum_due:8d} {sum_marked:8d}")
         click.echo("-"*62)
 
-
-@main.command()
-@click.option('-q', '--query', default='tag:marked',
-              help=('Review cards that match query [default: marked cards].'))
-def review(query):
-    """Review marked notes."""
-    with Anki(cfg['base']) as a:
-        notes = list(a.find_notes(query))
-        number_of_notes = len(notes)
-        for i, note in enumerate(notes):
-            if not _review_note(a, note, i, number_of_notes):
-                break
-
-def _review_note(anki, note, i=None, number_of_notes=None,
-                 remove_actions=None):
-    """Review note i of n"""
-    actions = {
-        'c': 'Continue',
-        'e': 'Edit',
-        'd': 'Delete',
-        'f': 'Show images',
-        'm': 'Toggle markdown',
-        '*': 'Toggle marked',
-        'z': 'Toggle suspend',
-        'a': 'Add new',
-        's': 'Save and stop',
-        'x': 'Abort',
-    }
-
-    if remove_actions:
-        actions = {key: val for key, val in actions.items()
-                   if val not in remove_actions}
-
-    refresh = True
-    while True:
-        if refresh:
-            click.clear()
-            if i is None:
-                click.secho('Reviewing note\n', fg='white')
-            elif number_of_notes is None:
-                click.secho(f'Reviewing note {i+1}\n', fg='white')
-            else:
-                click.secho(f'Reviewing note {i+1} of {number_of_notes}\n',
-                            fg='white')
-
-            column = 0
-            for x, y in actions.items():
-                menu = click.style(x, fg='blue') + ': ' + y
-                if column < 3:
-                    click.echo(f'{menu:28s}', nl=False)
-                else:
-                    click.echo(menu)
-                column = (column + 1) % 4
-
-            width = os.get_terminal_size()[0]
-            click.echo('\n' + '-'*width + '\n')
-
-            note.print()
-        else:
-            refresh = True
-
-        choice = readchar.readchar()
-        action = actions.get(choice)
-
-        if action == 'Continue':
-            return True
-
-        if action == 'Edit':
-            note.edit()
-            continue
-
-        if action == 'Delete':
-            if click.confirm('Are you sure you want to delete the note?'):
-                note.delete()
-            return True
-
-        if action == 'Show images':
-            note.show_images()
-            refresh = False
-            continue
-
-        if action == 'Toggle markdown':
-            note.toggle_markdown()
-            continue
-
-        if action == 'Toggle marked':
-            note.toggle_marked()
-            continue
-
-        if action == 'Toggle suspend':
-            note.toggle_suspend()
-            continue
-
-        if action == 'Add new':
-            click.echo('-'*width + '\n')
-
-            notes = anki.add_notes_with_editor(
-                tags=note.get_tag_string(),
-                model_name=note.model_name,
-                template=note)
-
-            number_of_notes = len(notes)
-            click.echo(f'Added {number_of_notes} notes')
-            click.confirm('Press any key to continue.',
-                          prompt_suffix='', show_default=False)
-            continue
-
-        if action == 'Save and stop':
-            click.echo('Stopped')
-            return False
-
-        if action == 'Abort':
-            if anki.modified:
-                if not click.confirm(
-                        'Abort: Changes will be lost. Continue [y/n]?',
-                        show_default=False):
-                    continue
-                anki.modified = False
-            raise click.Abort()
-
-
-@main.command('list')
+@main.command('list-notes')
 @click.argument('query', required=False, default='tag:marked')
 @click.option('-v', '--verbose', is_flag=True,
               help='Be verbose, show more info')
@@ -311,7 +182,6 @@ def list_notes(query, verbose):
     """List notes that match a given query."""
     with Anki(cfg['base']) as a:
         a.list_notes(query, verbose)
-
 
 @main.command('list-cards')
 @click.argument('query', required=False, default='tag:marked')
@@ -322,6 +192,23 @@ def list_cards(query, verbose):
     with Anki(cfg['base']) as a:
         a.list_cards(query, verbose)
 
+@main.command()
+@click.option('-q', '--query', default='tag:marked',
+              help=('Review cards that match query [default: marked cards].'))
+def review(query):
+    """Review marked notes."""
+    with Anki(cfg['base']) as a:
+        notes = list(a.find_notes(query))
+        number_of_notes = len(notes)
+        for i, note in enumerate(notes):
+            if not note.review(i, number_of_notes):
+                break
+
+@main.command()
+def sync():
+    """Synchronize collection with AnkiWeb."""
+    with Anki(cfg['base']) as a:
+        a.sync()
 
 @main.command()
 @click.argument('query')
@@ -358,13 +245,6 @@ def tag(query, add_tags, remove_tags):
 
         if remove_tags is not None:
             a.change_tags(query, remove_tags, add=False)
-
-
-@main.command()
-def sync():
-    """Synchronize collection with AnkiWeb."""
-    with Anki(cfg['base']) as a:
-        a.sync()
 
 
 if __name__ == '__main__':
