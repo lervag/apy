@@ -229,6 +229,12 @@ class Anki:
         return model
 
 
+    def change_tags(self, query, tags, add=True):
+        """Add/Remove tags from notes that match query"""
+        self.col.tags.bulkAdd(self.col.findNotes(query), tags, add)
+        self.modified = True
+
+
     def edit_model_css(self, model_name):
         """Edit the CSS part of a given model."""
         model = self.get_model(model_name)
