@@ -18,10 +18,11 @@ _apy() {
     'check-media:Check media' \
     'edit-css:Edit CSS template for specified model' \
     'info:Print some basic statistics' \
-    'list:Print notes that match the given query' \
-    'list-cards:simple tool to list cards that match query' \
+    'list-notes:Print notes that match the given query' \
+    'list-cards:Print cards that match the given query' \
     'review:Review marked notes (or notes that match' \
     'sync:Synchronize collection with AnkiWeb' \
+    'tag:Add or remove tags from notes that match query' \
     )
 
   _arguments $opts '*:: :->subcmds' && return 0
@@ -34,19 +35,20 @@ _apy() {
   case "$words[1]" in
     add)
       opts=( \
-        '(-t --tags)'{-t,--text}'[Specify tags]' \
-        '(-m --model)'{-m,--model}'[Specify model]' \
+        '(-t --tags)'{-t,--text}'[Specify tags]:tags:' \
+        '(-m --model)'{-m,--model}'[Specify model]:model:' \
+        '(-d --deck)'{-d,--deck}'[Specify deck]:deck:' \
         $opts_help \
         );;
     add-from-file)
       opts=( \
         '::Markdown input file:_files -g "*.md"' \
-        '(-t --tags)'{-t,--text}'[Specify tags]' \
+        '(-t --tags)'{-t,--text}'[Specify tags]:tags:' \
         $opts_help \
         );;
     edit-css)
       opts=( \
-        '(-m --model)'{-m,--model}'[Specify model]' \
+        '(-m --model)'{-m,--model}'[Specify model]:model:' \
         '(-s --sync-after)'{-s,--sync-after}'[Synchronize after edit]' \
         $opts_help \
         );;
@@ -55,12 +57,20 @@ _apy() {
     list*)
       opts=( \
         '::Query' \
+        '(-v --verbose)'{-v,--verbose}'[Be verbose]' \
         $opts_help \
         );;
     review)
       opts=( \
-        '(-q --query)'{-q,--query}'[Query string]' \
+        '(-q --query)'{-q,--query}'[Query string]:query:' \
         $opts_help \
+        );;
+    tag)
+      opts=( \
+        '(-a --add-tags)'{-a,--add-tags}'[Add specified tags]:tags:' \
+        '(-r --remove-tags)'{-r,--remove-tags}'[Remove specified tags]:tags:' \
+        $opts_help \
+        '::Query' \
         );;
     *)
       opts=( $opts_help );;
