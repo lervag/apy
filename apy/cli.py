@@ -324,6 +324,43 @@ def list_cards(query, verbose):
 
 
 @main.command()
+@click.argument('query')
+@click.option('-a', '--add-tags',
+              help='Add specified tags to matched notes.')
+@click.option('-r', '--remove-tags',
+              help='Add specified tags to matched notes.')
+def tag(query, add_tags, remove_tags):
+    """Add or remove tags from notes that match the query."""
+    if add_tags is None and remove_tags is None:
+        click.echo(f'Please specify either -a and/or -r to add/remove tags!')
+        return
+
+    with Anki(cfg['base']) as a:
+        n_notes = len(list(a.find_notes(query)))
+        if n_notes == 0:
+            click.echo(f'No matching notes!')
+            raise click.Abort()
+
+        click.echo(f'The operation will be applied to {n_notes} matched notes:')
+        a.list_notes(query)
+        click.echo('')
+
+        if add_tags is not None:
+            click.echo(f'Add tags:    {click.style(add_tags, fg="green")}')
+        if remove_tags is not None:
+            click.echo(f'Remove tags: {click.style(remove_tags, fg="red")}')
+
+        if not click.confirm(click.style('Continue?', fg='blue')):
+            raise click.Abort()
+
+        if add_tags is not None:
+            a.change_tags(query, add_tags)
+
+        if remove_tags is not None:
+            a.change_tags(query, remove_tags, add=False)
+
+
+@main.command()
 def sync():
     """Synchronize collection with AnkiWeb."""
     with Anki(cfg['base']) as a:
