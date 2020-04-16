@@ -44,6 +44,10 @@ class Anki:
         save_cwd = os.getcwd()
 
         if path is None:
+            if base is None:
+                click.echo('Base path is not properly set!')
+                raise click.Abort()
+
             basepath = Path(base)
             if not (basepath / 'prefs21.db').exists():
                 click.echo('Invalid base path!')
