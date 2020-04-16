@@ -1,4 +1,5 @@
 """A script to interact with the Anki database"""
+import os
 
 import click
 
@@ -36,7 +37,7 @@ def main(ctx, base):
     Note: Use `apy subcmd --help` to get detailed help for a given subcommand.
     """
     if base:
-        cfg['base'] = base
+        cfg['base'] = os.path.abspath(os.path.expanduser(base))
 
     if ctx.invoked_subcommand is None:
         ctx.invoke(info)
