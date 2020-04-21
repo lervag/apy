@@ -182,12 +182,12 @@ def edit_css(model_name, sync_after):
             a.modified = False
 
 @model.command()
-@click.argument('name1')
-@click.argument('name2')
-def rename(name1, name2):
-    """Rename model from name1 to name2"""
+@click.argument('old-name')
+@click.argument('new-name')
+def rename(old_name, new_name):
+    """Rename model from old_name to new_name."""
     with Anki(cfg['base']) as a:
-        a.rename_model(name1, name2)
+        a.rename_model(old_name, new_name)
 
 
 @main.command('list-notes')
