@@ -232,6 +232,26 @@ class Anki:
         self.col.models.setCurrent(model)
         return model
 
+    def rename_model(self, old_model_name, new_model_name):
+        """Rename a model"""
+        if old_model_name not in self.model_names:
+            click.echo('Can''t rename model!')
+            click.echo(f'No such model: {old_model_name}')
+            raise click.Abort()
+
+        # Change the name
+        model = self.get_model(old_model_name)
+        model['name'] = new_model_name
+
+        # Update local storage
+        self.model_name_to_id = {m['name']: m['id']
+                                 for m in self.col.models.all()}
+        self.model_names = self.model_name_to_id.keys()
+
+        # Save changes
+        self.col.models.save(model)
+        self.modified = True
+
 
     def change_tags(self, query, tags, add=True):
         """Add/Remove tags from notes that match query"""

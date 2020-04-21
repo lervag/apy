@@ -248,6 +248,20 @@ def tag(query, add_tags, remove_tags):
             a.change_tags(query, remove_tags, add=False)
 
 
+@main.group(context_settings=CONTEXT_SETTINGS, invoke_without_command=True)
+@click.pass_context
+def model(ctx):
+    """Interact with Anki models."""
+
+@model.command()
+@click.argument('name1')
+@click.argument('name2')
+def rename(name1, name2):
+    """Rename model from name1 to name2"""
+    with Anki(cfg['base']) as a:
+        a.rename_model(name1, name2)
+
+
 if __name__ == '__main__':
     # pylint: disable=no-value-for-parameter
     main()
