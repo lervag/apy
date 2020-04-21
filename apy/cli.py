@@ -121,20 +121,6 @@ def check_media():
     with Anki(cfg['base']) as a:
         a.check_media()
 
-@main.command('edit-css')
-@click.option('-m', '--model-name', default='Basic',
-              help='Specify for which model to edit CSS template.')
-@click.option('-s', '--sync-after', is_flag=True,
-              help='Perform sync after any change.')
-def edit_css(model_name, sync_after):
-    """Edit the CSS template for the specified model."""
-    with Anki(cfg['base']) as a:
-        a.edit_model_css(model_name)
-
-        if a.modified and sync_after:
-            a.sync()
-            a.modified = False
-
 @main.command()
 def info():
     """Print some basic statistics."""
@@ -174,6 +160,35 @@ def info():
         click.echo(f"{'Sum':26s} {sum_notes:8d} {sum_cards:8d} "
                    f"{sum_due:8d} {sum_marked:8d}")
         click.echo("-"*62)
+
+
+@main.group(context_settings=CONTEXT_SETTINGS, invoke_without_command=True)
+@click.pass_context
+def model(ctx):
+    """Interact with Anki models."""
+
+@model.command('edit-css')
+@click.option('-m', '--model-name', default='Basic',
+              help='Specify for which model to edit CSS template.')
+@click.option('-s', '--sync-after', is_flag=True,
+              help='Perform sync after any change.')
+def edit_css(model_name, sync_after):
+    """Edit the CSS template for the specified model."""
+    with Anki(cfg['base']) as a:
+        a.edit_model_css(model_name)
+
+        if a.modified and sync_after:
+            a.sync()
+            a.modified = False
+
+@model.command()
+@click.argument('name1')
+@click.argument('name2')
+def rename(name1, name2):
+    """Rename model from name1 to name2"""
+    with Anki(cfg['base']) as a:
+        a.rename_model(name1, name2)
+
 
 @main.command('list-notes')
 @click.argument('query', required=False, default='tag:marked')
@@ -246,20 +261,6 @@ def tag(query, add_tags, remove_tags):
 
         if remove_tags is not None:
             a.change_tags(query, remove_tags, add=False)
-
-
-@main.group(context_settings=CONTEXT_SETTINGS, invoke_without_command=True)
-@click.pass_context
-def model(ctx):
-    """Interact with Anki models."""
-
-@model.command()
-@click.argument('name1')
-@click.argument('name2')
-def rename(name1, name2):
-    """Rename model from name1 to name2"""
-    with Anki(cfg['base']) as a:
-        a.rename_model(name1, name2)
 
 
 if __name__ == '__main__':
