@@ -98,6 +98,8 @@ class Anki:
             if self.pm is not None and self.pm.profile['syncKey']:
                 click.secho('Remember to sync!', fg='blue')
             self.col.close()
+        elif self.col.db:
+            self.col.db.close()
 
 
     def sync(self):
