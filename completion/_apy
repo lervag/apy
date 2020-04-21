@@ -1,5 +1,37 @@
 #compdef apy
 
+__model() {
+  _arguments $opts_help '*:: :->subcmds' && return 0
+
+  local -a subcmds_model
+  subcmds_model=( \
+    'edit-css:Edit CSS template for specified model' \
+    'rename:Rename model' \
+    )
+
+  if (( CURRENT == 1 )); then
+    _describe -t commands 'apy commands / project' subcmds_model
+    return
+  fi
+
+  case "$words[1]" in
+    edit-css)
+      opts=( \
+        '(-m --model)'{-m,--model}'[Specify model]:model:' \
+        '(-s --sync-after)'{-s,--sync-after}'[Synchronize after edit]' \
+        $opts_help \
+        );;
+    rename)
+      opts=( \
+        '::old-name' \
+        '::new-name' \
+        $opts_help \
+        );;
+  esac
+
+  _arguments $opts
+}
+
 _apy() {
   zstyle ":completion:*:*:apy:*" sort false
 
@@ -16,8 +48,8 @@ _apy() {
     'add:Add notes interactively from terminal' \
     'add-from-file:Add notes from Markdown file For input file' \
     'check-media:Check media' \
-    'edit-css:Edit CSS template for specified model' \
     'info:Print some basic statistics' \
+    'model:Interact with the models' \
     'list-notes:Print notes that match the given query' \
     'list-cards:Print cards that match the given query' \
     'review:Review marked notes (or notes that match' \
@@ -46,14 +78,9 @@ _apy() {
         '(-t --tags)'{-t,--text}'[Specify tags]:tags:' \
         $opts_help \
         );;
-    edit-css)
-      opts=( \
-        '(-m --model)'{-m,--model}'[Specify model]:model:' \
-        '(-s --sync-after)'{-s,--sync-after}'[Synchronize after edit]' \
-        $opts_help \
-        );;
     info)
       opts=( $opts_help );;
+    model) __model; return;;
     list*)
       opts=( \
         '::Query' \
