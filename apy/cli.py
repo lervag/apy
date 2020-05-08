@@ -144,22 +144,24 @@ def info():
         sum_cards = a.col.cardCount()
         sum_due = len(a.col.findNotes('is:due'))
         sum_marked = len(a.col.findNotes('tag:marked'))
+        sum_flagged = len(a.col.findNotes('-flag:0'))
 
         click.echo(f"\n{'Model':26s} {'notes':>8s} {'cards':>8s} "
-                   f"{'due':>8s} {'marked':>8s}")
-        click.echo("-"*62)
+                   f"{'due':>8s} {'marked':>8s} {'flagged':>8s}")
+        click.echo("-"*71)
         models = sorted(a.model_names)
         for m in models:
             nnotes = len(a.col.findNotes(f"note:'{m}'"))
             ncards = len(a.find_cards(f"note:'{m}'"))
             ndue = len(a.find_cards(f"note:'{m}' is:due"))
             nmarked = len(a.find_cards(f"note:'{m}' tag:marked"))
+            nflagged = len(a.find_cards(f"note:'{m}' -flag:0"))
             click.echo(f"{m:26s} {nnotes:8d} {ncards:8d} "
-                       f"{ndue:8d} {nmarked:8d}")
-        click.echo("-"*62)
+                       f"{ndue:8d} {nmarked:8d} {nflagged:8d}")
+        click.echo("-"*71)
         click.echo(f"{'Sum':26s} {sum_notes:8d} {sum_cards:8d} "
-                   f"{sum_due:8d} {sum_marked:8d}")
-        click.echo("-"*62)
+                   f"{sum_due:8d} {sum_marked:8d} {sum_flagged:8d}")
+        click.echo("-"*71)
 
 
 @main.group(context_settings=CONTEXT_SETTINGS, invoke_without_command=True)
@@ -191,7 +193,7 @@ def rename(old_name, new_name):
 
 
 @main.command('list-notes')
-@click.argument('query', required=False, default='tag:marked')
+@click.argument('query', required=False, default='tag:marked OR -flag:0')
 @click.option('-v', '--verbose', is_flag=True,
               help='Be verbose, show more info')
 def list_notes(query, verbose):
@@ -200,7 +202,7 @@ def list_notes(query, verbose):
         a.list_notes(query, verbose)
 
 @main.command('list-cards')
-@click.argument('query', required=False, default='tag:marked')
+@click.argument('query', required=False, default='tag:marked OR -flag:0')
 @click.option('-v', '--verbose', is_flag=True,
               help='Be verbose, show more info')
 def list_cards(query, verbose):
@@ -209,7 +211,7 @@ def list_cards(query, verbose):
         a.list_cards(query, verbose)
 
 @main.command()
-@click.option('-q', '--query', default='tag:marked',
+@click.option('-q', '--query', default='tag:marked OR -flag:0',
               help=('Review cards that match query [default: marked cards].'))
 def review(query):
     """Review marked notes."""
