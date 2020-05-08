@@ -107,13 +107,13 @@ class Anki:
         if self.pm is None:
             return
 
-        if not self.pm.profile['syncKey']:
+        hkey = self.pm.sync_key()
+        hostNum = self.pm.sync_shard()
+        if not hkey:
             click.echo('No sync auth registered in profile')
             return
 
         # Initialize servers and sync clients
-        hkey = self.pm.profile['syncKey']
-        hostNum = self.pm.profile.get('hostNum')
         server = RemoteServer(hkey, hostNum=hostNum)
         main_client = Syncer(self.col, server)
 
@@ -146,28 +146,16 @@ class Anki:
             return
 
         # Perform media sync
-        # from anki.sync import MediaSyncer, RemoteMediaServer
-        # media_client = MediaSyncer(self.col,
-        #                            RemoteMediaServer(self.col, hkey,
-        #                                              server.client,
-        #                                              hostNum=hostNum))
-        # try:
-        #     click.echo('Syncing media ... ', nl=False)
-        #     save_cwd = os.getcwd()
-        #     os.chdir(self.col.media.dir())
-        #     ret = media_client.sync()
-        #     os.chdir(save_cwd)
-        # except Exception as e:
-        #     if "sync cancelled" in str(e):
-        #         return
-        #     raise
-
-        if ret == "noChanges":
-            click.echo('done (no changes)!')
-        elif ret in ("sanityCheckFailed", "corruptMediaDB"):
-            click.echo('failed!')
-        else:
-            click.echo('done!')
+        try:
+            with cd(self.col.media.dir()):
+                click.echo('Syncing media ... ', nl=False)
+                self.col.backend.sync_media(
+                    hkey, f"https://sync{hostNum}.ankiweb.net/msync/")
+                click.echo('done!')
+        except Exception as e:
+            if "sync cancelled" in str(e):
+                return
+            raise
 
 
     def check_media(self):
