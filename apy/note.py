@@ -106,20 +106,24 @@ class Note:
 
         lines += ['']
 
-        for key, val in self.n.items():
-            if is_generated_html(val):
+        latex_imgs = []
+        for key, html in self.n.items():
+            # Render LaTeX if necessary
+            latex.render_latex(html, self.n.model(), self.a.col)
+            latex_imgs += self.get_lateximg_from_field(html)
+
+            if is_generated_html(html):
                 key += ' (md)'
 
             lines.append(click.style('# ' + key, fg='blue'))
-            lines.append(html_to_screen(val))
+            lines.append(html_to_screen(html))
             lines.append('')
 
-            latex_tags = self.get_lateximg_from_field(val)
-            if latex_tags:
-                lines.append('LaTeX sources:')
-                for line in latex_tags:
-                    lines.append('- ' + line)
-                lines.append('')
+        if latex_imgs:
+            lines.append(click.style('LaTeX sources', fg='blue'))
+            for line in latex_imgs:
+                lines.append('- ' + str(line))
+            lines.append('')
 
         click.echo('\n'.join(lines))
 
@@ -127,10 +131,8 @@ class Note:
     def show_images(self):
         """Show in the fields"""
         images = []
-        for val in self.n.values():
-            source = val + "\n".join(self.get_lateximg_from_field(val))
-            images += [Path(x['src']) for x in
-                       BeautifulSoup(source, 'html.parser').find_all('img')]
+        for html in self.n.values():
+            images += self.get_lateximg_from_field(html)
 
         with cd(self.a.col.media.dir()):
             for file in images:
@@ -257,32 +259,11 @@ class Note:
         return ', '.join(self.n.tags)
 
 
-    @functools.lru_cache
     def get_lateximg_from_field(self, html):
-        """Get LaTeX image tags from field"""
-        return []
-        # TODO: Needs fixing!
-        links = []
-
-        # breakpoint()
-        # pylint: disable=protected-access
-        # for match in latex.regexps['standard'].finditer(html):
-        #     links.append(latex._imgLink(self.a.col,
-        #                                 match.group(1),
-        #                                 self.n.model()))
-        # for match in latex.regexps['expression'].finditer(html):
-        #     links.append(latex._imgLink(self.a.col,
-        #                                 "$" + match.group(1) + "$",
-        #                                 self.n.model()))
-        # for match in latex.regexps['math'].finditer(html):
-        #     links.append(latex._imgLink(self.a.col,
-        #                                 "\\begin{displaymath}"
-        #                                 + match.group(1)
-        #                                 + "\\end{displaymath}",
-        #                                 self.n.model()))
-        # pylint: enable=protected-access
-
-        return links
+        """Gather the generated LaTeX image filenames"""
+        return [Path(ltx.filename) for ltx in
+                self.a.col.backend.extract_latex(
+                    html, self.n.model().get("latexsvg", False), False).latex]
 
     def review(self, i=None, number_of_notes=None, remove_actions=None):
         """Interactive review of the note
