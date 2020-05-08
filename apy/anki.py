@@ -7,7 +7,7 @@ from sqlite3 import OperationalError
 
 import click
 import anki
-from anki.sync import Syncer, MediaSyncer, RemoteServer, RemoteMediaServer
+from anki.sync import Syncer, RemoteServer
 from aqt.profiles import ProfileManager
 
 from apy.config import cfg
@@ -116,10 +116,6 @@ class Anki:
         hostNum = self.pm.profile.get('hostNum')
         server = RemoteServer(hkey, hostNum=hostNum)
         main_client = Syncer(self.col, server)
-        media_client = MediaSyncer(self.col,
-                                   RemoteMediaServer(self.col, hkey,
-                                                     server.client,
-                                                     hostNum=hostNum))
 
         # Perform main sync
         try:
@@ -150,16 +146,21 @@ class Anki:
             return
 
         # Perform media sync
-        try:
-            click.echo('Syncing media ... ', nl=False)
-            save_cwd = os.getcwd()
-            os.chdir(self.col.media.dir())
-            ret = media_client.sync()
-            os.chdir(save_cwd)
-        except Exception as e:
-            if "sync cancelled" in str(e):
-                return
-            raise
+        # from anki.sync import MediaSyncer, RemoteMediaServer
+        # media_client = MediaSyncer(self.col,
+        #                            RemoteMediaServer(self.col, hkey,
+        #                                              server.client,
+        #                                              hostNum=hostNum))
+        # try:
+        #     click.echo('Syncing media ... ', nl=False)
+        #     save_cwd = os.getcwd()
+        #     os.chdir(self.col.media.dir())
+        #     ret = media_client.sync()
+        #     os.chdir(save_cwd)
+        # except Exception as e:
+        #     if "sync cancelled" in str(e):
+        #         return
+        #     raise
 
         if ret == "noChanges":
             click.echo('done (no changes)!')
