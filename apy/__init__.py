@@ -1,6 +1,10 @@
 """Package for interfacing and manipulating Anki decks"""
+try:
+    import ankixx
+except ImportError:
+    import os
+    import sys
 
-import os
-import sys
-
-sys.path.append(os.environ.get('APY_ANKI_PATH', '/usr/share/anki'))
+    _path = os.environ.get('APY_ANKI_PATH', '/usr/share/anki')
+    if os.path.isdir(_path):
+        sys.path.append(_path)
