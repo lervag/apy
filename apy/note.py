@@ -260,23 +260,26 @@ class Note:
     @functools.lru_cache
     def get_lateximg_from_field(self, html):
         """Get LaTeX image tags from field"""
+        return []
+        # TODO: Needs fixing!
         links = []
 
+        # breakpoint()
         # pylint: disable=protected-access
-        for match in latex.regexps['standard'].finditer(html):
-            links.append(latex._imgLink(self.a.col,
-                                        match.group(1),
-                                        self.n.model()))
-        for match in latex.regexps['expression'].finditer(html):
-            links.append(latex._imgLink(self.a.col,
-                                        "$" + match.group(1) + "$",
-                                        self.n.model()))
-        for match in latex.regexps['math'].finditer(html):
-            links.append(latex._imgLink(self.a.col,
-                                        "\\begin{displaymath}"
-                                        + match.group(1)
-                                        + "\\end{displaymath}",
-                                        self.n.model()))
+        # for match in latex.regexps['standard'].finditer(html):
+        #     links.append(latex._imgLink(self.a.col,
+        #                                 match.group(1),
+        #                                 self.n.model()))
+        # for match in latex.regexps['expression'].finditer(html):
+        #     links.append(latex._imgLink(self.a.col,
+        #                                 "$" + match.group(1) + "$",
+        #                                 self.n.model()))
+        # for match in latex.regexps['math'].finditer(html):
+        #     links.append(latex._imgLink(self.a.col,
+        #                                 "\\begin{displaymath}"
+        #                                 + match.group(1)
+        #                                 + "\\end{displaymath}",
+        #                                 self.n.model()))
         # pylint: enable=protected-access
 
         return links
