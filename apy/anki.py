@@ -162,27 +162,33 @@ class Anki:
         """Check media (will rebuild missing LaTeX files)"""
         with cd(self.col.media.dir()):
             click.echo('Checking media DB ... ', nl=False)
-            nohave, unused, warnings = self.col.media.check()
+            output = self.col.media.check()
             click.echo('done!')
 
-            if not warnings + unused + nohave:
+            if len(output.missing) + len(output.unused) == 0:
                 click.secho('No unused or missing files found.', fg='white')
                 return
 
-            for warning in warnings:
-                click.secho(warning, fg='red')
-
-            for file in nohave:
+            for file in output.missing:
                 click.secho(f'Missing: {file}', fg='red')
 
-            if unused:
-                for file in unused:
-                    click.secho(f'Unused: {file}', fg='red')
+            if len(output.missing) > 0 \
+                    and click.confirm('Render missing LaTeX?'):
+                out = self.col.media.render_all_latex()
+                if out is not None:
+                    nid, _ = out
+                    click.secho(f'Error prosessing node: {nid}', fg='red')
 
-                if not click.confirm('Delete unused media?'):
-                    return
+                    if click.confirm('Review note?'):
+                        note = Note(self, self.col.getNote(nid))
+                        note.review()
 
-                for file in unused:
+            for file in output.unused:
+                click.secho(f'Unused: {file}', fg='red')
+
+            if len(output.unused) > 0 \
+                    and click.confirm('Delete unused media?'):
+                for file in output.unused:
                     if os.path.isfile(file):
                         os.remove(file)
 
