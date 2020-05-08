@@ -101,6 +101,9 @@ class Note:
         if not any([is_generated_html(x) for x in self.n.values()]):
             lines += [f"{click.style('markdown:', fg='yellow')} false"]
 
+        if any([c.flags > 0 for c in self.n.cards()]):
+            lines += [f"{click.style('flagged', fg='red')}"]
+
         if self.suspended:
             lines[0] += f" ({click.style('suspended', fg='red')})"
 
