@@ -8,9 +8,7 @@ Anki.
 
 * This is currently **WORK IN PROGRESS**, and there may still be some major
   changes.
-* The current goal is to be compatible with Anki 2.1.23. Version 0.1 should be
-  relatively compatible with Anki 2.1.13. If you are on this version of Anki,
-  then please don't update `apy` beyond 0.1.
+* The current version shoulb be compatible with Anki 2.1.23.
 * This script and its author(s) are not affiliated/associated with the main
   Anki project in any way.
 * Use this software entirely at your own risk. Frequent backups are encouraged.
