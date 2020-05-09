@@ -16,11 +16,10 @@ Anki.
 * Use this software entirely at your own risk. Frequent backups are encouraged.
 
 | Version | Version note                       |
-| ------- | ---------------------------------- |
+|:-------:| ---------------------------------- |
 | `HEAD`  | Development branch                 |
 | 0.2     | Compatible with Anki 2.1.23        |
 | 0.1     | Compatible with Anki 2.1.13        |
-| ------- | ---------------------------------- |
 
 ## Table of Contents
 
