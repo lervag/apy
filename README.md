@@ -15,6 +15,13 @@ Anki.
   Anki project in any way.
 * Use this software entirely at your own risk. Frequent backups are encouraged.
 
+| Version | Version note                       |
+| ------- | ---------------------------------- |
+| `HEAD`  | Development branch                 |
+| 0.2     | Compatible with Anki 2.1.23        |
+| 0.1     | Compatible with Anki 2.1.13        |
+| ------- | ---------------------------------- |
+
 ## Table of Contents
 
 * [Install instructions](#install-instructions)
@@ -185,12 +192,4 @@ _The Dealbreaker_: It is quite close to being something I wanted, except that
 it needs to run as a plugin to Anki desktop to generate notes to a local
 collection. It does not seem to allow editing/adding to a local collection
 outside of Anki desktop.
-
-## Versions
-
-| Version | Version note                       |
-| ------- | ---------------------------------- |
-| `HEAD`  | Working on support for Anki 2.1.23 |
-| 0.1     | Works well with Anki 2.1.13        |
-| ------- | ---------------------------------- |
 
