@@ -20,9 +20,8 @@ from apy.utilities import editor, choose, cd
 class Anki:
     """My Anki collection wrapper class."""
 
-    def __init__(self, base=None, path=None, debug=False):
+    def __init__(self, base=None, path=None):
         self.modified = False
-        self._debug = debug
 
         self._init_load_collection(base, path)
         self._init_load_config()
@@ -92,7 +91,7 @@ class Anki:
         return self
 
     def __exit__(self, exception_type, exception_value, traceback):
-        if self.modified and not self._debug:
+        if self.modified:
             click.echo('Database was modified.')
             if self.pm is not None and self.pm.profile['syncKey']:
                 click.secho('Remember to sync!', fg='blue')

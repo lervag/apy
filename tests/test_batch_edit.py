@@ -1,19 +1,14 @@
 """Test batch editing"""
-import os
-
 import pytest
 
-from apy.anki import Anki
-
+from common import testDir, AnkiSimple
 
 pytestmark = pytest.mark.filterwarnings("ignore")
-testDir = os.path.dirname(__file__)
-testCol = testDir + '/data/test_base/Test/collection.anki2'
 
 
 def test_change_tags():
     """Test empty collection"""
-    with Anki(path=testCol, debug=True) as a:
+    with AnkiSimple() as a:
         a.add_notes_from_file(testDir + '/' + 'data/deck.md')
 
         query = 'tag:test'

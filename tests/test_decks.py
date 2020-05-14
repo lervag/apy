@@ -1,19 +1,14 @@
 """Test some basic features"""
-import os
-
 import pytest
 
-from apy.anki import Anki
-
+from common import testDir, AnkiSimple
 
 pytestmark = pytest.mark.filterwarnings("ignore")
-testDir = os.path.dirname(__file__)
-testCol = testDir + '/data/test_base/Test/collection.anki2'
 
 
 def test_decks():
     """Test empty collection"""
-    with Anki(path=testCol, debug=True) as a:
+    with AnkiSimple() as a:
         assert a.col.decks.count() == 2
         assert a.col.decks.current()['name'] == 'NewDeck'
         assert list(a.deck_names) == ['Default', 'NewDeck']
