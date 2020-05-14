@@ -192,16 +192,7 @@ def rename(old_name, new_name):
         a.rename_model(old_name, new_name)
 
 
-@main.command('list-notes')
-@click.argument('query', required=False, default='tag:marked OR -flag:0')
-@click.option('-v', '--verbose', is_flag=True,
-              help='Be verbose, show more info')
-def list_notes(query, verbose):
-    """List notes that match a given query."""
-    with Anki(cfg['base']) as a:
-        a.list_notes(query, verbose)
-
-@main.command('list-cards')
+@main.command('list')
 @click.argument('query', required=False, default='tag:marked OR -flag:0')
 @click.option('-v', '--verbose', is_flag=True,
               help='Be verbose, show more info')

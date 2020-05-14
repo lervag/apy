@@ -50,8 +50,7 @@ _apy() {
     'check-media:Check media' \
     'info:Print some basic statistics' \
     'model:Interact with the models' \
-    'list-notes:Print notes that match the given query' \
-    'list-cards:Print cards that match the given query' \
+    'list:Print cards that match the given query' \
     'review:Review marked notes (or notes that match' \
     'sync:Synchronize collection with AnkiWeb' \
     'tag:Add or remove tags from notes that match query' \
@@ -81,7 +80,7 @@ _apy() {
     info)
       opts=( $opts_help );;
     model) __model; return;;
-    list*)
+    list)
       opts=( \
         '::Query' \
         '(-v --verbose)'{-v,--verbose}'[Be verbose]' \
