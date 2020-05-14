@@ -3,7 +3,6 @@ import os
 import re
 import tempfile
 from pathlib import Path
-from sqlite3 import OperationalError
 
 import click
 import anki
@@ -71,7 +70,7 @@ class Anki:
             click.echo('Path to database is not valid!')
             click.echo(f'path = {path}')
             raise click.Abort()
-        except OperationalError:
+        except anki.rsbackend.DBError:
             click.echo('Database is NA/locked!')
             raise click.Abort()
 
@@ -98,8 +97,6 @@ class Anki:
             if self.pm is not None and self.pm.profile['syncKey']:
                 click.secho('Remember to sync!', fg='blue')
             self.col.close()
-        elif self.col.db:
-            self.col.db.close()
 
 
     def sync(self):

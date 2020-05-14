@@ -151,11 +151,11 @@ def info():
         click.echo("-"*71)
         models = sorted(a.model_names)
         for m in models:
-            nnotes = len(a.col.findNotes(f"note:'{m}'"))
-            ncards = len(a.find_cards(f"note:'{m}'"))
-            ndue = len(a.find_cards(f"note:'{m}' is:due"))
-            nmarked = len(a.find_cards(f"note:'{m}' tag:marked"))
-            nflagged = len(a.find_cards(f"note:'{m}' -flag:0"))
+            nnotes = len(a.col.findNotes(f'"note:{m}"'))
+            ncards = len(a.find_cards(f'"note:{m}"'))
+            ndue = len(a.find_cards(f'"note:{m}" is:due'))
+            nmarked = len(a.find_cards(f'"note:{m}" tag:marked'))
+            nflagged = len(a.find_cards(f'"note:{m}" -flag:0'))
             click.echo(f"{m:26s} {nnotes:8d} {ncards:8d} "
                        f"{ndue:8d} {nmarked:8d} {nflagged:8d}")
         click.echo("-"*71)
