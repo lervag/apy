@@ -8,7 +8,7 @@ Anki.
 
 * This is currently **WORK IN PROGRESS**, and there may still be some major
   changes.
-* The current version shoulb be compatible with Anki 2.1.23.
+* The current version should be compatible with Anki 2.1.26.
 * This script and its author(s) are not affiliated/associated with the main
   Anki project in any way.
 * Use this software entirely at your own risk. Frequent backups are encouraged.
@@ -16,6 +16,7 @@ Anki.
 | Version | Version note                       |
 |:-------:| ---------------------------------- |
 | `HEAD`  | Development branch                 |
+| 0.3     | Compatible with Anki 2.1.26        |
 | 0.2     | Compatible with Anki 2.1.23        |
 | 0.1     | Compatible with Anki 2.1.13        |
 
