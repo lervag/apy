@@ -145,11 +145,17 @@ class Anki:
 
         # Perform media sync
         try:
+            debug_output = 'media=debug' in os.environ.get('RUST_LOG', '')
+
             with cd(self.col.media.dir()):
-                click.echo('Syncing media ... ', nl=False)
+                if debug_output:
+                    click.echo('Syncing media:')
+                else:
+                    click.echo('Syncing media ... ', nl=False)
                 self.col.backend.sync_media(
                     hkey, f"https://sync{hostNum}.ankiweb.net/msync/")
-                click.echo('done!')
+                if not debug_output:
+                    click.echo('done!')
         except Exception as e:
             if "sync cancelled" in str(e):
                 return
