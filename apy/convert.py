@@ -166,8 +166,11 @@ def markdown_to_html(plain):
     if re.match(r"[a-zA-Z0-9æøåÆØÅ ,.?+-]*$", plain):
         return plain
 
-    # For convenience: Assume \\ is LaTeX line ending and escape it
+    # For convenience: Escape some common LaTeX constructs
     plain = plain.replace(r"\\", r"\\\\")
+    plain = plain.replace(r"\{", r"\\{")
+    plain = plain.replace(r"\}", r"\\}")
+    plain = plain.replace(r"*}", r"\*}")
 
     # Fix whitespaces in input
     plain = plain.replace("\xc2\xa0", " ").replace("\xa0", " ")
@@ -251,8 +254,11 @@ def html_to_screen(html, parseable=False):
     if generated:
         plain = html_to_markdown(plain)
 
-    # For convenience: Assume \\ is LaTeX line ending and escape it
+    # For convenience: Un-escape some common LaTeX constructs
     plain = plain.replace(r"\\\\", r"\\")
+    plain = plain.replace(r"\\{", r"\{")
+    plain = plain.replace(r"\\}", r"\}")
+    plain = plain.replace(r"\*}", r"*}")
 
     plain = plain.replace(r'&lt;', '<')
     plain = plain.replace(r'&gt;', '>')
