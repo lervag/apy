@@ -16,6 +16,7 @@ Anki.
 | Version | Version note                       |
 |:-------:| ---------------------------------- |
 | `HEAD`  | Development branch                 |
+| 0.4     | Minor improvements                 |
 | 0.3     | Compatible with Anki 2.1.26        |
 | 0.2     | Compatible with Anki 2.1.23        |
 | 0.1     | Compatible with Anki 2.1.13        |
@@ -30,7 +31,7 @@ Anki.
 
 ## Install instructions
 
-To install `apy`, do:
+To install `apy`, you can do something like this:
 
 ```bash
 # For users
@@ -38,6 +39,9 @@ pip install .
 
 # For developers
 pip install -e .
+
+# With pipx (https://github.com/pipxproject/pipx)
+pipx install git+https://github.com/lervag/apy.git#egg=apy
 ```
 
 **Important**: `apy` uses the python API from the Anki desktop app. So please
