@@ -34,14 +34,12 @@ Anki.
 To install `apy`, you can do something like this:
 
 ```bash
-# For users
-pip install .
+# Install latest version
+pip install --user git+https://github.com/lervag/apy.git#egg=apy
 
-# For developers
+# One can also do
+git clone https://github.com/lervag/apy.git
 pip install -e .
-
-# With pipx (https://github.com/pipxproject/pipx)
-pipx install git+https://github.com/lervag/apy.git#egg=apy
 ```
 
 **Important**: `apy` uses the python API from the Anki desktop app. So please
