@@ -1,11 +1,9 @@
 """A Note wrapper class"""
 
 import os
-import functools
 import tempfile
 import subprocess
 from pathlib import Path
-from bs4 import BeautifulSoup
 
 import click
 import readchar
@@ -35,13 +33,13 @@ class Note:
         """Convert note to Markdown format"""
         lines = [
             f'# Note ID: {self.n.id}',
-            f'model: {self.model_name}',
+            f'model: {self.model_name}  ',
         ]
 
         if self.a.n_decks > 1:
-            lines += [f'deck: {self.get_deck()}']
+            lines += [f'deck: {self.get_deck()}  ']
 
-        lines += [f'tags: {self.get_tag_string()}']
+        lines += [f'tags: {self.get_tag_string()}  ']
 
         if not any([is_generated_html(x) for x in self.n.values()]):
             lines += ['markdown: false']
@@ -49,9 +47,6 @@ class Note:
         lines += ['']
 
         for key, val in self.n.items():
-            if is_generated_html(val):
-                key += ' (md)'
-
             lines.append('## ' + key)
             lines.append(html_to_screen(val, parseable=True))
             lines.append('')
@@ -115,10 +110,7 @@ class Note:
             latex.render_latex(html, self.n.model(), self.a.col)
             latex_imgs += self.get_lateximg_from_field(html)
 
-            if is_generated_html(html):
-                key += ' (md)'
-
-            lines.append(click.style('# ' + key, fg='blue'))
+            lines.append(click.style('## ' + key, fg='blue'))
             lines.append(html_to_screen(html))
             lines.append('')
 
@@ -166,7 +158,7 @@ class Note:
             notes = markdown_file_to_notes(tf.name)
 
         if not notes:
-            click.echo(f'Something went wrong when editing note!')
+            click.echo('Something went wrong when editing note!')
             return
 
         if len(notes) > 1:

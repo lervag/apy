@@ -227,18 +227,7 @@ def plain_to_html(plain):
     # Convert newlines to <br> tags
     plain = plain.replace('\n', '<br />')
 
-    # For convenience: Fix mathjax escaping
-    # plain = plain.replace(r"\[", r"[")
-    # plain = plain.replace(r"\]", r"]")
-    # plain = plain.replace(r"\(", r"(")
-    # plain = plain.replace(r"\)", r")")
-
-
     return plain.strip()
-
-def clean_html(html):
-    """Remove some extra things from html"""
-    return re.sub(r'\<style\>.*\<\/style\>', '', html, flags=re.S)
 
 def html_to_markdown(html):
     """Extract Markdown from generated HTML"""
@@ -249,6 +238,8 @@ def html_to_markdown(html):
 
 def html_to_screen(html, parseable=False):
     """Convert html for printing to screen"""
+    html = re.sub(r'\<style\>.*\<\/style\>', '', html, flags=re.S)
+
     plain = html
     generated = is_generated_html(plain)
     if generated:

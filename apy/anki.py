@@ -11,7 +11,7 @@ from aqt.profiles import ProfileManager
 
 from apy.config import cfg
 from apy.note import Note
-from apy.convert import html_to_screen, clean_html
+from apy.convert import html_to_screen
 from apy.convert import markdown_file_to_notes
 from apy.convert import markdown_to_html, plain_to_html
 from apy.utilities import editor, choose, cd
@@ -286,7 +286,7 @@ class Anki:
     def list_notes(self, query, verbose=False):
         """List notes that match a query"""
         for note in self.find_notes(query):
-            first_field = html_to_screen(clean_html(note.n.values()[0]))
+            first_field = html_to_screen(note.n.values()[0])
             first_field = first_field.replace('\n', ' ')
             first_field = re.sub(r'\s\s\s+', ' ', first_field)
             first_field = first_field[:cfg['width']-14] \
@@ -306,8 +306,8 @@ class Anki:
         """List cards that match a query"""
         for cid in self.find_cards(query):
             c = self.col.getCard(cid)
-            question = html_to_screen(clean_html(c.q())).replace('\n', ' ')
-            answer = html_to_screen(clean_html(c.a())).replace('\n', ' ')
+            question = html_to_screen(c.q()).replace('\n', ' ')
+            answer = html_to_screen(c.a()).replace('\n', ' ')
             click.echo(f'Q: {question[:cfg["width"]]}')
             if verbose:
                 click.echo(f'A: {answer[:cfg["width"]]}')
