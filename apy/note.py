@@ -33,13 +33,13 @@ class Note:
         """Convert note to Markdown format"""
         lines = [
             f'# Note ID: {self.n.id}',
-            f'model: {self.model_name}  ',
+            f'model: {self.model_name}',
         ]
 
         if self.a.n_decks > 1:
-            lines += [f'deck: {self.get_deck()}  ']
+            lines += [f'deck: {self.get_deck()}']
 
-        lines += [f'tags: {self.get_tag_string()}  ']
+        lines += [f'tags: {self.get_tag_string()}']
 
         if not any([is_generated_html(x) for x in self.n.values()]):
             lines += ['markdown: false']
