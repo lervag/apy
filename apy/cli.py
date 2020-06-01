@@ -92,7 +92,7 @@ def add_from_file(file, tags):
     """Add notes from Markdown file.
 
     For input file syntax specification, see docstring for
-    parse_notes_from_markdown().
+    markdown_file_to_notes() in convert.py.
     """
     with Anki(cfg['base']) as a:
         notes = a.add_notes_from_file(file, tags)
@@ -129,7 +129,7 @@ def info():
         for key in cfg.keys():
             click.echo(f"Config loaded:           {key}")
     else:
-        click.echo(f"Config file:             Not found")
+        click.echo("Config file:             Not found")
 
     with Anki(cfg['base']) as a:
         click.echo(f"Collecton path:          {a.col.path}")
@@ -220,21 +220,25 @@ def sync():
         a.sync()
 
 @main.command()
-@click.argument('query')
+@click.argument('query', required=False)
 @click.option('-a', '--add-tags',
               help='Add specified tags to matched notes.')
 @click.option('-r', '--remove-tags',
               help='Add specified tags to matched notes.')
 def tag(query, add_tags, remove_tags):
-    """Add or remove tags from notes that match the query."""
-    if add_tags is None and remove_tags is None:
-        click.echo(f'Please specify either -a and/or -r to add/remove tags!')
-        return
+    """List tags or add/remove tags from matching notes.
 
+    If neither of the options --add-tags or --remove-tags are supplied, then
+    this command simply lists all tags.
+    """
     with Anki(cfg['base']) as a:
+        if add_tags is None and remove_tags is None:
+            a.list_tags()
+            return
+
         n_notes = len(list(a.find_notes(query)))
         if n_notes == 0:
-            click.echo(f'No matching notes!')
+            click.echo('No matching notes!')
             raise click.Abort()
 
         click.echo(f'The operation will be applied to {n_notes} matched notes:')

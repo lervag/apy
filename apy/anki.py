@@ -254,6 +254,18 @@ class Anki:
         self.modified = True
 
 
+    def list_tags(self):
+        """List all tags"""
+        tags = [(t, len(self.col.findNotes(f'tag:{t}')))
+                for t in self.col.tags.all()]
+        width = len(max(tags, key=lambda x: len(x[0]))[0]) + 2
+        filler = " "*(cfg['width'] - 2*width - 8)
+
+        for (t1, n1), (t2, n2) in zip(
+                sorted(tags, key=lambda x: x[0]),
+                sorted(tags, key=lambda x: x[1])):
+            click.echo(f'{t1:{width}s}{n1:4d}{filler}{t2:{width}s}{n2:4d}')
+
     def change_tags(self, query, tags, add=True):
         """Add/Remove tags from notes that match query"""
         self.col.tags.bulkAdd(self.col.findNotes(query), tags, add)
