@@ -68,11 +68,13 @@ apy --help
 currently recognized:
 
 - `pngCommands`/`svgCommands`: Set LaTeX commands to generate PNG/SVG files. This is inspired by the [Edit LaTeX build process](https://ankiweb.net/shared/info/937148547) addon to Anki.
+- `base`: Specify where `apy` should look for your Anki database. This is usually something like `/home/your_name/.local/share/Anki2/`
 
 An example configuration:
 
 ```json
 {
+  "base": "/home/your_name/.local/share/Anki2/",
   "pngCommands": [
     ["latex", "-interaction=nonstopmode", "tmp.tex"],
     ["dvipng", "-D", "150", "-T", "tight", "-bg", "Transparent",
