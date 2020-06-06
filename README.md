@@ -16,6 +16,8 @@ Anki.
 | Version | Version note                       |
 |:-------:| ---------------------------------- |
 | `HEAD`  | Development branch                 |
+| 0.5.1   | Started using patch releases       |
+| 0.5     | Minor improvements                 |
 | 0.4     | Minor improvements                 |
 | 0.3     | Compatible with Anki 2.1.26        |
 | 0.2     | Compatible with Anki 2.1.23        |
