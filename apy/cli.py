@@ -1,8 +1,10 @@
 """A script to interact with the Anki database"""
 import os
+import sys
 
 import click
 
+from apy import __version__
 from apy.anki import Anki
 from apy.config import cfg, cfg_file
 
@@ -11,8 +13,9 @@ CONTEXT_SETTINGS = dict(help_option_names=['-h', '--help'])
 
 @click.group(context_settings=CONTEXT_SETTINGS, invoke_without_command=True)
 @click.option('-b', '--base', help="Set Anki base directory")
+@click.option('-V', '--version', is_flag=True, help="Show apy version")
 @click.pass_context
-def main(ctx, base):
+def main(ctx, base, version):
     """A script to interact with the Anki database.
 
     The base directory may be specified with the -b / --base option. For
@@ -36,6 +39,10 @@ def main(ctx, base):
 
     Note: Use `apy subcmd --help` to get detailed help for a given subcommand.
     """
+    if version:
+        click.echo(f'apy {__version__}')
+        sys.exit()
+
     if base:
         cfg['base'] = os.path.abspath(os.path.expanduser(base))
 

@@ -1,6 +1,8 @@
 """Package for interfacing and manipulating Anki decks"""
+__version__ = '0.4.0'
+
 try:
-    import ankixx
+    import anki
 except ImportError:
     import os
     import sys
