@@ -65,9 +65,8 @@ def markdown_file_to_notes(filename):
 
     # Add some explicit defaults (unless added in file)
     defaults = {**{
-        'markdown': True,
         'model': 'Basic',
-        'tags': 'marked',
+        'markdown': True,
     }, **defaults}
 
     # Ensure each note has all necessary properties
