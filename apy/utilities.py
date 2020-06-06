@@ -33,7 +33,6 @@ def edit_text(input_text, prefix=None):
         prefix = prefix + "_"
 
     with tempfile.NamedTemporaryFile(mode='w+',
-                                     dir=os.getcwd(),
                                      prefix=prefix,
                                      suffix=".md") as tf:
         tf.write(input_text)

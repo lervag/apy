@@ -364,8 +364,7 @@ class Anki:
             input_string = '\n'.join(input_string) + '\n'
 
         with tempfile.NamedTemporaryFile(mode='w+',
-                                         dir=os.getcwd(),
-                                         prefix='note_',
+                                         prefix='apy_note_',
                                          suffix='.md',
                                          delete=False) as tf:
             tf.write(input_string)
