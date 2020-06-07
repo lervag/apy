@@ -53,11 +53,11 @@ def main(ctx, base, version):
 @main.command()
 @click.option('-t', '--tags', default='',
               help='Specify default tags for new cards.')
-@click.option('-m', '--model', default='Basic',
+@click.option('-m', '--model', 'model_name', default='Basic',
               help=('Specify default model for new cards.'))
 @click.option('-d', '--deck',
               help=('Specify defauly deck for new cards.'))
-def add(tags, model, deck):
+def add(tags, model_name, deck):
     """Add notes interactively from terminal.
 
     Examples:
@@ -71,17 +71,17 @@ def add(tags, model, deck):
         apy add -m ASK -d ask
     """
     with Anki(cfg['base']) as a:
-        notes = a.add_notes_with_editor(tags, model, deck)
+        notes = a.add_notes_with_editor(tags, model_name, deck)
         n_notes = len(notes)
         if n_notes == 0:
             click.echo("No notes added")
-            return None
+            return
 
         decks = [a.col.decks.name(c.did) for n in notes for c in n.n.cards()]
         n_decks = len(decks)
         if n_decks == 0:
             click.echo("No notes added")
-            return None
+            return
 
         if a.n_decks > 1:
             if n_notes == 1:
@@ -112,13 +112,13 @@ def add_from_file(file, tags):
         n_notes = len(notes)
         if n_notes == 0:
             click.echo("No notes added")
-            return None
+            return
 
         decks = [a.col.decks.name(c.did) for n in notes for c in n.n.cards()]
         n_decks = len(decks)
         if n_decks == 0:
             click.echo("No notes added")
-            return None
+            return
 
         if a.n_decks > 1:
             if n_notes == 1:
@@ -184,8 +184,7 @@ def info():
 
 
 @main.group(context_settings=CONTEXT_SETTINGS, invoke_without_command=True)
-@click.pass_context
-def model(ctx):
+def model():
     """Interact with Anki models."""
 
 @model.command('edit-css')
