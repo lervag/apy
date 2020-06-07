@@ -11,7 +11,7 @@ def test_decks():
     with AnkiSimple() as a:
         assert a.col.decks.count() == 2
         assert a.col.decks.current()['name'] == 'NewDeck'
-        assert list(a.deck_names) == ['Default', 'NewDeck']
+        assert set(a.deck_names) == {'Default', 'NewDeck'}
 
         notes = a.add_notes_from_file(testDir + '/' + 'data/deck.md')
 
