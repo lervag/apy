@@ -72,10 +72,16 @@ def add(tags, model, deck):
     """
     with Anki(cfg['base']) as a:
         notes = a.add_notes_with_editor(tags, model, deck)
+        n_notes = len(notes)
+        if n_notes == 0:
+            click.echo("No notes added")
+            return None
 
         decks = [a.col.decks.name(c.did) for n in notes for c in n.n.cards()]
-        n_notes = len(notes)
         n_decks = len(decks)
+        if n_decks == 0:
+            click.echo("No notes added")
+            return None
 
         if a.n_decks > 1:
             if n_notes == 1:
@@ -103,10 +109,16 @@ def add_from_file(file, tags):
     """
     with Anki(cfg['base']) as a:
         notes = a.add_notes_from_file(file, tags)
+        n_notes = len(notes)
+        if n_notes == 0:
+            click.echo("No notes added")
+            return None
 
         decks = [a.col.decks.name(c.did) for n in notes for c in n.n.cards()]
-        n_notes = len(notes)
         n_decks = len(decks)
+        if n_decks == 0:
+            click.echo("No notes added")
+            return None
 
         if a.n_decks > 1:
             if n_notes == 1:
