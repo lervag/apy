@@ -67,6 +67,7 @@ def markdown_file_to_notes(filename):
     defaults = {**{
         'model': 'Basic',
         'markdown': True,
+        'tags': '',
     }, **defaults}
 
     # Ensure each note has all necessary properties
