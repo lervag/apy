@@ -55,6 +55,45 @@ def main(ctx, base, profile, version):
 
 
 @main.command()
+@click.option('-s', '--preset', default='default',
+      help='Specify a preset.')
+@click.option('-t', '--tags',
+      help='Specify default tags for new cards.')
+@click.option('-m', '--model', 'model_name',
+              help=('Specify default model for new cards.'))
+@click.option('-d', '--deck',
+              help=('Specify defauly deck for new cards.'))
+@click.argument('fields', nargs=-1)
+def addone(tags, preset, model_name, deck, fields):
+    """Add a single note from command line arguments.
+
+    Examples:
+
+    \b
+        # Add a note to the default deck
+        apy addone myfront myback
+
+    \b
+        # Add a cloze deletion note to the default deck
+        apy addone -m Cloze "cloze {{c1::deletion}}" "extra text"
+
+    \b
+        # Add a note to deck "MyDeck" with tags 'my-tag' and 'new-tag'
+        apy addone -t "my-tag new-tag" -d MyDeck myfront myback
+
+    """
+    with Anki(cfg) as a:
+        if not tags:
+            tags = ' '.join(cfg['presets'][preset]['tags'])
+        if not deck:
+            deck = cfg['presets'][preset]['deck']
+        if not model_name:
+            model_name = cfg['presets'][preset]['model']
+
+        a.add_single_note(fields, tags, model_name, deck)
+
+
+@main.command()
 @click.option('-t', '--tags', default='',
               help='Specify default tags for new cards.')
 @click.option('-m', '--model', 'model_name', default='Basic',

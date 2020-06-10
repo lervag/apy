@@ -27,6 +27,17 @@ if 'profile' not in cfg:
 if 'path' not in cfg:
     cfg['path'] = None
 
+# Add default preset
+preset_def = {
+    'model': 'Basic',
+    'tags': []
+}
+
+if 'presets' not in cfg:
+    cfg['presets'] = {'default': preset_def}
+elif 'default' not in cfg['presets']:
+    cfg['presets']['default'] = preset_def
+
 # Ensure base path is a proper absolute path
 if cfg['base']:
     cfg['base'] = os.path.abspath(os.path.expanduser(cfg['base']))
