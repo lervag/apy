@@ -20,6 +20,13 @@ if 'base' not in cfg:
             cfg['base'] = os.environ[var]
             break
 
+# Ensure that cfg has 'profile' and 'path' keys
+if 'profile' not in cfg:
+    cfg['profile'] = None
+
+if 'path' not in cfg:
+    cfg['path'] = None
+
 # Ensure base path is a proper absolute path
 if cfg['base']:
     cfg['base'] = os.path.abspath(os.path.expanduser(cfg['base']))
