@@ -83,8 +83,12 @@ def addone(tags, preset, model_name, deck, fields):
 
     """
     with Anki(cfg) as a:
+        pstags = ' '.join(cfg['presets'][preset]['tags'])
         if not tags:
-            tags = ' '.join(cfg['presets'][preset]['tags'])
+            tags = pstags
+        else:
+            tags += ' ' + pstags
+
         if not deck:
             deck = cfg['presets'][preset]['deck']
         if not model_name:
