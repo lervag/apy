@@ -54,7 +54,7 @@ def main(ctx, base, profile, version):
         ctx.invoke(info)
 
 
-@main.command()
+@main.command('add-single')
 @click.option('-s', '--preset', default='default',
       help='Specify a preset.')
 @click.option('-t', '--tags',
@@ -62,9 +62,9 @@ def main(ctx, base, profile, version):
 @click.option('-m', '--model', 'model_name',
               help=('Specify default model for new cards.'))
 @click.option('-d', '--deck',
-              help=('Specify defauly deck for new cards.'))
+              help=('Specify default deck for new cards.'))
 @click.argument('fields', nargs=-1)
-def addone(tags, preset, model_name, deck, fields):
+def add_single(fields, tags=None, preset=None, model_name=None, deck=None):
     """Add a single note from command line arguments.
 
     Examples:
@@ -82,15 +82,13 @@ def addone(tags, preset, model_name, deck, fields):
         apy addone -t "my-tag new-tag" -d MyDeck myfront myback
 
     """
-    with Anki(cfg) as a:
+    with Anki(**cfg) as a:
         pstags = ' '.join(cfg['presets'][preset]['tags'])
         if not tags:
             tags = pstags
         else:
             tags += ' ' + pstags
 
-        if not deck:
-            deck = cfg['presets'][preset]['deck']
         if not model_name:
             model_name = cfg['presets'][preset]['model']
 
@@ -117,7 +115,7 @@ def add(tags, model_name, deck):
         # Ask for the model and the deck for each new card
         apy add -m ASK -d ask
     """
-    with Anki(cfg) as a:
+    with Anki(**cfg) as a:
         notes = a.add_notes_with_editor(tags, model_name, deck)
         n_notes = len(notes)
         if n_notes == 0:
@@ -154,7 +152,7 @@ def add_from_file(file, tags):
     For input file syntax specification, see docstring for
     markdown_file_to_notes() in convert.py.
     """
-    with Anki(cfg) as a:
+    with Anki(**cfg) as a:
         notes = a.add_notes_from_file(file, tags)
         n_notes = len(notes)
         if n_notes == 0:
@@ -184,7 +182,7 @@ def add_from_file(file, tags):
 @main.command('check-media')
 def check_media():
     """Check media"""
-    with Anki(cfg) as a:
+    with Anki(**cfg) as a:
         a.check_media()
 
 @main.command()
@@ -197,7 +195,7 @@ def info():
     else:
         click.echo("Config file:             Not found")
 
-    with Anki(cfg) as a:
+    with Anki(**cfg) as a:
         click.echo(f"Collecton path:          {a.col.path}")
         click.echo(f"Scheduler version:       {a.col.schedVer()}")
 
@@ -241,7 +239,7 @@ def model():
               help='Perform sync after any change.')
 def edit_css(model_name, sync_after):
     """Edit the CSS template for the specified model."""
-    with Anki(cfg) as a:
+    with Anki(**cfg) as a:
         a.edit_model_css(model_name)
 
         if a.modified and sync_after:
@@ -253,7 +251,7 @@ def edit_css(model_name, sync_after):
 @click.argument('new-name')
 def rename(old_name, new_name):
     """Rename model from old_name to new_name."""
-    with Anki(cfg) as a:
+    with Anki(**cfg) as a:
         a.rename_model(old_name, new_name)
 
 
@@ -263,7 +261,7 @@ def rename(old_name, new_name):
               help='Be verbose, show more info')
 def list_cards(query, verbose):
     """List cards that match a given query."""
-    with Anki(cfg) as a:
+    with Anki(**cfg) as a:
         a.list_cards(query, verbose)
 
 @main.command()
@@ -271,7 +269,7 @@ def list_cards(query, verbose):
               help=('Review cards that match query [default: marked cards].'))
 def review(query):
     """Review marked notes."""
-    with Anki(cfg) as a:
+    with Anki(**cfg) as a:
         notes = list(a.find_notes(query))
         number_of_notes = len(notes)
         for i, note in enumerate(notes):
@@ -281,7 +279,7 @@ def review(query):
 @main.command()
 def sync():
     """Synchronize collection with AnkiWeb."""
-    with Anki(cfg) as a:
+    with Anki(**cfg) as a:
         a.sync()
 
 @main.command()
@@ -296,7 +294,7 @@ def tag(query, add_tags, remove_tags):
     If neither of the options --add-tags or --remove-tags are supplied, then
     this command simply lists all tags.
     """
-    with Anki(cfg) as a:
+    with Anki(**cfg) as a:
         if add_tags is None and remove_tags is None:
             a.list_tags()
             return

@@ -20,10 +20,10 @@ from apy.utilities import editor, choose, cd
 class Anki:
     """My Anki collection wrapper class."""
 
-    def __init__(self, config):
+    def __init__(self, base=None, path=None, profile=None, **kwargs):
         self.modified = False
 
-        self._init_load_collection(config['base'], config['path'], config['profile'])
+        self._init_load_collection(base, path, profile)
         self._init_load_config()
 
         self.model_name_to_id = {m['name']: m['id']
@@ -37,7 +37,6 @@ class Anki:
 
     def _init_load_collection(self, base, path, profile):
         """Load the Anki collection"""
-
         # Save CWD (because Anki changes it)
         save_cwd = os.getcwd()
 
@@ -54,17 +53,14 @@ class Anki:
 
             # Initialize a profile manager to get an interface to the profile
             # settings and main database path; also required for syncing
-
             self.pm = ProfileManager(base)
             self.pm.setupMeta()
-            pfs = self.pm.profiles()
 
             if profile is None:
-                profile = pfs[0]
-
-            self.pm.load(profile)
+                profile = self.pm.profiles()[0]
 
             # Load the main Anki database/collection
+            self.pm.load(profile)
             path = self.pm.collectionPath()
         else:
             self.pm = None
