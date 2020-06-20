@@ -20,10 +20,10 @@ from apy.utilities import editor, choose, cd
 class Anki:
     """My Anki collection wrapper class."""
 
-    def __init__(self, base=None, path=None):
+    def __init__(self, base=None, path=None, profile=None, **kwargs):
         self.modified = False
 
-        self._init_load_collection(base, path)
+        self._init_load_collection(base, path, profile)
         self._init_load_config()
 
         self.model_name_to_id = {m['name']: m['id']
@@ -35,9 +35,8 @@ class Anki:
         self.deck_names = self.deck_name_to_id.keys()
         self.n_decks = len(self.deck_names)
 
-    def _init_load_collection(self, base, path):
+    def _init_load_collection(self, base, path, profile):
         """Load the Anki collection"""
-
         # Save CWD (because Anki changes it)
         save_cwd = os.getcwd()
 
@@ -56,9 +55,12 @@ class Anki:
             # settings and main database path; also required for syncing
             self.pm = ProfileManager(base)
             self.pm.setupMeta()
-            self.pm.load(self.pm.profiles()[0])
+
+            if profile is None:
+                profile = self.pm.profiles()[0]
 
             # Load the main Anki database/collection
+            self.pm.load(profile)
             path = self.pm.collectionPath()
         else:
             self.pm = None
@@ -409,6 +411,13 @@ class Anki:
                                         note.get('deck')))
 
         return notes
+
+    def add_notes_single(self, fields, tags='', model=None, deck=None):
+        """Add new note to collection from args"""
+        if model is not None:
+            self.set_model(model)
+
+        self._add_note(fields, tags, False, deck)
 
     def _add_note(self, fields, tags, markdown=True, deck=None):
         """Add new note to collection"""

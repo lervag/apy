@@ -13,9 +13,10 @@ CONTEXT_SETTINGS = dict(help_option_names=['-h', '--help'])
 
 @click.group(context_settings=CONTEXT_SETTINGS, invoke_without_command=True)
 @click.option('-b', '--base', help="Set Anki base directory")
+@click.option('-p', '--profile', help="Set Anki profile to be used")
 @click.option('-V', '--version', is_flag=True, help="Show apy version")
 @click.pass_context
-def main(ctx, base, version):
+def main(ctx, base, profile, version):
     """A script to interact with the Anki database.
 
     The base directory may be specified with the -b / --base option. For
@@ -46,8 +47,49 @@ def main(ctx, base, version):
     if base:
         cfg['base'] = os.path.abspath(os.path.expanduser(base))
 
+    if profile:
+        cfg['profile'] = profile
+
     if ctx.invoked_subcommand is None:
         ctx.invoke(info)
+
+
+@main.command('add-single')
+@click.option('-s', '--preset', default='default', help='Specify a preset.')
+@click.option('-t', '--tags', help='Specify default tags for new cards.')
+@click.option('-m', '--model', 'model_name',
+              help=('Specify default model for new cards.'))
+@click.option('-d', '--deck', help=('Specify default deck for new cards.'))
+@click.argument('fields', nargs=-1)
+def add_single(fields, tags=None, preset=None, model_name=None, deck=None):
+    """Add a single note from command line arguments.
+
+    Examples:
+
+    \b
+        # Add a note to the default deck
+        apy add-single myfront myback
+
+    \b
+        # Add a cloze deletion note to the default deck
+        apy add-single -m Cloze "cloze {{c1::deletion}}" "extra text"
+
+    \b
+        # Add a note to deck "MyDeck" with tags 'my-tag' and 'new-tag'
+        apy add-single -t "my-tag new-tag" -d MyDeck myfront myback
+
+    """
+    with Anki(**cfg) as a:
+        tags_preset = ' '.join(cfg['presets'][preset]['tags'])
+        if not tags:
+            tags = tags_preset
+        else:
+            tags += ' ' + tags_preset
+
+        if not model_name:
+            model_name = cfg['presets'][preset]['model']
+
+        a.add_notes_single(fields, tags, model_name, deck)
 
 
 @main.command()
@@ -70,7 +112,7 @@ def add(tags, model_name, deck):
         # Ask for the model and the deck for each new card
         apy add -m ASK -d ask
     """
-    with Anki(cfg['base']) as a:
+    with Anki(**cfg) as a:
         notes = a.add_notes_with_editor(tags, model_name, deck)
         n_notes = len(notes)
         if n_notes == 0:
@@ -107,7 +149,7 @@ def add_from_file(file, tags):
     For input file syntax specification, see docstring for
     markdown_file_to_notes() in convert.py.
     """
-    with Anki(cfg['base']) as a:
+    with Anki(**cfg) as a:
         notes = a.add_notes_from_file(file, tags)
         n_notes = len(notes)
         if n_notes == 0:
@@ -137,7 +179,7 @@ def add_from_file(file, tags):
 @main.command('check-media')
 def check_media():
     """Check media"""
-    with Anki(cfg['base']) as a:
+    with Anki(**cfg) as a:
         a.check_media()
 
 @main.command()
@@ -150,7 +192,7 @@ def info():
     else:
         click.echo("Config file:             Not found")
 
-    with Anki(cfg['base']) as a:
+    with Anki(**cfg) as a:
         click.echo(f"Collecton path:          {a.col.path}")
         click.echo(f"Scheduler version:       {a.col.schedVer()}")
 
@@ -194,7 +236,7 @@ def model():
               help='Perform sync after any change.')
 def edit_css(model_name, sync_after):
     """Edit the CSS template for the specified model."""
-    with Anki(cfg['base']) as a:
+    with Anki(**cfg) as a:
         a.edit_model_css(model_name)
 
         if a.modified and sync_after:
@@ -206,7 +248,7 @@ def edit_css(model_name, sync_after):
 @click.argument('new-name')
 def rename(old_name, new_name):
     """Rename model from old_name to new_name."""
-    with Anki(cfg['base']) as a:
+    with Anki(**cfg) as a:
         a.rename_model(old_name, new_name)
 
 
@@ -216,7 +258,7 @@ def rename(old_name, new_name):
               help='Be verbose, show more info')
 def list_cards(query, verbose):
     """List cards that match a given query."""
-    with Anki(cfg['base']) as a:
+    with Anki(**cfg) as a:
         a.list_cards(query, verbose)
 
 @main.command()
@@ -224,7 +266,7 @@ def list_cards(query, verbose):
               help=('Review cards that match query [default: marked cards].'))
 def review(query):
     """Review marked notes."""
-    with Anki(cfg['base']) as a:
+    with Anki(**cfg) as a:
         notes = list(a.find_notes(query))
         number_of_notes = len(notes)
         for i, note in enumerate(notes):
@@ -234,7 +276,7 @@ def review(query):
 @main.command()
 def sync():
     """Synchronize collection with AnkiWeb."""
-    with Anki(cfg['base']) as a:
+    with Anki(**cfg) as a:
         a.sync()
 
 @main.command()
@@ -249,7 +291,7 @@ def tag(query, add_tags, remove_tags):
     If neither of the options --add-tags or --remove-tags are supplied, then
     this command simply lists all tags.
     """
-    with Anki(cfg['base']) as a:
+    with Anki(**cfg) as a:
         if add_tags is None and remove_tags is None:
             a.list_tags()
             return
