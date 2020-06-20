@@ -55,14 +55,11 @@ def main(ctx, base, profile, version):
 
 
 @main.command('add-single')
-@click.option('-s', '--preset', default='default',
-      help='Specify a preset.')
-@click.option('-t', '--tags',
-      help='Specify default tags for new cards.')
+@click.option('-s', '--preset', default='default', help='Specify a preset.')
+@click.option('-t', '--tags', help='Specify default tags for new cards.')
 @click.option('-m', '--model', 'model_name',
               help=('Specify default model for new cards.'))
-@click.option('-d', '--deck',
-              help=('Specify default deck for new cards.'))
+@click.option('-d', '--deck', help=('Specify default deck for new cards.'))
 @click.argument('fields', nargs=-1)
 def add_single(fields, tags=None, preset=None, model_name=None, deck=None):
     """Add a single note from command line arguments.
@@ -71,28 +68,28 @@ def add_single(fields, tags=None, preset=None, model_name=None, deck=None):
 
     \b
         # Add a note to the default deck
-        apy addone myfront myback
+        apy add-single myfront myback
 
     \b
         # Add a cloze deletion note to the default deck
-        apy addone -m Cloze "cloze {{c1::deletion}}" "extra text"
+        apy add-single -m Cloze "cloze {{c1::deletion}}" "extra text"
 
     \b
         # Add a note to deck "MyDeck" with tags 'my-tag' and 'new-tag'
-        apy addone -t "my-tag new-tag" -d MyDeck myfront myback
+        apy add-single -t "my-tag new-tag" -d MyDeck myfront myback
 
     """
     with Anki(**cfg) as a:
-        pstags = ' '.join(cfg['presets'][preset]['tags'])
+        tags_preset = ' '.join(cfg['presets'][preset]['tags'])
         if not tags:
-            tags = pstags
+            tags = tags_preset
         else:
-            tags += ' ' + pstags
+            tags += ' ' + tags_preset
 
         if not model_name:
             model_name = cfg['presets'][preset]['model']
 
-        a.add_single_note(fields, tags, model_name, deck)
+        a.add_notes_single(fields, tags, model_name, deck)
 
 
 @main.command()

@@ -412,8 +412,8 @@ class Anki:
 
         return notes
 
-    def add_single_note(self, fields, tags='', model=None, deck=None):
-        """Add new note to collection (public function)"""
+    def add_notes_single(self, fields, tags='', model=None, deck=None):
+        """Add new note to collection from args"""
         if model is not None:
             self.set_model(model)
 
