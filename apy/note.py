@@ -93,11 +93,13 @@ class Note:
         lines += [click.style('tags: ', fg='yellow')
                   + self.get_tag_string()]
 
+        flags = [c.template()["name"] for c in self.n.cards() if c.flags > 0]
+        if flags:
+            flags = [click.style(x, fg='magenta') for x in flags]
+            lines += [f"{click.style('flagged:', fg='yellow')} {', '.join(flags)}"]
+
         if not any([is_generated_html(x) for x in self.n.values()]):
             lines += [f"{click.style('markdown:', fg='yellow')} false"]
-
-        if any([c.flags > 0 for c in self.n.cards()]):
-            lines += [f"{click.style('flagged', fg='red')}"]
 
         if self.suspended:
             lines[0] += f" ({click.style('suspended', fg='red')})"
@@ -228,6 +230,27 @@ class Note:
         self.n.flush()
         self.a.modified = True
 
+    def clear_flags(self):
+        """Clear flags for note"""
+        for c in self.n.cards():
+            if c.flags > 0:
+                c.flags = 0
+                c.flush()
+                self.a.modified = True
+
+
+    def show_cards(self):
+        """Show cards for note"""
+        for i, c in enumerate(self.n.cards()):
+            number = f'{str(i) + ".":>3s}'
+            name = c.template()['name']
+            if c.flags > 0:
+                name = click.style(name, fg='red')
+            click.echo(f'  {click.style(number, fg="white")} {name}')
+
+        click.secho('\nPress any key to continue ... ', fg='blue', nl=False)
+        readchar.readchar()
+
 
     def get_deck(self):
         """Return which deck the note belongs to"""
@@ -275,10 +298,12 @@ class Note:
             'c': 'Continue',
             'e': 'Edit',
             'd': 'Delete',
-            'f': 'Show images',
             'm': 'Toggle markdown',
             '*': 'Toggle marked',
             'z': 'Toggle suspend',
+            'C': 'Show card names',
+            'f': 'Show images',
+            'F': 'Clear flags',
             'a': 'Add new',
             's': 'Save and stop',
             'x': 'Abort',
@@ -293,11 +318,11 @@ class Note:
             if refresh:
                 click.clear()
                 if i is None:
-                    click.secho('Reviewing note\n', fg='white')
+                    click.secho('Reviewing note', fg='white')
                 elif number_of_notes is None:
-                    click.secho(f'Reviewing note {i+1}\n', fg='white')
+                    click.secho(f'Reviewing note {i+1}', fg='white')
                 else:
-                    click.secho(f'Reviewing note {i+1} of {number_of_notes}\n',
+                    click.secho(f'Reviewing note {i+1} of {number_of_notes}',
                                 fg='white')
 
                 column = 0
@@ -310,7 +335,7 @@ class Note:
                     column = (column + 1) % 4
 
                 width = os.get_terminal_size()[0]
-                click.echo('\n' + '-'*width + '\n')
+                click.echo('')
 
                 self.print()
             else:
@@ -346,6 +371,14 @@ class Note:
 
             if action == 'Toggle suspend':
                 self.toggle_suspend()
+                continue
+
+            if action == 'Clear flags':
+                self.clear_flags()
+                continue
+
+            if action == 'Show card names':
+                self.show_cards()
                 continue
 
             if action == 'Add new':
