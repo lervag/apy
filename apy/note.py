@@ -79,7 +79,7 @@ class Note:
 
         return '\n'.join(lines)
 
-    def print(self):
+    def print(self, pprint=True):
         """Print to screen (similar to __repr__ but with colors)"""
         lines = [
             click.style(f'# Note ID: {self.n.id}', fg='green'),
@@ -113,7 +113,7 @@ class Note:
             latex_imgs += self.get_lateximg_from_field(html)
 
             lines.append(click.style('## ' + key, fg='blue'))
-            lines.append(html_to_screen(html))
+            lines.append(html_to_screen(html, pprint))
             lines.append('')
 
         if latex_imgs:
@@ -297,14 +297,16 @@ class Note:
         actions = {
             'c': 'Continue',
             'e': 'Edit',
+            'a': 'Add new',
             'd': 'Delete',
             'm': 'Toggle markdown',
             '*': 'Toggle marked',
             'z': 'Toggle suspend',
+            'p': 'Toggle pprint',
+            'F': 'Clear flags',
             'C': 'Show card names',
             'f': 'Show images',
-            'F': 'Clear flags',
-            'a': 'Add new',
+            'E': 'Edit CSS',
             's': 'Save and stop',
             'x': 'Abort',
         }
@@ -313,6 +315,7 @@ class Note:
             actions = {key: val for key, val in actions.items()
                        if val not in remove_actions}
 
+        _pprint = True
         refresh = True
         while True:
             if refresh:
@@ -335,9 +338,9 @@ class Note:
                     column = (column + 1) % 4
 
                 width = os.get_terminal_size()[0]
-                click.echo('')
+                click.echo('\n')
 
-                self.print()
+                self.print(_pprint)
             else:
                 refresh = True
 
@@ -349,36 +352,6 @@ class Note:
 
             if action == 'Edit':
                 self.edit()
-                continue
-
-            if action == 'Delete':
-                if click.confirm('Are you sure you want to delete the note?'):
-                    self.delete()
-                return True
-
-            if action == 'Show images':
-                self.show_images()
-                refresh = False
-                continue
-
-            if action == 'Toggle markdown':
-                self.toggle_markdown()
-                continue
-
-            if action == 'Toggle marked':
-                self.toggle_marked()
-                continue
-
-            if action == 'Toggle suspend':
-                self.toggle_suspend()
-                continue
-
-            if action == 'Clear flags':
-                self.clear_flags()
-                continue
-
-            if action == 'Show card names':
-                self.show_cards()
                 continue
 
             if action == 'Add new':
@@ -393,6 +366,44 @@ class Note:
                 click.echo(f'Added {number_of_notes} notes')
                 click.confirm('Press any key to continue.',
                               prompt_suffix='', show_default=False)
+                continue
+
+            if action == 'Delete':
+                if click.confirm('Are you sure you want to delete the note?'):
+                    self.delete()
+                return True
+
+            if action == 'Toggle markdown':
+                self.toggle_markdown()
+                continue
+
+            if action == 'Toggle marked':
+                self.toggle_marked()
+                continue
+
+            if action == 'Toggle suspend':
+                self.toggle_suspend()
+                continue
+
+            if action == 'Toggle pprint':
+                _pprint = not _pprint
+                continue
+
+            if action == 'Clear flags':
+                self.clear_flags()
+                continue
+
+            if action == 'Show card names':
+                self.show_cards()
+                continue
+
+            if action == 'Show images':
+                self.show_images()
+                refresh = False
+                continue
+
+            if action == 'Edit CSS':
+                self.a.edit_model_css(self.model_name)
                 continue
 
             if action == 'Save and stop':

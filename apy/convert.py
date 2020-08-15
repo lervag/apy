@@ -236,8 +236,13 @@ def html_to_markdown(html):
     converted = base64.b64decode(encoded_bytes).decode('utf-8')
     return converted.replace("<br>", "\n").replace("<br />", "\n")
 
-def html_to_screen(html, parseable=False):
+def html_to_screen(html, pprint=True, parseable=False):
     """Convert html for printing to screen"""
+    if not pprint:
+        soup = BeautifulSoup(html.replace('\n', ''),
+                             features='html5lib').next.next.next
+        return " ".join([el.prettify() for el in soup.contents])
+
     html = re.sub(r'\<style\>.*\<\/style\>', '', html, flags=re.S)
 
     plain = html
