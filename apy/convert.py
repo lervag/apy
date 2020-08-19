@@ -241,7 +241,8 @@ def html_to_screen(html, pprint=True, parseable=False):
     if not pprint:
         soup = BeautifulSoup(html.replace('\n', ''),
                              features='html5lib').next.next.next
-        return " ".join([el.prettify() for el in soup.contents])
+        return "".join([el.prettify() if isinstance(el, Tag) else el
+                        for el in soup.contents])
 
     html = re.sub(r'\<style\>.*\<\/style\>', '', html, flags=re.S)
 
