@@ -46,6 +46,7 @@ _apy() {
 
   subcmds=( \
     'add:Add notes interactively from terminal' \
+    'add-single:Add a single note from command line arguments' \
     'add-from-file:Add notes from Markdown file For input file' \
     'check-media:Check media' \
     'info:Print some basic statistics' \
@@ -66,15 +67,24 @@ _apy() {
   case "$words[1]" in
     add)
       opts=( \
-        '(-t --tags)'{-t,--text}'[Specify tags]:tags:' \
+        '(-t --tags)'{-t,--tags}'[Specify tags]:tags:' \
         '(-m --model)'{-m,--model}'[Specify model]:model:' \
         '(-d --deck)'{-d,--deck}'[Specify deck]:deck:' \
+        $opts_help \
+        );;
+    add-single)
+      opts=( \
+        '(-s --preset)'{-s,--preset}'[Specify a preset]:preset:' \
+        '(-t --tags)'{-t,--tags}'[Specify tags]:tags:' \
+        '(-m --model)'{-m,--model}'[Specify model]:model:' \
+        '(-d --deck)'{-d,--deck}'[Specify deck]:deck:' \
+        '::Fields' \
         $opts_help \
         );;
     add-from-file)
       opts=( \
         '::Markdown input file:_files -g "*.md"' \
-        '(-t --tags)'{-t,--text}'[Specify tags]:tags:' \
+        '(-t --tags)'{-t,--tags}'[Specify tags]:tags:' \
         $opts_help \
         );;
     info)
