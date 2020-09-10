@@ -253,19 +253,42 @@ def rename(old_name, new_name):
 
 
 @main.command('list')
-@click.argument('query', required=False, default='tag:marked OR -flag:0')
+@click.argument('query', required=False, nargs=-1)
 @click.option('-v', '--verbose', is_flag=True,
               help='Be verbose, show more info')
 def list_cards(query, verbose):
-    """List cards that match a given query."""
+    """List cards that match QUERY.
+
+    The default QUERY is "tag:marked OR -flag:0". This default can be
+    customized in the config file `~/.config/apy/apy.json`, e.g. with
+
+    \b
+    {
+      "query": "tag:marked OR tag:leech"
+    }
+    """
+    if not query:
+        query = cfg["query"]
+
     with Anki(**cfg) as a:
         a.list_cards(query, verbose)
 
 @main.command()
-@click.option('-q', '--query', default='tag:marked OR -flag:0',
-              help=('Review/Edit notes that match query [default: marked cards].'))
+@click.argument('query', required=False, nargs=-1)
 def review(query):
-    """Review/Edit notes that match query."""
+    """Review/Edit notes that match QUERY.
+
+    The default QUERY is "tag:marked OR -flag:0". This default can be
+    customized in the config file `~/.config/apy/apy.json`, e.g. with
+
+    \b
+    {
+      "query": "tag:marked OR tag:leech"
+    }
+    """
+    if not query:
+        query = cfg["query"]
+
     with Anki(**cfg) as a:
         notes = list(a.find_notes(query))
         number_of_notes = len(notes)
@@ -280,17 +303,28 @@ def sync():
         a.sync()
 
 @main.command()
-@click.argument('query', required=False)
+@click.argument('query', required=False, nargs=-1)
 @click.option('-a', '--add-tags',
               help='Add specified tags to matched notes.')
 @click.option('-r', '--remove-tags',
-              help='Add specified tags to matched notes.')
+              help='Remove specified tags from matched notes.')
 def tag(query, add_tags, remove_tags):
-    """List tags or add/remove tags from matching notes.
+    """Add/Remove tags to/from notes that match QUERY.
+
+    The default QUERY is "tag:marked OR -flag:0". This default can be
+    customized in the config file `~/.config/apy/apy.json`, e.g. with
+
+    \b
+    {
+      "query": "tag:marked OR tag:leech"
+    }
 
     If neither of the options --add-tags or --remove-tags are supplied, then
     this command simply lists all tags.
     """
+    if not query:
+        query = cfg["query"]
+
     with Anki(**cfg) as a:
         if add_tags is None and remove_tags is None:
             a.list_tags()
