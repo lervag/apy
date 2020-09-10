@@ -286,11 +286,11 @@ def html_to_screen(html, pprint=True, parseable=False):
                        click.style(r'\1', bold=True),
                        plain, re.S)
 
-        plain = re.sub(r'_(.*?)_',
-                       click.style(r'\1', underline=True),
-                       plain, re.S)
+        plain = re.sub(r'_(.*?)_', _italize(r'\1'), plain, re.S)
 
-        plain = re.sub(r'\<i\>(.*?)\<\/i\>',
+        plain = re.sub(r'\<i\>(.*?)\<\/i\>', _italize(r'\1'), plain, re.S)
+
+        plain = re.sub(r'\<u\>(.*?)\<\/u\>',
                        click.style(r'\1', underline=True),
                        plain, re.S)
 
@@ -315,3 +315,7 @@ def _get_first_tag(tree):
             return child
 
     return None
+
+def _italize(string):
+    """Italize string"""
+    return '\x1b[3m' + string + '\x1b[0m'

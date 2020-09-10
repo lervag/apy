@@ -32,7 +32,8 @@ class Note:
     def __repr__(self):
         """Convert note to Markdown format"""
         lines = [
-            f'# Note ID: {self.n.id}',
+            '# Note',
+            f'nid: {self.n.id}',
             f'model: {self.model_name}',
         ]
 
@@ -82,7 +83,8 @@ class Note:
     def print(self, pprint=True):
         """Print to screen (similar to __repr__ but with colors)"""
         lines = [
-            click.style(f'# Note ID: {self.n.id}', fg='green'),
+            click.style('# Note', fg='green'),
+            click.style('nid: ', fg='yellow') + f'{self.n.id}',
             click.style('model: ', fg='yellow')
             + f'{self.model_name} ({len(self.n.cards())} cards)',
         ]
