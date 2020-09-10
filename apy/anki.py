@@ -20,7 +20,7 @@ from apy.utilities import editor, choose, cd
 class Anki:
     """My Anki collection wrapper class."""
 
-    def __init__(self, base=None, path=None, profile=None, **kwargs):
+    def __init__(self, base=None, path=None, profile=None, **_kwargs):
         self.modified = False
 
         self._init_load_collection(base, path, profile)
@@ -325,7 +325,8 @@ class Anki:
             click.echo(f'Q: {question[:cfg["width"]]}')
             if verbose:
                 click.echo(f'A: {answer[:cfg["width"]]}')
-                click.echo(f'ease: {c.factor/10}% '
+                click.echo(f'cid: {cid} '
+                           f'ease: {c.factor/10}% '
                            f'lapses: {c.lapses} '
                            f'model: {c.model()["name"]}\n')
 
