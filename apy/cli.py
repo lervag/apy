@@ -263,9 +263,9 @@ def list_cards(query, verbose):
 
 @main.command()
 @click.option('-q', '--query', default='tag:marked OR -flag:0',
-              help=('Review cards that match query [default: marked cards].'))
+              help=('Review/Edit notes that match query [default: marked cards].'))
 def review(query):
-    """Review marked notes."""
+    """Review/Edit notes that match query."""
     with Anki(**cfg) as a:
         notes = list(a.find_notes(query))
         number_of_notes = len(notes)
