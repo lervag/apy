@@ -267,7 +267,9 @@ def list_cards(query, verbose):
       "query": "tag:marked OR tag:leech"
     }
     """
-    if not query:
+    if query:
+        query = " ".join(query)
+    else:
         query = cfg["query"]
 
     with Anki(**cfg) as a:
@@ -286,7 +288,9 @@ def review(query):
       "query": "tag:marked OR tag:leech"
     }
     """
-    if not query:
+    if query:
+        query = " ".join(query)
+    else:
         query = cfg["query"]
 
     with Anki(**cfg) as a:
@@ -322,7 +326,9 @@ def tag(query, add_tags, remove_tags):
     If neither of the options --add-tags or --remove-tags are supplied, then
     this command simply lists all tags.
     """
-    if not query:
+    if query:
+        query = " ".join(query)
+    else:
         query = cfg["query"]
 
     with Anki(**cfg) as a:
