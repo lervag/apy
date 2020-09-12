@@ -16,6 +16,7 @@ Anki.
 | Version | Version note                        |
 |:-------:| ----------------------------------- |
 | `HEAD`  | Development branch                  |
+| 0.7     | Several improvements                |
 | 0.6     | Presets, choose profile, add-single |
 | 0.5     | Minor improvements                  |
 | 0.4     | Minor improvements                  |
