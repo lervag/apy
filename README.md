@@ -13,15 +13,15 @@ Anki.
   Anki project in any way.
 * Use this software entirely at your own risk. Frequent backups are encouraged.
 
-| Version | Version note                       |
-|:-------:| ---------------------------------- |
-| `HEAD`  | Development branch                 |
-| 0.5.1   | Started using patch releases       |
-| 0.5     | Minor improvements                 |
-| 0.4     | Minor improvements                 |
-| 0.3     | Compatible with Anki 2.1.26        |
-| 0.2     | Compatible with Anki 2.1.23        |
-| 0.1     | Compatible with Anki 2.1.13        |
+| Version | Version note                        |
+|:-------:| ----------------------------------- |
+| `HEAD`  | Development branch                  |
+| 0.6     | Presets, choose profile, add-single |
+| 0.5     | Minor improvements                  |
+| 0.4     | Minor improvements                  |
+| 0.3     | Compatible with Anki 2.1.26         |
+| 0.2     | Compatible with Anki 2.1.23         |
+| 0.1     | Compatible with Anki 2.1.13         |
 
 ## Table of Contents
 
@@ -69,14 +69,22 @@ apy --help
 `apy` loads configuration from `~/.config/apy/apy.json`. The following keys are
 currently recognized:
 
+- `base`: Specify where `apy` should look for your Anki database. This is usually something like `/home/your_name/.local/share/Anki2/`.
+- `profile`: Specify which profile to load by default.
+- `query`: Specify default query for `apy list`, `apy review` and `apy tag`.
+- `presets`: Specify preset combination of model and tags for use with `apy add-single`.
 - `pngCommands`/`svgCommands`: Set LaTeX commands to generate PNG/SVG files. This is inspired by the [Edit LaTeX build process](https://ankiweb.net/shared/info/937148547) addon to Anki.
-- `base`: Specify where `apy` should look for your Anki database. This is usually something like `/home/your_name/.local/share/Anki2/`
 
 An example configuration:
 
 ```json
 {
   "base": "/home/your_name/.local/share/Anki2/",
+  "profile": "MyAnkiProfile",
+  "query": "tag:leech",
+  "presets": {
+    "default": { "model": "Custom", "tags": ["marked"] }
+  },
   "pngCommands": [
     ["latex", "-interaction=nonstopmode", "tmp.tex"],
     ["dvipng", "-D", "150", "-T", "tight", "-bg", "Transparent",

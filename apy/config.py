@@ -17,7 +17,6 @@ else:
 # Ensure that cfg has required keys
 for required, default in [('base', None),
                           ('profile', None),
-                          ('path', None),
                           ('query', 'tag:marked OR -flag:0'),
                           ('presets', {})]:
     if required not in cfg:
