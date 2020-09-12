@@ -82,6 +82,10 @@ apy list -v tag:leech
 apy review cid:12345678
 ```
 
+`apy` can be combined with editor specific configuration and workflows to
+improve the process of adding and editing cards. For more information about
+this, see [the Wiki](https://github.com/lervag/apy/wiki/Vim).
+
 ## Configuration
 
 `apy` loads configuration from `~/.config/apy/apy.json`. The following keys are
