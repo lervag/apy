@@ -64,6 +64,24 @@ put it somewhere else, then you must set the environment variable
 apy --help
 ```
 
+Some examples:
+
+```sh
+# Add card with interactive editor session
+apy add
+
+# Add single card with specified preset (see configuration for more info on
+# presets)
+apy add-single -p preset "Question/Front" "Answer/Back"
+
+# List leech cards (will show cid values for each card). Note that the query
+# should be similar to a search query in the Anki browser.
+apy list -v tag:leech
+
+# Review and possibly edit file with given cid
+apy review cid:12345678
+```
+
 ## Configuration
 
 `apy` loads configuration from `~/.config/apy/apy.json`. The following keys are
