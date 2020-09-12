@@ -18,6 +18,7 @@ else:
 for required, default in [('base', None),
                           ('profile', None),
                           ('query', 'tag:marked OR -flag:0'),
+                          ('markdown_models', ['Basic']),
                           ('presets', {})]:
     if required not in cfg:
         cfg[required] = default

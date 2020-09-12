@@ -354,7 +354,7 @@ class Anki:
 
             input_string += [f'tags: {tags}']
 
-            if model_name != 'Basic':
+            if model_name not in cfg['markdown_models']:
                 input_string += ['markdown: false']
 
             input_string += ['\n# Note\n']
