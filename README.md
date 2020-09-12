@@ -4,31 +4,24 @@
 remembering things easy. `apy` is a Python script for easily adding cards to
 Anki.
 
-**Important**:
+### Important
 
 * This is currently **WORK IN PROGRESS**, and there may still be some major
   changes.
-* The current version should be compatible with Anki 2.1.26.
+* The current version should be compatible with Anki 2.1.26 (see the
+  [changelog](#changelog) to find versions compatible with older versions of
+  Anki).
 * This script and its author(s) are not affiliated/associated with the main
   Anki project in any way.
 * Use this software entirely at your own risk. Frequent backups are encouraged.
 
-| Version | Version note                        |
-|:-------:| ----------------------------------- |
-| `HEAD`  | Development branch                  |
-| 0.7     | Several improvements                |
-| 0.6     | Presets, choose profile, add-single |
-| 0.5     | Minor improvements                  |
-| 0.4     | Minor improvements                  |
-| 0.3     | Compatible with Anki 2.1.26         |
-| 0.2     | Compatible with Anki 2.1.23         |
-| 0.1     | Compatible with Anki 2.1.13         |
-
-## Table of Contents
+### Table of Contents
 
 * [Install instructions](#install-instructions)
 * [Usage](#usage)
+* [Configuration](#configuration)
 * [Zsh completion](#zsh-completion)
+* [Changelog](#changelog)
 * [Relevant resources](#relevant-resources)
 * [Alternatives](#alternatives)
 
@@ -140,6 +133,23 @@ Then add the following line to ones `.zshrc` file:
 ```sh
 fpath=($HOME/.local/zsh-functions $fpath)
 ```
+
+## Changelog
+
+This is just a simple changelog. See the commit history and issue threads for
+details. The main purpose of the changelog is to show which versions of apy are
+compatible with which versions of Anki.
+
+| Version | Version note                        |
+|:-------:| ----------------------------------- |
+| `HEAD`  | Development branch                  |
+| 0.7     | Several improvements                |
+| 0.6     | Presets, choose profile, add-single |
+| 0.5     | Minor improvements                  |
+| 0.4     | Minor improvements                  |
+| 0.3     | Compatible with Anki 2.1.26         |
+| 0.2     | Compatible with Anki 2.1.23         |
+| 0.1     | Compatible with Anki 2.1.13         |
 
 ## Relevant resources
 
