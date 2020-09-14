@@ -77,7 +77,6 @@ def add_single(fields, tags=None, preset=None, model_name=None, deck=None):
     \b
         # Add a note to deck "MyDeck" with tags 'my-tag' and 'new-tag'
         apy add-single -t "my-tag new-tag" -d MyDeck myfront myback
-
     """
     with Anki(**cfg) as a:
         tags_preset = ' '.join(cfg['presets'][preset]['tags'])
@@ -90,7 +89,6 @@ def add_single(fields, tags=None, preset=None, model_name=None, deck=None):
             model_name = cfg['presets'][preset]['model']
 
         a.add_notes_single(fields, tags, model_name, deck)
-
 
 @main.command()
 @click.option('-t', '--tags', default='',
@@ -114,30 +112,7 @@ def add(tags, model_name, deck):
     """
     with Anki(**cfg) as a:
         notes = a.add_notes_with_editor(tags, model_name, deck)
-        n_notes = len(notes)
-        if n_notes == 0:
-            click.echo("No notes added")
-            return
-
-        decks = [a.col.decks.name(c.did) for n in notes for c in n.n.cards()]
-        n_decks = len(decks)
-        if n_decks == 0:
-            click.echo("No notes added")
-            return
-
-        if a.n_decks > 1:
-            if n_notes == 1:
-                click.echo(f'Added note to deck: {decks[0]}')
-            elif n_decks > 1:
-                click.echo(f'Added {n_notes} notes to {n_decks} different decks')
-            else:
-                click.echo(f'Added {n_notes} notes to deck: {decks[0]}')
-        else:
-            click.echo(f'Added {n_notes} notes')
-
-        if click.confirm('Review added notes?'):
-            for i, note in enumerate(notes):
-                note.review(i, n_notes, remove_actions=['Abort'])
+        _added_notes_postprocessing(a, notes)
 
 @main.command('add-from-file')
 @click.argument('file', type=click.Path(exists=True, dir_okay=False))
@@ -151,30 +126,35 @@ def add_from_file(file, tags):
     """
     with Anki(**cfg) as a:
         notes = a.add_notes_from_file(file, tags)
-        n_notes = len(notes)
-        if n_notes == 0:
-            click.echo("No notes added")
-            return
+        _added_notes_postprocessing(a, notes)
 
-        decks = [a.col.decks.name(c.did) for n in notes for c in n.n.cards()]
-        n_decks = len(decks)
-        if n_decks == 0:
-            click.echo("No notes added")
-            return
+def _added_notes_postprocessing(a, notes):
+    """Common postprocessing after 'apy add[-from-file]'."""
+    n_notes = len(notes)
+    if n_notes == 0:
+        click.echo("No notes added")
+        return
 
-        if a.n_decks > 1:
-            if n_notes == 1:
-                click.echo(f'Added note to deck: {decks[0]}')
-            elif n_decks > 1:
-                click.echo(f'Added {n_notes} notes to {n_decks} different decks')
-            else:
-                click.echo(f'Added {n_notes} notes to deck: {decks[0]}')
+    decks = [a.col.decks.name(c.did) for n in notes for c in n.n.cards()]
+    n_decks = len(decks)
+    if n_decks == 0:
+        click.echo("No notes added")
+        return
+
+    if a.n_decks > 1:
+        if n_notes == 1:
+            click.echo(f'Added note to deck: {decks[0]}')
+        elif n_decks > 1:
+            click.echo(f'Added {n_notes} notes to {n_decks} different decks')
         else:
-            click.echo(f'Added {n_notes} notes')
+            click.echo(f'Added {n_notes} notes to deck: {decks[0]}')
+    else:
+        click.echo(f'Added {n_notes} notes')
 
-        if click.confirm('Review added notes?'):
-            for i, note in enumerate(notes):
-                note.review(i, n_notes, remove_actions=['Abort'])
+    if click.confirm('Review added notes?'):
+        for i, note in enumerate(notes):
+            note.review(i, n_notes, remove_actions=['Abort'])
+
 
 @main.command('check-media')
 def check_media():
