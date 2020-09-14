@@ -151,6 +151,12 @@ def _added_notes_postprocessing(a, notes):
     else:
         click.echo(f'Added {n_notes} notes')
 
+    for note in notes:
+        cards = note.n.cards()
+        click.echo(f'* nid: {note.n.id} (with {len(cards)} cards)')
+        for card in note.n.cards():
+            click.echo(f'  * cid: {card.id}')
+
 
 @main.command('check-media')
 def check_media():

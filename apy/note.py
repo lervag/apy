@@ -167,8 +167,13 @@ class Note:
 
         if len(notes) > 1:
             self.a.add_notes_from_list(notes[1:])
-            click.confirm(f'\nAdded {len(notes) - 1} new notes while editing.'
-                          '\nPress <cr> to continue.',
+            click.echo(f'\nAdded {len(notes) - 1} new notes while editing.')
+            for note in notes[1:]:
+                cards = note.n.cards()
+                click.echo(f'* nid: {note.n.id} (with {len(cards)} cards)')
+                for card in note.n.cards():
+                    click.echo(f'  * cid: {card.id}')
+            click.confirm('\nPress <cr> to continue.',
                           prompt_suffix='', show_default=False)
 
         note = notes[0]
