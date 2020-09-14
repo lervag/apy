@@ -206,7 +206,7 @@ class Anki:
     def find_notes(self, query):
         """Find notes in Collection and return Note objects"""
         return (Note(self, self.col.getNote(i))
-                for i in self.col.findNotes(query))
+                for i in set(self.col.findNotes(query)))
 
     def delete_notes(self, ids):
         """Delete notes by note ids"""
