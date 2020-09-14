@@ -151,10 +151,6 @@ def _added_notes_postprocessing(a, notes):
     else:
         click.echo(f'Added {n_notes} notes')
 
-    if click.confirm('Review added notes?'):
-        for i, note in enumerate(notes):
-            note.review(i, n_notes, remove_actions=['Abort'])
-
 
 @main.command('check-media')
 def check_media():
