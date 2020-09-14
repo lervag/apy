@@ -369,8 +369,12 @@ class Note:
                     model_name=self.model_name,
                     template=self)
 
-                number_of_notes = len(notes)
-                click.echo(f'Added {number_of_notes} notes')
+                click.echo(f'Added {len(notes)} notes')
+                for note in notes:
+                    cards = note.n.cards()
+                    click.echo(f'* nid: {note.n.id} (with {len(cards)} cards)')
+                    for card in note.n.cards():
+                        click.echo(f'  * cid: {card.id}')
                 click.confirm('Press any key to continue.',
                               prompt_suffix='', show_default=False)
                 continue
