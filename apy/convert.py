@@ -50,7 +50,12 @@ def markdown_file_to_notes(filename):
         ## FieldThree
         FieldThree
     """
-    defaults, notes = _parse_file(filename)
+    try:
+        defaults, notes = _parse_file(filename)
+    except KeyError as e:
+        click.echo(f'Error {e.__class__} when parsing {filename}!')
+        click.echo('This may typically be due to bad Markdown formatting.')
+        raise click.Abort()
 
     # Parse markdown flag
     if 'markdown' in defaults:
