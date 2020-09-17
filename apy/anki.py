@@ -322,13 +322,17 @@ class Anki:
             c = self.col.getCard(cid)
             question = html_to_screen(c.q()).replace('\n', ' ')
             answer = html_to_screen(c.a()).replace('\n', ' ')
-            click.echo(f'Q: {question[:cfg["width"]]}')
+            click.echo(f"{click.style('Q:', fg='yellow')} "
+                       f"{question[:cfg['width']]}")
             if verbose:
-                click.echo(f'A: {answer[:cfg["width"]]}')
-                click.echo(f'cid: {cid} '
-                           f'ease: {c.factor/10}% '
-                           f'lapses: {c.lapses} '
-                           f'model: {c.model()["name"]}\n')
+                click.echo(f"{click.style('A:', fg='yellow')} "
+                           f"{answer[:cfg['width']]}")
+                click.echo(
+                    f"{click.style('cid:', fg='yellow')} {cid} "
+                    f"{click.style('ease:', fg='yellow')} {c.factor/10}% "
+                    f"{click.style('lapses:', fg='yellow')} {c.lapses} "
+                    f"{click.style('due:', fg='yellow')} {c.due} "
+                    f"{click.style('model:', fg='yellow')} {c.model()['name']}\n")
 
 
     def add_notes_with_editor(self, tags='', model_name=None, deck_name=None,
