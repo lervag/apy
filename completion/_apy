@@ -104,8 +104,8 @@ _apy() {
         );;
     reposition)
       opts=( \
-        '::CID for card to reposition' \
         '::New position for CID' \
+        '::Query' \
         $opts_help \
         );;
     tag)

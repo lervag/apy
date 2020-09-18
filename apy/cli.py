@@ -343,26 +343,30 @@ def tag(query, add_tags, remove_tags):
 
 
 @main.command()
-@click.argument('cid', type=int, required=True, nargs=1)
 @click.argument('position', type=int, required=True, nargs=1)
-def reposition(cid, position):
-    """Reposition card with cid = CID.
+@click.argument('query', required=True, nargs=-1)
+def reposition(position, query):
+    """Reposition cards that match QUERY.
 
     Sets the new position to POSITION and shifts other cards.
 
     Note that repositioning only works with new cards!
     """
+    query = " ".join(query)
+
     with Anki(**cfg) as a:
-        try:
-            card = a.col.getCard(cid)
-            if card.type != 0:
-                click.echo(f'Can only reposition new cards!')
-                raise click.Abort()
-        except AssertionError:
-            click.echo(f'No matching card for cid = {cid}!')
+        cids = list(a.find_cards(query))
+        if not cids:
+            click.echo(f'No matching cards for query: {query}!')
             raise click.Abort()
 
-        a.col.sched.sortCards([cid], position, 1, False, True)
+        for cid in cids:
+            card = a.col.getCard(cid)
+            if card.type != 0:
+                click.echo('Can only reposition new cards!')
+                raise click.Abort()
+
+        a.col.sched.sortCards(cids, position, 1, False, True)
         a.modified = True
 
 
