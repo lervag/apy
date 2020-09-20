@@ -5,6 +5,7 @@ import tempfile
 import subprocess
 from pathlib import Path
 
+from bs4 import BeautifulSoup
 import click
 import readchar
 from anki import latex
@@ -132,6 +133,7 @@ class Note:
         images = []
         for html in self.n.values():
             images += _get_imgs_from_html_latex(html, self.a, self.n.model())
+            images += _get_imgs_from_html(html)
 
         with cd(self.a.col.media.dir()):
             for file in images:
@@ -424,6 +426,14 @@ class Note:
                     self.a.modified = False
                 raise click.Abort()
 
+
+def _get_imgs_from_html(field_html):
+    """Gather image filenames from <img> tags in field html.
+
+    Note: The returned paths are relative to the Anki media directory.
+    """
+    soup = BeautifulSoup(field_html, 'html.parser')
+    return [Path(x['src']) for x in soup.find_all('img')]
 
 def _get_imgs_from_html_latex(field_html, anki, model):
     """Gather the generated LaTeX image filenames from field html.
