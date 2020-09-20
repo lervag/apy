@@ -16,6 +16,10 @@ else:
 
 # Ensure that cfg has required keys
 for required, default in [('base', None),
+                          ('img_viewers', {
+                              'svg': ['display', '-density', '300'],
+                          }),
+                          ('img_viewers_default', ['feh']),
                           ('markdown_models', ['Basic']),
                           ('presets', {}),
                           ('profile', None),

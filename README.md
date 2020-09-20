@@ -87,6 +87,13 @@ currently recognized:
 
 - `base`: Specify where `apy` should look for your Anki database. This is
   usually something like `/home/your_name/.local/share/Anki2/`.
+- `img_viewers`: Specify a dictionary of image viewer commands. Each key is
+  a file extension. The value is a command list, e.g. `['display', 'density',
+  '300']` which specifies the command and its options to use for the
+  corresponding key (file extension).
+- `img_viewers_default`: Specify the default command to show an image. Must be
+  provided as a list of the command and desired options, such as `['feh',
+  '-d']`.
 - `markdown_models`: Specify a list of models for which `apy` will use
   a markdown converter.
 - `pngCommands`/`svgCommands`: Set LaTeX commands to generate PNG/SVG files.

@@ -10,6 +10,7 @@ import click
 import readchar
 from anki import latex
 
+from apy.config import cfg
 from apy.convert import html_to_markdown
 from apy.convert import html_to_screen
 from apy.convert import is_generated_html
@@ -137,14 +138,11 @@ class Note:
 
         with cd(self.a.col.media.dir()):
             for file in images:
-                if file.suffix == '.svg':
-                    subprocess.Popen(['display', '-density', '300', file],
-                                     stdout=subprocess.DEVNULL,
-                                     stderr=subprocess.DEVNULL)
-                else:
-                    subprocess.Popen(['feh', file],
-                                     stdout=subprocess.DEVNULL,
-                                     stderr=subprocess.DEVNULL)
+                view_cmd = cfg['img_viewers'].get(file.suffix[1:],
+                                                  cfg['img_viewers_default'])
+                subprocess.Popen(view_cmd + [file],
+                                 stdout=subprocess.DEVNULL,
+                                 stderr=subprocess.DEVNULL)
 
 
     def edit(self):
