@@ -112,7 +112,7 @@ class Note:
         for key, html in self.n.items():
             # Render LaTeX if necessary
             latex.render_latex(html, self.n.model(), self.a.col)
-            latex_imgs += self.get_lateximg_from_field(html)
+            latex_imgs += _get_imgs_from_html_latex(html, self.a, self.n.model())
 
             lines.append(click.style('## ' + key, fg='blue'))
             lines.append(html_to_screen(html, pprint))
@@ -131,7 +131,7 @@ class Note:
         """Show in the fields"""
         images = []
         for html in self.n.values():
-            images += self.get_lateximg_from_field(html)
+            images += _get_imgs_from_html_latex(html, self.a, self.n.model())
 
         with cd(self.a.col.media.dir()):
             for file in images:
@@ -284,12 +284,6 @@ class Note:
         return ', '.join(self.n.tags)
 
 
-    def get_lateximg_from_field(self, html):
-        """Gather the generated LaTeX image filenames"""
-        return [Path(ltx.filename) for ltx in
-                self.a.col.backend.extract_latex(
-                    html, self.n.model().get("latexsvg", False), False).latex]
-
     def review(self, i=None, number_of_notes=None, remove_actions=None):
         """Interactive review of the note
 
@@ -429,3 +423,13 @@ class Note:
                         continue
                     self.a.modified = False
                 raise click.Abort()
+
+
+def _get_imgs_from_html_latex(field_html, anki, model):
+    """Gather the generated LaTeX image filenames from field html.
+
+    Note: The returned paths are relative to the Anki media directory.
+    """
+    return [Path(ltx.filename)
+            for ltx in anki.col.backend.extract_latex(
+                field_html, model.get("latexsvg", False), False).latex]
