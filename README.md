@@ -85,12 +85,17 @@ this, see [the Wiki](https://github.com/lervag/apy/wiki/Vim).
 `apy` loads configuration from `~/.config/apy/apy.json`. The following keys are
 currently recognized:
 
-- `base`: Specify where `apy` should look for your Anki database. This is usually something like `/home/your_name/.local/share/Anki2/`.
+- `base`: Specify where `apy` should look for your Anki database. This is
+  usually something like `/home/your_name/.local/share/Anki2/`.
+- `markdown_models`: Specify a list of models for which `apy` will use
+  a markdown converter.
+- `pngCommands`/`svgCommands`: Set LaTeX commands to generate PNG/SVG files.
+  This is inspired by the [Edit LaTeX build
+  process](https://ankiweb.net/shared/info/937148547) addon to Anki.
+- `presets`: Specify preset combination of model and tags for use with `apy
+  add-single`.
 - `profile`: Specify which profile to load by default.
 - `query`: Specify default query for `apy list`, `apy review` and `apy tag`.
-- `markdown_models`: Specify a list of models for which `apy` will use a markdown converter.
-- `presets`: Specify preset combination of model and tags for use with `apy add-single`.
-- `pngCommands`/`svgCommands`: Set LaTeX commands to generate PNG/SVG files. This is inspired by the [Edit LaTeX build process](https://ankiweb.net/shared/info/937148547) addon to Anki.
 
 An example configuration:
 
