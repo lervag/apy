@@ -198,6 +198,49 @@ class Note:
         """Delete the note"""
         self.a.delete_notes(self.n.id)
 
+    def change_model(self):
+        """Change the note type"""
+        click.clear()
+        click.secho('Warning!', fg='red')
+        click.echo(
+            '\nThe note type is changed by creating a new note with the selected'
+            '\ntype and then deleting the old note. This means that the review'
+            '\nprogress is lost!'
+        )
+        if not click.confirm('\nContinue?'):
+            return False
+
+        models = list(self.a.model_names)
+        models.sort()
+        while True:
+            click.clear()
+            click.echo('Please choose new model:')
+            for n, m in enumerate(models):
+                click.echo(f'  {n+1}: {m}')
+            index = click.prompt('>>> ', prompt_suffix='', type=int) - 1
+            try:
+                new_model = models[index]
+                self.a.set_model(new_model)
+                model = self.a.get_model(new_model)
+                break
+            except IndexError:
+                continue
+
+        fields = ['' for _ in range(len(model['flds']))]
+        for key, val in self.n.items():
+            fields[0] += f'### {key}\n{val}\n'
+
+        tags = ', '.join(self.n.tags)
+        is_markdown = any([is_generated_html(x) for x in self.n.values()])
+
+        # pylint: disable=protected-access
+        new_note = self.a._add_note(fields, tags, is_markdown)
+        new_note.edit()
+        # pylint: enable=protected-access
+        self.a.delete_notes(self.n.id)
+
+        return True
+
 
     def toggle_marked(self):
         """Toggle marked tag for note"""
@@ -308,6 +351,7 @@ class Note:
             'C': 'Show card names',
             'f': 'Show images',
             'E': 'Edit CSS',
+            'N': 'Change model',
             's': 'Save and stop',
             'x': 'Abort',
         }
@@ -409,6 +453,11 @@ class Note:
 
             if action == 'Edit CSS':
                 self.a.edit_model_css(self.model_name)
+                continue
+
+            if action == 'Change model':
+                if self.change_model():
+                    return True
                 continue
 
             if action == 'Save and stop':
