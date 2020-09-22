@@ -166,9 +166,9 @@ class Note:
             return
 
         if len(notes) > 1:
-            self.a.add_notes_from_list(notes[1:])
-            click.echo(f'\nAdded {len(notes) - 1} new notes while editing.')
-            for note in notes[1:]:
+            added_notes = self.a.add_notes_from_list(notes[1:])
+            click.echo(f'\nAdded {len(added_notes)} new notes while editing.')
+            for note in added_notes:
                 cards = note.n.cards()
                 click.echo(f'* nid: {note.n.id} (with {len(cards)} cards)')
                 for card in note.n.cards():
