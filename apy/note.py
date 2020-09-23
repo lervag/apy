@@ -417,9 +417,9 @@ class Note:
                               prompt_suffix='', show_default=False)
                 continue
 
-            if action == 'Delete':
-                if click.confirm('Are you sure you want to delete the note?'):
-                    self.delete()
+            if action == 'Delete' and click.confirm(
+                    'Are you sure you want to delete the note?'):
+                self.delete()
                 return True
 
             if action == 'Toggle markdown':
@@ -455,10 +455,8 @@ class Note:
                 self.a.edit_model_css(self.model_name)
                 continue
 
-            if action == 'Change model':
-                if self.change_model():
-                    return True
-                continue
+            if action == 'Change model' and self.change_model():
+                return True
 
             if action == 'Save and stop':
                 click.echo('Stopped')
