@@ -322,6 +322,8 @@ class Anki:
             c = self.col.getCard(cid)
             question = html_to_screen(c.q()).replace('\n', ' ')
             answer = html_to_screen(c.a()).replace('\n', ' ')
+            card_type = ['new', 'learning', 'review', 'relearning'][c.type]
+
             click.echo(f"{click.style('Q:', fg='yellow')} "
                        f"{question[:cfg['width']]}")
             if verbose:
@@ -329,6 +331,7 @@ class Anki:
                            f"{answer[:cfg['width']]}")
                 click.echo(
                     f"{click.style('cid:', fg='yellow')} {cid} "
+                    f"{click.style('type:', fg='yellow')} {card_type} "
                     f"{click.style('ease:', fg='yellow')} {c.factor/10}% "
                     f"{click.style('lapses:', fg='yellow')} {c.lapses} "
                     f"{click.style('due:', fg='yellow')} {c.due} "

@@ -188,23 +188,30 @@ def info():
         sum_due = len(a.col.findNotes('is:due'))
         sum_marked = len(a.col.findNotes('tag:marked'))
         sum_flagged = len(a.col.findNotes('-flag:0'))
+        sum_new = len(a.col.findNotes('is:new'))
+        sum_susp = len(a.col.findNotes('is:suspended'))
 
-        click.echo(f"\n{'Model':26s} {'notes':>8s} {'cards':>8s} "
-                   f"{'due':>8s} {'marked':>8s} {'flagged':>8s}")
-        click.echo("-"*71)
+        click.echo(f"\n{'Model':24s} {'notes':>7s} {'cards':>7s} "
+                   f"{'due':>7s} {'new':>7s} {'susp.':>7s} {'marked':>7s} {'flagged':>7s}")
+        click.echo("-"*80)
         models = sorted(a.model_names)
         for m in models:
-            nnotes = len(a.col.findNotes(f'"note:{m}"'))
+            nnotes = len(set(a.col.findNotes(f'"note:{m}"')))
             ncards = len(a.find_cards(f'"note:{m}"'))
             ndue = len(a.find_cards(f'"note:{m}" is:due'))
             nmarked = len(a.find_cards(f'"note:{m}" tag:marked'))
             nflagged = len(a.find_cards(f'"note:{m}" -flag:0'))
-            click.echo(f"{m:26s} {nnotes:8d} {ncards:8d} "
-                       f"{ndue:8d} {nmarked:8d} {nflagged:8d}")
-        click.echo("-"*71)
-        click.echo(f"{'Sum':26s} {sum_notes:8d} {sum_cards:8d} "
-                   f"{sum_due:8d} {sum_marked:8d} {sum_flagged:8d}")
-        click.echo("-"*71)
+            nnew = len(a.find_cards(f'"note:{m}" is:new'))
+            nsusp = len(a.find_cards(f'"note:{m}" is:suspended'))
+            name = m[:24]
+            click.echo(f"{name:24s} {nnotes:7d} {ncards:7d} "
+                       f"{ndue:7d} {nnew:7d} {nsusp:7d} "
+                       f"{nmarked:7d} {nflagged:7d}")
+        click.echo("-"*80)
+        click.echo(f"{'Sum':24s} {sum_notes:7d} {sum_cards:7d} "
+                   f"{sum_due:7d} {sum_new:7d} {sum_susp:7d} "
+                   f"{sum_marked:7d} {sum_flagged:7d}")
+        click.echo("-"*80)
 
 
 @main.group(context_settings=CONTEXT_SETTINGS, invoke_without_command=True)

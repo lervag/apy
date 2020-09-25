@@ -84,12 +84,16 @@ class Note:
 
     def print(self, pprint=True):
         """Print to screen (similar to __repr__ but with colors)"""
-        lines = [
-            click.style('# Note', fg='green'),
-            click.style('nid: ', fg='yellow') + f'{self.n.id}',
-            click.style('model: ', fg='yellow')
-            + f'{self.model_name} ({len(self.n.cards())} cards)',
-        ]
+        lines = [click.style('# Note', fg='green')]
+
+        types = ', '.join({['new', 'learning', 'review', 'relearning'][c.type]
+                           for c in self.n.cards()})
+
+        lines += [click.style('nid: ', fg='yellow') + f'{self.n.id}'
+                  + click.style('    card type(s): ', fg='yellow') + types]
+
+        lines += [click.style('model: ', fg='yellow')
+                  + f'{self.model_name} ({len(self.n.cards())} cards)']
 
         if self.a.n_decks > 1:
             lines += [click.style('deck: ', fg='yellow')+self.get_deck()]
