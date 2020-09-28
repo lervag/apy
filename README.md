@@ -251,3 +251,24 @@ it needs to run as a plugin to Anki desktop to generate notes to a local
 collection. It does not seem to allow editing/adding to a local collection
 outside of Anki desktop.
 
+## Contributing
+
+### Setup
+
+First fork the repository, then clone your fork and install the package
+dependencies:
+
+```console
+$ git clone git@github.com:<username>/apy.git
+$ cd apy/
+$ mkvirtualenv anki -p python3.8
+$ echo "anki" > .venv  # if you use a loader like zsh-autoswitch-virtualenv
+$ ./setup.py install
+$ pip install -r requirements-dev.txt
+```
+
+### tests
+
+```console
+$ pytest
+```

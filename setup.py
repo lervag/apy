@@ -1,3 +1,5 @@
+#!/usr/bin/env python
+
 """Setup script for apy"""
 
 import codecs
@@ -22,10 +24,10 @@ setup(
         'Programming Language :: Python :: 3',
     ],
     install_requires=[
-        'click',
-        'beautifulsoup4',
-        'Markdown',
-        'readchar',
+        'click==7.1.2',
+        'beautifulsoup4==4.8.2',
+        'Markdown==3.2.1',
+        'readchar==2.0.1',
     ],
     entry_points='''
         [console_scripts]
