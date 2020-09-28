@@ -320,8 +320,12 @@ class Anki:
         """List cards that match a query"""
         for cid in self.find_cards(query):
             c = self.col.getCard(cid)
-            question = html_to_screen(c.q()).replace('\n', ' ')
-            answer = html_to_screen(c.a()).replace('\n', ' ')
+
+            # Use the field values to skip unwanted card template markup
+            field_question, field_answer = c.note().values()
+            question = html_to_screen(field_question).replace('\n', ' ')
+            answer = html_to_screen(field_answer).replace('\n', ' ')
+
             card_type = ['new', 'learning', 'review', 'relearning'][c.type]
 
             click.echo(f"{click.style('Q:', fg='yellow')} "
