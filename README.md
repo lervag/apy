@@ -262,28 +262,28 @@ First, fork the repository. Then clone your fork and install the package
 dependencies. The following listing should give an indication of how to get
 started.
 
-```console
+```sh
 # Clone the forked repo
-$ git clone git@github.com:<username>/apy.git
-$ cd apy/
+git clone git@github.com:<username>/apy.git
+cd apy/
 
 # Create a virtualenv
-$ mkvirtualenv anki -p python3.8
+mkvirtualenv anki -p python3.8
 
 # The following is convenient if you use a virtualenv loader like
 # zsh-autoswitch-virtualenv
-$ echo "anki" > .venv
+echo "anki" > .venv
 
 # Activate the virtualenv, then:
-$ ./setup.py install
-$ pip install -r requirements-dev.txt
+./setup.py install
+pip install -r requirements-dev.txt
 ```
 
 ### Tests
 
 To run the tests, do this:
 
-```console
-$ pytest
+```sh
+pytest
 ```
 
