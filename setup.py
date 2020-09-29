@@ -24,8 +24,8 @@ setup(
         'Programming Language :: Python :: 3',
     ],
     install_requires=[
-        'click==7.1.2',
         'beautifulsoup4==4.8.2',
+        'click==7.1.2',
         'Markdown==3.2.1',
         'readchar==2.0.1',
     ],

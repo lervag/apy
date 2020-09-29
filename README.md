@@ -253,22 +253,37 @@ outside of Anki desktop.
 
 ## Contributing
 
+The following is a short and simple guide to getting started with contributing
+and developing the `apy` code.
+
 ### Setup
 
-First fork the repository, then clone your fork and install the package
-dependencies:
+First, fork the repository. Then clone your fork and install the package
+dependencies. The following listing should give an indication of how to get
+started.
 
 ```console
+# Clone the forked repo
 $ git clone git@github.com:<username>/apy.git
 $ cd apy/
+
+# Create a virtualenv
 $ mkvirtualenv anki -p python3.8
-$ echo "anki" > .venv  # if you use a loader like zsh-autoswitch-virtualenv
+
+# The following is convenient if you use a virtualenv loader like
+# zsh-autoswitch-virtualenv
+$ echo "anki" > .venv
+
+# Activate the virtualenv, then:
 $ ./setup.py install
 $ pip install -r requirements-dev.txt
 ```
 
-### tests
+### Tests
+
+To run the tests, do this:
 
 ```console
 $ pytest
 ```
+
