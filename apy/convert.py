@@ -299,7 +299,7 @@ def html_to_screen(html, pprint=True, parseable=False):
                        click.style(r'\1', underline=True),
                        plain, re.S)
 
-    return plain
+    return plain.strip()
 
 def is_generated_html(html):
     """Check if text is a generated HTML"""
