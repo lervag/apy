@@ -299,7 +299,7 @@ def html_to_screen(html, pprint=True, parseable=False):
                        click.style(r'\1', underline=True),
                        plain, re.S)
 
-    return BeautifulSoup(plain, features='html5lib').get_text().strip()
+    return plain
 
 def is_generated_html(html):
     """Check if text is a generated HTML"""

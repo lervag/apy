@@ -8,6 +8,7 @@ import click
 import anki
 from anki.sync import Syncer, RemoteServer
 from aqt.profiles import ProfileManager
+from bs4 import BeautifulSoup
 
 from apy.config import cfg
 from apy.note import Note
@@ -320,10 +321,15 @@ class Anki:
         """List cards that match a query"""
         for cid in self.find_cards(query):
             c = self.col.getCard(cid)
+            question = BeautifulSoup(html_to_screen(c.q()),
+                                     features='html5lib')
             question = re.sub(r'\s\s+', ' ',
-                              html_to_screen(c.q()).replace('\n', ' '))
+                              question.get_text().replace('\n', ' ').strip())
+            answer = BeautifulSoup(html_to_screen(c.a()),
+                                     features='html5lib')
             answer = re.sub(r'\s\s+', ' ',
-                            html_to_screen(c.a()).replace('\n', ' '))
+                              answer.get_text().replace('\n', ' ').strip())
+
             card_type = ['new', 'learning', 'review', 'relearning'][c.type]
 
             click.echo(f"{click.style('', fg='reset')}"
