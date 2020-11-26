@@ -6,7 +6,6 @@ from pathlib import Path
 
 import click
 import anki
-from anki.sync import Syncer, RemoteServer
 from aqt.profiles import ProfileManager
 from bs4 import BeautifulSoup
 
@@ -108,43 +107,32 @@ class Anki:
         if self.pm is None:
             return
 
-        hkey = self.pm.sync_key()
-        hostNum = self.pm.sync_shard()
-        if not hkey:
-            click.echo('No sync auth registered in profile')
+        auth = self.pm.sync_auth()
+        if auth is None:
             return
 
-        # Initialize servers and sync clients
-        server = RemoteServer(hkey, hostNum=hostNum)
-        main_client = Syncer(self.col, server)
+        # Make sure database is saved first
+        self.col.save(trx=False)
 
         # Perform main sync
         try:
-            click.echo('Syncing deck ... ', nl=False)
-            ret = main_client.sync()
+            debug_output = 'anki::sync=debug' in os.environ.get('RUST_LOG', '')
+
+            if debug_output:
+                click.secho('Syncing deck:', fg='blue')
+            else:
+                click.echo('Syncing deck ... ', nl=False)
+
+            self.col.backend.sync_collection(auth)
+
+            if not debug_output:
+                click.echo('done!')
+            else:
+                click.echo('')
         except Exception as e:
-            if 'sync cancelled' in str(e):
-                server.abort()
             click.secho('Error during sync!', fg='red')
             click.echo(e)
             raise click.Abort()
-
-        # Parse return value
-        if ret == "noChanges":
-            click.echo('done (no changes)!')
-        elif ret == "success":
-            click.echo('done!')
-        elif ret == "serverAbort":
-            click.echo('aborted!')
-            return
-        elif ret == "fullSync":
-            click.echo('aborted!')
-            click.secho('Full sync required!', fg='red')
-            return
-        else:
-            click.echo('failed!')
-            click.echo(f'Message: {ret}')
-            return
 
         # Perform media sync
         try:
@@ -152,11 +140,10 @@ class Anki:
 
             with cd(self.col.media.dir()):
                 if debug_output:
-                    click.echo('Syncing media:')
+                    click.secho('Syncing media:', fg='blue')
                 else:
                     click.echo('Syncing media ... ', nl=False)
-                self.col.backend.sync_media(
-                    hkey, f"https://sync{hostNum}.ankiweb.net/msync/")
+                self.col.backend.sync_media(auth)
                 if not debug_output:
                     click.echo('done!')
         except Exception as e:
