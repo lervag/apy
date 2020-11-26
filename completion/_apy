@@ -53,7 +53,7 @@ _apy() {
     'model:Interact with the models' \
     'list:Print cards that match query' \
     'review:Review/Edit notes that match query [default: marked/flagged]' \
-    'reposition: Reposition new card with given CID' \
+    'reposition:Reposition new card with given CID' \
     'sync:Synchronize collection with AnkiWeb' \
     'tag:Add or remove tags from notes that match query' \
     )
