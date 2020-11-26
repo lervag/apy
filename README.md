@@ -8,7 +8,7 @@ Anki.
 
 * This is currently **WORK IN PROGRESS**, and there may still be some major
   changes.
-* The current version should be compatible with Anki 2.1.26 (see the
+* The current version should be compatible with Anki 2.1.35 (see the
   [changelog](#changelog) to find versions compatible with older versions of
   Anki).
 * This script and its author(s) are not affiliated/associated with the main
@@ -155,6 +155,7 @@ compatible with which versions of Anki.
 | Version | Version note                        |
 |:-------:| ----------------------------------- |
 | `HEAD`  | Development branch                  |
+| 0.8     | Compatible with Anki 2.1.35         |
 | 0.7     | Several improvements                |
 | 0.6     | Presets, choose profile, add-single |
 | 0.5     | Minor improvements                  |
