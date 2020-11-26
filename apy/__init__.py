@@ -1,5 +1,5 @@
 """Package for interfacing and manipulating Anki decks"""
-__version__ = '0.7.2'
+__version__ = '0.7.3'
 
 try:
     import anki
