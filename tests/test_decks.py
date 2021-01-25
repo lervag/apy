@@ -15,5 +15,15 @@ def test_decks():
 
         notes = a.add_notes_from_file(testDir + '/' + 'data/deck.md')
 
-        assert a.col.decks.name(notes[0].n.cards()[0].did) == 'Default'
-        assert a.col.decks.name(notes[1].n.cards()[0].did) == 'NewDeck'
+        assert notes[0].get_deck() == 'Default'
+        assert notes[1].get_deck() == 'NewDeck'
+
+        # Move note cards to existing deck
+        notes[0].set_deck('NewDeck')
+        assert notes[0].get_deck() == 'NewDeck'
+
+        # Move note cards to new deck
+        notes[1].set_deck('DeckTwo')
+        assert notes[1].get_deck() == 'DeckTwo'
+
+        assert a.col.decks.count() == 3

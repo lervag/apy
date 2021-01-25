@@ -186,6 +186,10 @@ class Note:
         if new_tags != self.n.tags:
             self.n.tags = new_tags
 
+        new_deck = note.get('deck', None)
+        if new_deck is not None and new_deck != self.get_deck():
+            self.set_deck(new_deck)
+
         for i, value in enumerate(note['fields'].values()):
             if note['markdown']:
                 self.n.fields[i] = markdown_to_html(value)
@@ -310,6 +314,35 @@ class Note:
         """Return which deck the note belongs to"""
         return self.a.col.decks.name(self.n.cards()[0].did)
 
+    def set_deck(self, deck):
+        """Move note to deck"""
+        if not isinstance(deck, str):
+            raise Exception('Argument "deck" should be string!')
+
+        newdid = self.a.col.decks.id(deck)
+        cids = [c.id for c in self.n.cards()]
+
+        if cids:
+            self.a.col.decks.setDeck(cids, newdid)
+            self.a.modified = True
+
+    def set_deck_interactive(self):
+        """Move note to deck, interactive"""
+        click.clear()
+
+        click.secho('Specify target deck (CTRL-c/CTRL-d to abort):',
+                    fg='white')
+        for d in self.a.col.decks.all_names_and_ids(include_filtered=False):
+            click.echo(f'* {d.name}')
+        click.echo('* OTHER -> create new deck')
+
+        try:
+            newdeck = click.prompt('> ', prompt_suffix='')
+        except click.Abort:
+            return
+
+        self.set_deck(newdeck)
+
 
     def get_field(self, index_or_name):
         """Return field with given index or name"""
@@ -355,6 +388,7 @@ class Note:
             'C': 'Show card names',
             'f': 'Show images',
             'E': 'Edit CSS',
+            'D': 'Change deck',
             'N': 'Change model',
             's': 'Save and stop',
             'x': 'Abort',
@@ -459,8 +493,14 @@ class Note:
                 self.a.edit_model_css(self.model_name)
                 continue
 
-            if action == 'Change model' and self.change_model():
-                return True
+            if action == 'Change deck':
+                self.set_deck_interactive()
+                continue
+
+            if action == 'Change model':
+                if self.change_model():
+                    return True
+                continue
 
             if action == 'Save and stop':
                 click.echo('Stopped')
