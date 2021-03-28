@@ -1,6 +1,7 @@
-tests/data
-*.pyc
 apy.egg-info/
-.venv
 build/
 dist/
+tests/data
+*.pyc
+.venv
+.vimspector.json
