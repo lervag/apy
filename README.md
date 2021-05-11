@@ -252,6 +252,15 @@ it needs to run as a plugin to Anki desktop to generate notes to a local
 collection. It does not seem to allow editing/adding to a local collection
 outside of Anki desktop.
 
+### inka
+
+[inka](https://github.com/lazy-void/inka) is a CLI utility for adding
+flashcards from Markdown files to Anki.
+
+_The Dealbreaker_: This did not exist when apy was created. It seems to be
+close to what I would personally be interested in, but today I find apy solves
+all (or most) of my requirements. Also, `inka` requires the AnkiConnect plugin.
+
 ## Contributing
 
 The following is a short and simple guide to getting started with contributing
