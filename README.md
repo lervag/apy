@@ -261,6 +261,12 @@ _The Dealbreaker_: This did not exist when apy was created. It seems to be
 close to what I would personally be interested in, but today I find apy solves
 all (or most) of my requirements. Also, `inka` requires the AnkiConnect plugin.
 
+### Obsidian_to_Anki
+
+[Obsidian_to_Anki](https://github.com/Pseudonium/Obsidian_to_Anki) is a plugin to add flashcards from a text or markdown file to Anki. It can also be run from the command-line as a python script. Built with Obsidian markdown syntax in mind.
+
+_The Dealbreaker_: Requires AnkiConnect.
+
 ## Contributing
 
 The following is a short and simple guide to getting started with contributing
