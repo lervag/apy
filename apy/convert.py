@@ -1,9 +1,10 @@
 """Convert between formats/targets"""
 
-import re
 import base64
-import markdown
+import re
+
 import click
+import markdown
 from bs4 import BeautifulSoup, Tag
 from markdown.extensions.abbr import AbbrExtension
 from markdown.extensions.codehilite import CodeHiliteExtension
@@ -90,9 +91,10 @@ def markdown_file_to_notes(filename):
 
         # note = {**defaults, **note}
         note.update({k: v for k, v in defaults.items()
-                     if not k in note})
+                     if k not in note})
 
     return notes
+
 
 def _parse_file(filename):
     """Get data from file"""
@@ -101,62 +103,63 @@ def _parse_file(filename):
     note = {}
     codeblock = False
     field = None
-    for line in open(filename, 'r'):
-        if codeblock:
-            if field:
-                note['fields'][field] += line
-            match = re.match(r'```\s*$', line)
-            if match:
-                codeblock = False
-            continue
-
-        match = re.match(r'```\w*\s*$', line)
-        if match:
-            codeblock = True
-            if field:
-                note['fields'][field] += line
-            continue
-
-        if not field:
-            match = re.match(r'(\w+): (.*)', line)
-            if match:
-                k, v = match.groups()
-                k = k.lower()
-                if k == 'tag':
-                    k = 'tags'
-                note[k] = v.strip()
+    with open(filename, 'r', encoding='utf8') as f:
+        for line in f:
+            if codeblock:
+                if field:
+                    note['fields'][field] += line
+                match = re.match(r'```\s*$', line)
+                if match:
+                    codeblock = False
                 continue
 
-        match = re.match(r'(#+)\s*(.*)', line)
-        if not match:
-            if field:
-                note['fields'][field] += line
-            continue
+            match = re.match(r'```\w*\s*$', line)
+            if match:
+                codeblock = True
+                if field:
+                    note['fields'][field] += line
+                continue
 
-        level, title = match.groups()
+            if not field:
+                match = re.match(r'(\w+): (.*)', line)
+                if match:
+                    k, v = match.groups()
+                    k = k.lower()
+                    if k == 'tag':
+                        k = 'tags'
+                    note[k] = v.strip()
+                    continue
 
-        if len(level) == 1:
-            if note:
+            match = re.match(r'(#+)\s*(.*)', line)
+            if not match:
+                if field:
+                    note['fields'][field] += line
+                continue
+
+            level, title = match.groups()
+
+            if len(level) == 1:
+                if note:
+                    if field:
+                        note['fields'][field] = note['fields'][field].strip()
+                        notes.append(note)
+                    else:
+                        defaults.update(note)
+
+                note = {'title': title, 'fields': {}}
+                field = None
+                continue
+
+            if len(level) == 2:
                 if field:
                     note['fields'][field] = note['fields'][field].strip()
-                    notes.append(note)
-                else:
-                    defaults.update(note)
 
-            note = {'title': title, 'fields': {}}
-            field = None
-            continue
+                if title in note:
+                    click.echo(f'Error when parsing {filename}!')
+                    raise click.Abort()
 
-        if len(level) == 2:
-            if field:
-                note['fields'][field] = note['fields'][field].strip()
-
-            if title in note:
-                click.echo(f'Error when parsing {filename}!')
-                raise click.Abort()
-
-            field = title
-            note['fields'][field] = ''
+                field = title
+                note['fields'][field] = ''
 
     if note and field:
         note['fields'][field] = note['fields'][field].strip()
@@ -218,6 +221,7 @@ def markdown_to_html(plain):
 
     return str(html_tree)
 
+
 def plain_to_html(plain):
     """Convert plain text to html"""
     # Minor clean up
@@ -234,12 +238,14 @@ def plain_to_html(plain):
 
     return plain.strip()
 
+
 def html_to_markdown(html):
     """Extract Markdown from generated HTML"""
     tag = _get_first_tag(BeautifulSoup(html, 'html.parser'))
     encoded_bytes = tag['data-original-markdown'].encode()
     converted = base64.b64decode(encoded_bytes).decode('utf-8')
     return converted.replace("<br>", "\n").replace("<br />", "\n")
+
 
 def html_to_screen(html, pprint=True, parseable=False):
     """Convert html for printing to screen"""
@@ -301,6 +307,7 @@ def html_to_screen(html, pprint=True, parseable=False):
 
     return plain.strip()
 
+
 def is_generated_html(html):
     """Check if text is a generated HTML"""
     if html is None:
@@ -320,6 +327,7 @@ def _get_first_tag(tree):
             return child
 
     return None
+
 
 def _italize(string):
     """Italize string"""

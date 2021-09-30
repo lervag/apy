@@ -4,17 +4,16 @@ import re
 import tempfile
 from pathlib import Path
 
-import click
 import anki
+import click
 from aqt.profiles import ProfileManager
 from bs4 import BeautifulSoup
 
 from apy.config import cfg
+from apy.convert import (html_to_screen, markdown_file_to_notes,
+                         markdown_to_html, plain_to_html)
 from apy.note import Note
-from apy.convert import html_to_screen
-from apy.convert import markdown_file_to_notes
-from apy.convert import markdown_to_html, plain_to_html
-from apy.utilities import editor, choose, cd
+from apy.utilities import cd, choose, editor
 
 
 class Anki:
@@ -67,13 +66,13 @@ class Anki:
 
         try:
             self.col = anki.Collection(path)
-        except AssertionError:
+        except AssertionError as error:
             click.echo('Path to database is not valid!')
             click.echo(f'path = {path}')
-            raise click.Abort()
-        except anki.rsbackend.DBError:
+            raise click.Abort() from error
+        except anki.rsbackend.DBError as error:
             click.echo('Database is NA/locked!')
-            raise click.Abort()
+            raise click.Abort() from error
 
         # Restore CWD (because Anki changes it)
         os.chdir(save_cwd)
@@ -88,7 +87,6 @@ class Anki:
         if 'svgCommands' in cfg:
             anki.latex.svgCommands = cfg['svgCommands']
 
-
     def __enter__(self):
         return self
 
@@ -100,7 +98,6 @@ class Anki:
             self.col.close()
         elif self.col.db:
             self.col.close(False)
-
 
     def sync(self):
         """Sync collection to AnkiWeb"""
@@ -151,7 +148,6 @@ class Anki:
                 return
             raise
 
-
     def check_media(self):
         """Check media (will rebuild missing LaTeX files)"""
         with cd(self.col.media.dir()):
@@ -186,7 +182,6 @@ class Anki:
                     if os.path.isfile(file):
                         os.remove(file)
 
-
     def find_cards(self, query):
         """Find card ids in Collection that match query"""
         return self.col.findCards(query)
@@ -203,7 +198,6 @@ class Anki:
 
         self.col.remNotes(ids)
         self.modified = True
-
 
     def get_model(self, model_name):
         """Get model from model name"""
@@ -243,7 +237,6 @@ class Anki:
         self.col.models.save(model)
         self.modified = True
 
-
     def list_tags(self):
         """List all tags"""
         tags = [(t, len(self.col.findNotes(f'tag:{t}')))
@@ -261,7 +254,6 @@ class Anki:
         self.col.tags.bulkAdd(self.col.findNotes(query), tags, add)
         self.modified = True
 
-
     def edit_model_css(self, model_name):
         """Edit the CSS part of a given model."""
         model = self.get_model(model_name)
@@ -276,14 +268,13 @@ class Anki:
                 click.echo(f'Editor return with exit code {retcode}!')
                 return
 
-            with open(tf.name, 'r') as f:
+            with open(tf.name, 'r', encoding='utf8') as f:
                 new_content = f.read()
 
         if model['css'] != new_content:
             model['css'] = new_content
             self.col.models.save(model, templates=True)
             self.modified = True
-
 
     def list_notes(self, query, verbose=False):
         """List notes that match a query"""
@@ -312,30 +303,27 @@ class Anki:
                                      features='html5lib')
             question = re.sub(r'\s\s+', ' ',
                               question.get_text().replace('\n', ' ').strip())
-            answer = BeautifulSoup(html_to_screen(c.a()),
-                                     features='html5lib')
+            answer = BeautifulSoup(html_to_screen(c.a()), features='html5lib')
             answer = re.sub(r'\s\s+', ' ',
-                              answer.get_text().replace('\n', ' ').strip())
+                            answer.get_text().replace('\n', ' ').strip())
+
+            def _styled(key, value):
+                """Simple convenience printer."""
+                return click.style(key + ': ', fg='yellow') + str(value)
 
             card_type = ['new', 'learning', 'review', 'relearning'][c.type]
 
-            click.echo(f"{click.style('', fg='reset')}"
-                       f"{click.style('Q:', fg='yellow')} "
-                       f"{question[:cfg['width']]}")
+            click.echo(_styled('Q', question[:cfg['width']]))
             if verbose:
-                click.echo(f"{click.style('', fg='reset')}"
-                           f"{click.style('A:', fg='yellow')} "
-                           f"{answer[:cfg['width']]}")
+                click.echo(_styled('A', answer[:cfg['width']]))
 
                 click.echo(
-                    f"{click.style('', fg='reset')}"
-                    f"{click.style('cid:', fg='yellow')} {cid} "
-                    f"{click.style('type:', fg='yellow')} {card_type} "
-                    f"{click.style('ease:', fg='yellow')} {c.factor/10}% "
-                    f"{click.style('lapses:', fg='yellow')} {c.lapses} "
-                    f"{click.style('due:', fg='yellow')} {c.due} "
-                    f"{click.style('model:', fg='yellow')} {c.model()['name']}\n")
-
+                    f"{_styled('model', c.model()['name'])} "
+                    f"{_styled('type', card_type)} "
+                    f"{_styled('ease', c.factor/10)}% "
+                    f"{_styled('lapses', c.lapses)}\n"
+                    f"{_styled('cid', cid)} "
+                    f"{_styled('due', c.due)}\n")
 
     def add_notes_with_editor(self, tags='', model_name=None, deck_name=None,
                               template=None):

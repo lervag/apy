@@ -8,8 +8,8 @@ from apy import __version__
 from apy.anki import Anki
 from apy.config import cfg, cfg_file
 
-
 CONTEXT_SETTINGS = dict(help_option_names=['-h', '--help'])
+
 
 @click.group(context_settings=CONTEXT_SETTINGS, invoke_without_command=True)
 @click.option('-b', '--base', help="Set Anki base directory")
@@ -90,6 +90,7 @@ def add_single(fields, tags=None, preset=None, model_name=None, deck=None):
 
         a.add_notes_single(fields, tags, model_name, deck)
 
+
 @main.command()
 @click.option('-t', '--tags', default='',
               help='Specify default tags for new cards.')
@@ -114,6 +115,7 @@ def add(tags, model_name, deck):
         notes = a.add_notes_with_editor(tags, model_name, deck)
         _added_notes_postprocessing(a, notes)
 
+
 @main.command('add-from-file')
 @click.argument('file', type=click.Path(exists=True, dir_okay=False))
 @click.option('-t', '--tags', default='',
@@ -127,6 +129,7 @@ def add_from_file(file, tags):
     with Anki(**cfg) as a:
         notes = a.add_notes_from_file(file, tags)
         _added_notes_postprocessing(a, notes)
+
 
 def _added_notes_postprocessing(a, notes):
     """Common postprocessing after 'apy add[-from-file]'."""
@@ -164,6 +167,7 @@ def check_media():
     with Anki(**cfg) as a:
         a.check_media()
 
+
 @main.command()
 def info():
     """Print some basic statistics."""
@@ -192,7 +196,8 @@ def info():
         sum_susp = len(a.col.findNotes('is:suspended'))
 
         click.echo(f"\n{'Model':24s} {'notes':>7s} {'cards':>7s} "
-                   f"{'due':>7s} {'new':>7s} {'susp.':>7s} {'marked':>7s} {'flagged':>7s}")
+                   f"{'due':>7s} {'new':>7s} {'susp.':>7s} "
+                   f"{'marked':>7s} {'flagged':>7s}")
         click.echo("-"*80)
         models = sorted(a.model_names)
         for m in models:
@@ -218,6 +223,7 @@ def info():
 def model():
     """Interact with Anki models."""
 
+
 @model.command('edit-css')
 @click.option('-m', '--model-name', default='Basic',
               help='Specify for which model to edit CSS template.')
@@ -231,6 +237,7 @@ def edit_css(model_name, sync_after):
         if a.modified and sync_after:
             a.sync()
             a.modified = False
+
 
 @model.command()
 @click.argument('old-name')
@@ -264,6 +271,7 @@ def list_cards(query, verbose):
     with Anki(**cfg) as a:
         a.list_cards(query, verbose)
 
+
 @main.command()
 @click.argument('query', required=False, nargs=-1)
 def review(query):
@@ -289,11 +297,13 @@ def review(query):
             if not note.review(i, number_of_notes):
                 break
 
+
 @main.command()
 def sync():
     """Synchronize collection with AnkiWeb."""
     with Anki(**cfg) as a:
         a.sync()
+
 
 @main.command()
 @click.argument('query', required=False, nargs=-1)
@@ -330,7 +340,8 @@ def tag(query, add_tags, remove_tags):
             click.echo('No matching notes!')
             raise click.Abort()
 
-        click.echo(f'The operation will be applied to {n_notes} matched notes:')
+        click.echo(
+            f'The operation will be applied to {n_notes} matched notes:')
         a.list_notes(query)
         click.echo('')
 

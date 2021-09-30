@@ -1,14 +1,13 @@
 """Simple module to load configuration from file"""
-import os
 import json
+import os
 from pathlib import Path
-
 
 # Parse configuration file (if it exists)
 cfg_path = os.environ.get('APY_CONFIG', '~/.config/apy/apy.json')
 cfg_file = Path(cfg_path).expanduser()
 if cfg_file.exists():
-    with cfg_file.open() as f:
+    with cfg_file.open(encoding='utf8') as f:
         cfg = json.load(f)
 else:
     cfg = {}

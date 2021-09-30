@@ -1,11 +1,11 @@
 """Simple utility functions."""
 
 import os
+from tempfile import NamedTemporaryFile
 from subprocess import call
-import tempfile
-import readchar
 
 import click
+import readchar
 
 
 class cd:
@@ -27,14 +27,13 @@ def editor(filepath):
     """Use EDITOR to edit file at given path"""
     return call([os.environ.get('EDITOR', 'vim'), filepath])
 
+
 def edit_text(input_text, prefix=None):
     """Use EDITOR to edit text (from a temporary file)"""
     if prefix is not None:
         prefix = prefix + "_"
 
-    with tempfile.NamedTemporaryFile(mode='w+',
-                                     prefix=prefix,
-                                     suffix=".md") as tf:
+    with NamedTemporaryFile(mode='w+', prefix=prefix, suffix=".md") as tf:
         tf.write(input_text)
         tf.flush()
         editor(tf.name)
@@ -42,6 +41,7 @@ def edit_text(input_text, prefix=None):
         edited_message = tf.read().strip()
 
     return edited_message
+
 
 def choose(items, text="Choose from list:"):
     """Choose from list of items"""

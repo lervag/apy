@@ -1,23 +1,20 @@
 """A Note wrapper class"""
 
 import os
+from subprocess import Popen, DEVNULL
 import tempfile
-import subprocess
 from pathlib import Path
 
-from bs4 import BeautifulSoup
 import click
 import readchar
 from anki import latex
+from bs4 import BeautifulSoup
 
 from apy.config import cfg
-from apy.convert import html_to_markdown
-from apy.convert import html_to_screen
-from apy.convert import is_generated_html
-from apy.convert import markdown_file_to_notes
-from apy.convert import markdown_to_html
-from apy.convert import plain_to_html
-from apy.utilities import cd, editor, choose
+from apy.convert import (html_to_markdown, html_to_screen, is_generated_html,
+                         markdown_file_to_notes, markdown_to_html,
+                         plain_to_html)
+from apy.utilities import cd, choose, editor
 
 
 class Note:
@@ -28,8 +25,7 @@ class Note:
         self.n = note
         self.model_name = note.model()['name']
         self.fields = [x for x, y in self.n.items()]
-        self.suspended = any([c.queue == -1 for c in self.n.cards()])
-
+        self.suspended = any(c.queue == -1 for c in self.n.cards())
 
     def __repr__(self):
         """Convert note to Markdown format"""
@@ -44,7 +40,7 @@ class Note:
 
         lines += [f'tags: {self.get_tag_string()}']
 
-        if not any([is_generated_html(x) for x in self.n.values()]):
+        if not any(is_generated_html(x) for x in self.n.values()):
             lines += ['markdown: false']
 
         lines += ['']
@@ -65,7 +61,7 @@ class Note:
 
         lines += [f'tags: {self.get_tag_string()}']
 
-        if not any([is_generated_html(x) for x in self.n.values()]):
+        if not any(is_generated_html(x) for x in self.n.values()):
             lines += ['markdown: false']
 
         lines += ['']
@@ -104,9 +100,10 @@ class Note:
         flags = [c.template()["name"] for c in self.n.cards() if c.flags > 0]
         if flags:
             flags = [click.style(x, fg='magenta') for x in flags]
-            lines += [f"{click.style('flagged:', fg='yellow')} {', '.join(flags)}"]
+            lines += [f"{click.style('flagged:', fg='yellow')} "
+                      f"{', '.join(flags)}"]
 
-        if not any([is_generated_html(x) for x in self.n.values()]):
+        if not any(is_generated_html(x) for x in self.n.values()):
             lines += [f"{click.style('markdown:', fg='yellow')} false"]
 
         if self.suspended:
@@ -118,7 +115,8 @@ class Note:
         for key, html in self.n.items():
             # Render LaTeX if necessary
             latex.render_latex(html, self.n.model(), self.a.col)
-            latex_imgs += _get_imgs_from_html_latex(html, self.a, self.n.model())
+            latex_imgs += _get_imgs_from_html_latex(html,
+                                                    self.a, self.n.model())
 
             lines.append(click.style('## ' + key, fg='blue'))
             lines.append(html_to_screen(html, pprint))
@@ -132,7 +130,6 @@ class Note:
 
         click.echo('\n'.join(lines))
 
-
     def show_images(self):
         """Show in the fields"""
         images = []
@@ -144,10 +141,7 @@ class Note:
             for file in images:
                 view_cmd = cfg['img_viewers'].get(file.suffix[1:],
                                                   cfg['img_viewers_default'])
-                subprocess.Popen(view_cmd + [file],
-                                 stdout=subprocess.DEVNULL,
-                                 stderr=subprocess.DEVNULL)
-
+                Popen(view_cmd + [file], stdout=DEVNULL, stderr=DEVNULL)
 
     def edit(self):
         """Edit tags and fields of current note"""
@@ -210,11 +204,9 @@ class Note:
         """Change the note type"""
         click.clear()
         click.secho('Warning!', fg='red')
-        click.echo(
-            '\nThe note type is changed by creating a new note with the selected'
-            '\ntype and then deleting the old note. This means that the review'
-            '\nprogress is lost!'
-        )
+        click.echo('\nThe note type is changed by creating a new note with '
+                   'the selected\ntype and then deleting the old note. This '
+                   'means that the review\nprogress is lost!')
         if not click.confirm('\nContinue?'):
             return False
 
@@ -239,7 +231,7 @@ class Note:
             fields[0] += f'### {key}\n{val}\n'
 
         tags = ', '.join(self.n.tags)
-        is_markdown = any([is_generated_html(x) for x in self.n.values()])
+        is_markdown = any(is_generated_html(x) for x in self.n.values())
 
         # pylint: disable=protected-access
         new_note = self.a._add_note(fields, tags, is_markdown)
@@ -248,7 +240,6 @@ class Note:
         self.a.delete_notes(self.n.id)
 
         return True
-
 
     def toggle_marked(self):
         """Toggle marked tag for note"""
@@ -296,7 +287,6 @@ class Note:
                 c.flush()
                 self.a.modified = True
 
-
     def show_cards(self):
         """Show cards for note"""
         for i, c in enumerate(self.n.cards()):
@@ -308,7 +298,6 @@ class Note:
 
         click.secho('\nPress any key to continue ... ', fg='blue', nl=False)
         readchar.readchar()
-
 
     def get_deck(self):
         """Return which deck the note belongs to"""
@@ -343,7 +332,6 @@ class Note:
 
         self.set_deck(newdeck)
 
-
     def get_field(self, index_or_name):
         """Return field with given index or name"""
         if isinstance(index_or_name, str):
@@ -358,11 +346,9 @@ class Note:
 
         return reply
 
-
     def get_tag_string(self):
         """Get tag string"""
         return ', '.join(self.n.tags)
-
 
     def review(self, i=None, number_of_notes=None, remove_actions=None):
         """Interactive review of the note
@@ -523,6 +509,7 @@ def _get_imgs_from_html(field_html):
     """
     soup = BeautifulSoup(field_html, 'html.parser')
     return [Path(x['src']) for x in soup.find_all('img')]
+
 
 def _get_imgs_from_html_latex(field_html, anki, model):
     """Gather the generated LaTeX image filenames from field html.
