@@ -257,10 +257,20 @@ def html_to_screen(html, pprint=True, parseable=False):
 
     html = re.sub(r'\<style\>.*\<\/style\>', '', html, flags=re.S)
 
-    plain = html
-    generated = is_generated_html(plain)
+    generated = is_generated_html(html)
     if generated:
-        plain = html_to_markdown(plain)
+        plain = html_to_markdown(html)
+        if html != markdown_to_html(plain):
+            html_clean = re.sub(r' data-original-markdown="[^"]*"', '', html)
+            if parseable:
+                plain += f"\n**Original HTML**\n{html_clean}"
+            else:
+                plain += "\n"
+                plain += click.style("HTML is inconsistent with Markdown!",
+                                     fg='red', bold=True)
+                plain += "\n" + click.style(html_clean, fg='white')
+    else:
+        plain = html
 
     # For convenience: Un-escape some common LaTeX constructs
     plain = plain.replace(r"\\\\", r"\\")
