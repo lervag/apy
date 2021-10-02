@@ -274,7 +274,11 @@ def list_cards(query, verbose):
 
 @main.command()
 @click.argument('query', required=False, nargs=-1)
-def review(query):
+@click.option('-m', '--check-markdown-consistency', is_flag=True,
+              help='Check for Markdown consistency')
+@click.option('-n', '--cmc-range', default=7, type=int,
+              help='Number of days backwards to check consistency')
+def review(query, check_markdown_consistency, cmc_range):
     """Review/Edit notes that match QUERY.
 
     The default QUERY is "tag:marked OR -flag:0". This default can be
@@ -292,6 +296,12 @@ def review(query):
 
     with Anki(**cfg) as a:
         notes = list(a.find_notes(query))
+
+        # Add inconsistent notes
+        if check_markdown_consistency:
+            notes += [n for n in a.find_notes(f"rated:{cmc_range}")
+                      if not n.consistent_markdown()]
+
         number_of_notes = len(notes)
         for i, note in enumerate(notes):
             if not note.review(i, number_of_notes):
