@@ -169,28 +169,33 @@ def _parse_file(filename):
     return defaults, notes
 
 
-def markdown_to_html(plain):
+def markdown_to_html(md):
     """Convert Markdown to HTML"""
-    # Don't convert if plain text is really plain
-    if re.match(r"[a-zA-Z0-9æøåÆØÅ ,.?+-]*$", plain):
-        return plain
+    # Don't convert if md text is really plain
+    if re.match(r"[a-zA-Z0-9æøåÆØÅ ,.?+-]*$", md):
+        return md
+
+    # Prepare original markdown for restoring
+    # Note: convert newlines to <br> to make text readable in the Anki viewer
+    original_encoded = base64.b64encode(
+        md.replace("\n", "<br />").encode('utf-8')).decode()
 
     # For convenience: Escape some common LaTeX constructs
-    plain = plain.replace(r"\\", r"\\\\")
-    plain = plain.replace(r"\{", r"\\{")
-    plain = plain.replace(r"\}", r"\\}")
-    plain = plain.replace(r"*}", r"\*}")
+    md = md.replace(r"\\", r"\\\\")
+    md = md.replace(r"\{", r"\\{")
+    md = md.replace(r"\}", r"\\}")
+    md = md.replace(r"*}", r"\*}")
 
     # Fix whitespaces in input
-    plain = plain.replace("\xc2\xa0", " ").replace("\xa0", " ")
+    md = md.replace("\xc2\xa0", " ").replace("\xa0", " ")
 
     # For convenience: Fix mathjax escaping
-    plain = plain.replace(r"\[", r"\\[")
-    plain = plain.replace(r"\]", r"\\]")
-    plain = plain.replace(r"\(", r"\\(")
-    plain = plain.replace(r"\)", r"\\)")
+    md = md.replace(r"\[", r"\\[")
+    md = md.replace(r"\]", r"\\]")
+    md = md.replace(r"\(", r"\\(")
+    md = md.replace(r"\)", r"\\)")
 
-    html = markdown.markdown(plain, extensions=[
+    html = markdown.markdown(md, extensions=[
         'tables',
         AbbrExtension(),
         CodeHiliteExtension(
@@ -202,10 +207,11 @@ def markdown_to_html(plain):
         DefListExtension(),
         FencedCodeExtension(),
         FootnoteExtension(),
-        ], output_format="html5")
+    ], output_format="html5")
 
     html_tree = BeautifulSoup(html, 'html.parser')
 
+    # Find html tree root tag
     tag = _get_first_tag(html_tree)
     if not tag:
         if not html:
@@ -214,11 +220,8 @@ def markdown_to_html(plain):
         html_tree = BeautifulSoup(f"<div>{html}</div>", "html.parser")
         tag = _get_first_tag(html_tree)
 
-    # Store original text as data-attribute on tree root
-    # Note: convert newlines to <br> to make text readable in the Anki viewer
-    original_html = base64.b64encode(
-        plain.replace("\n", "<br />").encode('utf-8')).decode()
-    tag['data-original-markdown'] = original_html
+    # Store original_encoded as data-attribute on tree root
+    tag['data-original-markdown'] = original_encoded
 
     return str(html_tree)
 
