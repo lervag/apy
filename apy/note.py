@@ -1,19 +1,24 @@
 """A Note wrapper class"""
 
 import os
-from subprocess import Popen, DEVNULL
-import tempfile
 from pathlib import Path
+from subprocess import DEVNULL, Popen
+import tempfile
 
-import click
-import readchar
 from anki import latex
 from bs4 import BeautifulSoup
+import click
+import readchar
 
 from apy.config import cfg
-from apy.convert import (html_to_markdown, html_to_screen, is_generated_html,
-                         markdown_file_to_notes, markdown_to_html,
-                         plain_to_html)
+from apy.convert import (
+    html_to_markdown,
+    html_to_screen,
+    is_generated_html,
+    markdown_file_to_notes,
+    markdown_to_html,
+    plain_to_html,
+)
 from apy.utilities import cd, choose, editor
 
 
