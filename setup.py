@@ -24,10 +24,11 @@ setup(
         'Programming Language :: Python :: 3',
     ],
     install_requires=[
-        'beautifulsoup4==4.8.2',
-        'click==7.1.2',
-        'Markdown==3.2.1',
-        'readchar==2.0.1',
+        'beautifulsoup4',
+        'click',
+        'Markdown',
+        'readchar',
+        'markdownify',
     ],
     entry_points='''
         [console_scripts]
