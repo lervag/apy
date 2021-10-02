@@ -205,6 +205,14 @@ class Note:
         """Delete the note"""
         self.a.delete_notes(self.n.id)
 
+    def consistent_markdown(self):
+        """Check if markdown fields are consistent with html values"""
+        for html in [h for h in self.n.values() if is_generated_html(h)]:
+            if html != markdown_to_html(html_to_markdown(html)):
+                return False
+
+        return True
+
     def change_model(self):
         """Change the note type"""
         click.clear()
