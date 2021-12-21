@@ -70,7 +70,7 @@ class Anki:
             click.echo('Path to database is not valid!')
             click.echo(f'path = {path}')
             raise click.Abort() from error
-        except anki.rsbackend.DBError as error:
+        except anki.errors.DBError as error:
             click.echo('Database is NA/locked!')
             raise click.Abort() from error
 
@@ -184,12 +184,12 @@ class Anki:
 
     def find_cards(self, query):
         """Find card ids in Collection that match query"""
-        return self.col.findCards(query)
+        return self.col.find_cards(query)
 
     def find_notes(self, query):
         """Find notes in Collection and return Note objects"""
         return (Note(self, self.col.getNote(i))
-                for i in set(self.col.findNotes(query)))
+                for i in set(self.col.find_notes(query)))
 
     def delete_notes(self, ids):
         """Delete notes by note ids"""
@@ -205,7 +205,7 @@ class Anki:
 
     def set_model(self, model_name):
         """Set current model based on model name"""
-        current = self.col.models.current(forDeck=False)
+        current = self.col.models.current(for_deck=False)
         if current['name'] == model_name:
             return current
 
@@ -234,12 +234,12 @@ class Anki:
         self.model_names = self.model_name_to_id.keys()
 
         # Save changes
-        self.col.models.save(model)
+        self.col.models.update_dict(model)
         self.modified = True
 
     def list_tags(self):
         """List all tags"""
-        tags = [(t, len(self.col.findNotes(f'tag:{t}')))
+        tags = [(t, len(self.col.find_notes(f'tag:{t}')))
                 for t in self.col.tags.all()]
         width = len(max(tags, key=lambda x: len(x[0]))[0]) + 2
         filler = " "*(cfg['width'] - 2*width - 8)
@@ -251,7 +251,7 @@ class Anki:
 
     def change_tags(self, query, tags, add=True):
         """Add/Remove tags from notes that match query"""
-        self.col.tags.bulkAdd(self.col.findNotes(query), tags, add)
+        self.col.tags.bulkAdd(self.col.find_notes(query), tags, add)
         self.modified = True
 
     def edit_model_css(self, model_name):
@@ -299,11 +299,12 @@ class Anki:
         """List cards that match a query"""
         for cid in self.find_cards(query):
             c = self.col.getCard(cid)
-            question = BeautifulSoup(html_to_screen(c.q()),
+            question = BeautifulSoup(html_to_screen(c.question()),
                                      features='html5lib')
             question = re.sub(r'\s\s+', ' ',
                               question.get_text().replace('\n', ' ').strip())
-            answer = BeautifulSoup(html_to_screen(c.a()), features='html5lib')
+            answer = BeautifulSoup(html_to_screen(c.answer()),
+                                   features='html5lib')
             answer = re.sub(r'\s\s+', ' ',
                             answer.get_text().replace('\n', ' ').strip())
 
@@ -311,7 +312,8 @@ class Anki:
                 """Simple convenience printer."""
                 return click.style(key + ': ', fg='yellow') + str(value)
 
-            card_type = ['new', 'learning', 'review', 'relearning'][c.type]
+            cardtype = int(c.type)
+            card_type = ['new', 'learning', 'review', 'relearning'][cardtype]
 
             click.echo(_styled('Q', question[:cfg['width']]))
             if verbose:
@@ -416,7 +418,8 @@ class Anki:
 
     def _add_note(self, fields, tags, markdown=True, deck=None):
         """Add new note to collection"""
-        note = self.col.newNote(forDeck=False)
+        notetype = self.col.models.current(for_deck=False)
+        note = self.col.new_note(notetype)
 
         if deck is not None:
             note.model()['did'] = self.deck_name_to_id[deck]

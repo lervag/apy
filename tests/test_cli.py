@@ -25,15 +25,16 @@ def test_cli_base_directory():
         result = runner.invoke(main, ["-b", tmpdirname])
         assert result.exit_code == 0
 
+
 # List of files that apy add-from-file should be able to successfully parse
 note_files_input = [
     "basic.md",
     "empty.md",
 ]
 
-@pytest.mark.parametrize("note_files",
-                         [test_data_dir + file
-                          for file in note_files_input])
+
+@pytest.mark.parametrize("note_files", [test_data_dir + file
+                                        for file in note_files_input])
 def test_cli_add_from_file(note_files):
     """Test 'apy add-from-file' for various note file inputs."""
     runner = CliRunner()

@@ -11,7 +11,7 @@ from markdown.extensions.codehilite import CodeHiliteExtension
 from markdown.extensions.def_list import DefListExtension
 from markdown.extensions.fenced_code import FencedCodeExtension
 from markdown.extensions.footnotes import FootnoteExtension
-from markdownify import markdownify as md
+from markdownify import markdownify as to_md
 
 
 def markdown_file_to_notes(filename):
@@ -267,7 +267,8 @@ def html_to_screen(html, pprint=True, parseable=False):
         if html != markdown_to_html(plain):
             html_clean = re.sub(r' data-original-markdown="[^"]*"', '', html)
             if parseable:
-                plain += f"\n\n### Current HTML → Markdown\n{md(html_clean)}"
+                plain += ("\n\n### Current HTML → Markdown\n"
+                          f"{to_md(html_clean)}")
                 plain += f"\n### Current HTML\n{html_clean}"
             else:
                 plain += "\n"

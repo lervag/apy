@@ -180,20 +180,20 @@ def info():
 
     with Anki(**cfg) as a:
         click.echo(f"Collecton path:          {a.col.path}")
-        click.echo(f"Scheduler version:       {a.col.schedVer()}")
+        click.echo(f"Scheduler version:       {a.col.sched_ver()}")
 
         if a.col.decks.count() > 1:
             click.echo("Decks:")
             for name in sorted(a.deck_names):
                 click.echo(f"  - {name}")
 
-        sum_notes = a.col.noteCount()
-        sum_cards = a.col.cardCount()
-        sum_due = len(a.col.findNotes('is:due'))
-        sum_marked = len(a.col.findNotes('tag:marked'))
-        sum_flagged = len(a.col.findNotes('-flag:0'))
-        sum_new = len(a.col.findNotes('is:new'))
-        sum_susp = len(a.col.findNotes('is:suspended'))
+        sum_notes = a.col.note_count()
+        sum_cards = a.col.card_count()
+        sum_due = len(a.col.find_notes('is:due'))
+        sum_marked = len(a.col.find_notes('tag:marked'))
+        sum_flagged = len(a.col.find_notes('-flag:0'))
+        sum_new = len(a.col.find_notes('is:new'))
+        sum_susp = len(a.col.find_notes('is:suspended'))
 
         click.echo(f"\n{'Model':24s} {'notes':>7s} {'cards':>7s} "
                    f"{'due':>7s} {'new':>7s} {'susp.':>7s} "
@@ -201,7 +201,7 @@ def info():
         click.echo("-"*80)
         models = sorted(a.model_names)
         for m in models:
-            nnotes = len(set(a.col.findNotes(f'"note:{m}"')))
+            nnotes = len(set(a.col.find_notes(f'"note:{m}"')))
             ncards = len(a.find_cards(f'"note:{m}"'))
             ndue = len(a.find_cards(f'"note:{m}" is:due'))
             nmarked = len(a.find_cards(f'"note:{m}" tag:marked'))

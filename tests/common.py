@@ -27,7 +27,7 @@ class AnkiEmpty(AnkiTest):
         (self.fd, self.name) = tempfile.mkstemp(suffix=".anki2")
         os.close(self.fd)
         os.unlink(self.name)
-        super(AnkiEmpty, self).__init__(Anki(path=self.name))
+        super().__init__(Anki(path=self.name))
 
 
 class AnkiSimple(AnkiTest):
@@ -36,9 +36,8 @@ class AnkiSimple(AnkiTest):
         self.tmppath = os.path.join(tempfile.gettempdir(), 'tempfile.anki2')
         shutil.copy2(testDir + '/data/test_base/Test/collection.anki2',
                      self.tmppath)
-        super(AnkiSimple, self).__init__(Anki(path=self.tmppath))
+        super().__init__(Anki(path=self.tmppath))
 
     def __exit__(self, exception_type, exception_value, traceback):
-        super(AnkiSimple, self).__exit__(
-            exception_type, exception_value, traceback)
+        super().__exit__(exception_type, exception_value, traceback)
         os.remove(self.tmppath)
