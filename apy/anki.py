@@ -120,7 +120,7 @@ class Anki:
             else:
                 click.echo('Syncing deck ... ', nl=False)
 
-            self.col.backend.sync_collection(auth)
+            self.col.sync_collection(auth)
 
             if not debug_output:
                 click.echo('done!')
@@ -140,7 +140,7 @@ class Anki:
                     click.secho('Syncing media:', fg='blue')
                 else:
                     click.echo('Syncing media ... ', nl=False)
-                self.col.backend.sync_media(auth)
+                self.col.sync_media(auth)
                 if not debug_output:
                     click.echo('done!')
         except Exception as e:
