@@ -155,6 +155,7 @@ compatible with which versions of Anki.
 | Version | Version note                        |
 |:-------:| ----------------------------------- |
 | `HEAD`  | Development branch                  |
+| 0.9     | Compatible with Anki 2.1.49         |
 | 0.8     | Compatible with Anki 2.1.35; 2.1.44 |
 | 0.7     | Several improvements                |
 | 0.6     | Presets, choose profile, add-single |
