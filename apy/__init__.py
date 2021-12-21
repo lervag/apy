@@ -2,6 +2,7 @@
 __version__ = '0.8.1'
 
 import os
+from importlib.util import find_spec
 
 
 # Reduce rust verbosity, unless already explicitly increased. Anki by default
@@ -10,9 +11,7 @@ if "RUST_LOG" not in os.environ:
     os.environ["RUST_LOG"] \
         = "warn,anki::media=info,anki::sync=info,anki::dbcheck=info"
 
-try:
-    import anki
-except ImportError:
+if find_spec("anki") is None:
     import sys
 
     _path = os.environ.get('APY_ANKI_PATH', '/usr/share/anki')
