@@ -1,5 +1,5 @@
 """Package for interfacing and manipulating Anki decks"""
-__version__ = '0.8.1'
+__version__ = '0.9.0'
 
 import os
 from importlib.util import find_spec
