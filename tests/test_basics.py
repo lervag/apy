@@ -21,7 +21,7 @@ def test_add_basic():
 
         assert a.col.card_count() == 2
         assert a.col.note_count() == 2
-        assert notes[1].n.model()['name'] == 'Basic (type in the answer)'
+        assert notes[1].n.note_type()['name'] == 'Basic (type in the answer)'
 
 
 def test_add_different_models():

@@ -320,7 +320,7 @@ class Anki:
                 click.echo(_styled('A', answer[:cfg['width']]))
 
                 click.echo(
-                    f"{_styled('model', c.model()['name'])} "
+                    f"{_styled('model', c.note_type()['name'])} "
                     f"{_styled('type', card_type)} "
                     f"{_styled('ease', c.factor/10)}% "
                     f"{_styled('lapses', c.lapses)}\n"
@@ -422,7 +422,7 @@ class Anki:
         note = self.col.new_note(notetype)
 
         if deck is not None:
-            note.model()['did'] = self.deck_name_to_id[deck]
+            note.note_type()['did'] = self.deck_name_to_id[deck]
 
         if markdown:
             note.fields = [markdown_to_html(x) for x in fields]

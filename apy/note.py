@@ -28,7 +28,7 @@ class Note:
     def __init__(self, anki, note):
         self.a = anki
         self.n = note
-        self.model_name = note.model()['name']
+        self.model_name = note.note_type()['name']
         self.fields = [x for x, y in self.n.items()]
         self.suspended = any(c.queue == -1 for c in self.n.cards())
 
@@ -116,20 +116,20 @@ class Note:
 
         lines += ['']
 
-        latex_imgs = []
+        imgs = []
         for key, html in self.n.items():
             # Render LaTeX if necessary
-            latex.render_latex(html, self.n.model(), self.a.col)
-            latex_imgs += _get_imgs_from_html_latex(html,
-                                                    self.a, self.n.model())
+            note_type = self.n.note_type()
+            latex.render_latex(html, note_type, self.a.col)
+            imgs += _get_imgs_from_html_latex(html, note_type, self.a)
 
             lines.append(click.style('## ' + key, fg='blue'))
             lines.append(html_to_screen(html, pprint))
             lines.append('')
 
-        if latex_imgs:
+        if imgs:
             lines.append(click.style('LaTeX sources', fg='blue'))
-            for line in latex_imgs:
+            for line in imgs:
                 lines.append('- ' + str(line))
             lines.append('')
 
@@ -137,9 +137,10 @@ class Note:
 
     def show_images(self):
         """Show in the fields"""
+        note_type = self.n.note_type()
         images = []
         for html in self.n.values():
-            images += _get_imgs_from_html_latex(html, self.a, self.n.model())
+            images += _get_imgs_from_html_latex(html, note_type, self.a)
             images += _get_imgs_from_html(html)
 
         with cd(self.a.col.media.dir()):
@@ -524,13 +525,16 @@ def _get_imgs_from_html(field_html):
     return [Path(x['src']) for x in soup.find_all('img')]
 
 
-def _get_imgs_from_html_latex(field_html, anki, model):
+def _get_imgs_from_html_latex(field_html, note_type, anki):
     """Gather the generated LaTeX image filenames from field html.
 
     Note: The returned paths are relative to the Anki media directory.
     """
-    proto = anki.col.backend.extract_latex(text=field_html,
-                                           svg=model.get("latexsvg", False),
-                                           expand_clozes=False)
+    # pylint: disable=protected-access
+    proto = anki.col._backend.extract_latex(
+        text=field_html,
+        svg=note_type.get("latexsvg", False),
+        expand_clozes=False
+    )
     out = latex.ExtractedLatexOutput.from_proto(proto)
     return [Path(ltx.filename) for ltx in out.latex]
