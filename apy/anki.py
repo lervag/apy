@@ -431,7 +431,7 @@ class Anki:
 
         tags = tags.strip().split()
         for tag in tags:
-            note.addTag(tag)
+            note.add_tag(tag)
 
         if not note.dupeOrEmpty():
             self.col.addNote(note)
