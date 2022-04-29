@@ -214,7 +214,7 @@ class Anki:
             click.secho(f'Model "{model_name}" was not recognized!')
             raise click.Abort()
 
-        self.col.models.setCurrent(model)
+        self.col.models.set_current(model)
         return model
 
     def rename_model(self, old_model_name, new_model_name):
