@@ -389,7 +389,7 @@ def reposition(position, query):
             raise click.Abort()
 
         for cid in cids:
-            card = a.col.getCard(cid)
+            card = a.col.get_card(cid)
             if card.type != 0:
                 click.echo('Can only reposition new cards!')
                 raise click.Abort()

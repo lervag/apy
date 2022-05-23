@@ -298,7 +298,7 @@ class Anki:
     def list_cards(self, query, verbose=False):
         """List cards that match a query"""
         for cid in self.find_cards(query):
-            c = self.col.getCard(cid)
+            c = self.col.get_card(cid)
             question = BeautifulSoup(html_to_screen(c.question()),
                                      features='html5lib')
             question = re.sub(r'\s\s+', ' ',
