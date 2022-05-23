@@ -8,7 +8,7 @@ Anki.
 
 * This is currently **WORK IN PROGRESS**, and there may still be some major
   changes.
-* The current version should be compatible with Anki versions 2.1.35 to 2.1.44
+* The current version should be compatible with Anki versions 2.1.45 to 2.1.52
   (see the [changelog](#changelog) to find versions compatible with older
   versions of Anki).
 * This script and its author(s) are not affiliated/associated with the main
@@ -152,18 +152,18 @@ This is just a simple changelog. See the commit history and issue threads for
 details. The main purpose of the changelog is to show which versions of apy are
 compatible with which versions of Anki.
 
-| Version | Version note                        |
-|:-------:| ----------------------------------- |
-| `HEAD`  | Development branch                  |
-| 0.9     | Compatible with Anki 2.1.49         |
-| 0.8     | Compatible with Anki 2.1.35; 2.1.44 |
-| 0.7     | Several improvements                |
-| 0.6     | Presets, choose profile, add-single |
-| 0.5     | Minor improvements                  |
-| 0.4     | Minor improvements                  |
-| 0.3     | Compatible with Anki 2.1.26         |
-| 0.2     | Compatible with Anki 2.1.23         |
-| 0.1     | Compatible with Anki 2.1.13         |
+| Version | Version note                                |
+|:-------:| ------------------------------------------- |
+| `HEAD`  | Development branch (works with Anki 2.1.52) |
+| 0.9     | Compatible with Anki 2.1.49                 |
+| 0.8     | Compatible with Anki 2.1.35--2.1.44         |
+| 0.7     | Several improvements                        |
+| 0.6     | Presets, choose profile, add-single         |
+| 0.5     | Minor improvements                          |
+| 0.4     | Minor improvements                          |
+| 0.3     | Compatible with Anki 2.1.26                 |
+| 0.2     | Compatible with Anki 2.1.23                 |
+| 0.1     | Compatible with Anki 2.1.13                 |
 
 ## Relevant resources
 
