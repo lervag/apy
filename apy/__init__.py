@@ -11,6 +11,10 @@ if "RUST_LOG" not in os.environ:
     os.environ["RUST_LOG"] \
         = "warn,anki::media=info,anki::sync=info,anki::dbcheck=info"
 
+# Avoid unnecessary Qt5 message
+if "DISABLE_QT5_COMPAT" not in os.environ:
+    os.environ["DISABLE_QT5_COMPAT"] = "1"
+
 if find_spec("anki") is None:
     import sys
 
