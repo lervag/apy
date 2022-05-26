@@ -170,7 +170,7 @@ class Anki:
                     click.secho(f'Error prosessing node: {nid}', fg='red')
 
                     if click.confirm('Review note?'):
-                        note = Note(self, self.col.getNote(nid))
+                        note = Note(self, self.col.get_note(nid))
                         note.review()
 
             for file in output.unused:
@@ -188,7 +188,7 @@ class Anki:
 
     def find_notes(self, query):
         """Find notes in Collection and return Note objects"""
-        return (Note(self, self.col.getNote(i))
+        return (Note(self, self.col.get_note(i))
                 for i in set(self.col.find_notes(query)))
 
     def delete_notes(self, ids):
