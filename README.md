@@ -8,7 +8,7 @@ Anki.
 
 * This is currently **WORK IN PROGRESS**, and there may still be some major
   changes.
-* The current version should be compatible with Anki versions 2.1.45 to 2.1.52
+* The current version should be compatible with Anki versions 2.1.45 to 2.1.53
   (see the [changelog](#changelog) to find versions compatible with older
   versions of Anki).
 * This script and its author(s) are not affiliated/associated with the main
@@ -30,7 +30,7 @@ Anki.
 To install `apy`, you can do something like this:
 
 ```bash
-# Install latest version
+# Install apy from github
 pip install --user git+https://github.com/lervag/apy.git#egg=apy
 
 # One can also do
@@ -38,19 +38,64 @@ git clone https://github.com/lervag/apy.git
 pip install -e .
 ```
 
-**Important**: `apy` uses the python API from the Anki desktop app. So please
-  make sure to install the Anki source. Note that the releases on
-  [Ankiweb](https://apps.ankiweb.net/#download) only include precompiled
-  binaries. Ankiweb recommends that one uses these precompiled binaries, but
-  for `apy` to work one needs the Anki source to be available. These are
-  typically included if one installs from repositories (e.g. with `sudo apt
-  install anki` or `pacman -S anki`). One may also download the source either
-  from the ["Development" tab on Ankiweb](https://apps.ankiweb.net/#dev) or
-  from [github](https://github.com/dae/anki).
+**Please also notice the following requirements specification!**
+
+### Requirements
+
+`apy` should work well for Python 3.9 and later.
+
+`apy` uses the Anki Python packages, similar to how Anki addons do. We
+therefore need these available for `apy` to work! Some relevant references:
+* [Anki dev docs: Pre-built Python wheels](https://github.com/ankitects/anki/blob/main/docs/development.md#pre-built-python-wheels)
+* [Anki betas: Install via PyPI/pip](https://betas.ankiweb.net/intro.html#via-pypipip)
 
 `apy` assumes that the Anki source is available at `/usr/share/anki`. If you
-put it somewhere else, then you must set the environment variable
+put it somewhere else, then you may have to set the environment variable
 `APY_ANKI_PATH`, e.g. `export APY_ANKI_PATH=/my/path/to/anki`.
+
+The following guides should help for some users on some specified systems.
+
+#### Arch Linux
+
+It should suffice to install Anki from AUR with e.g.
+
+```sh
+paru -S anki
+```
+
+#### Ubuntu
+
+The following should work and will install the latest Anki version as well as
+`apy` itself at user level with `pip`.
+
+```
+sudo apt install git
+sudo apt install python3-pip
+sudo apt install python3-pyqt5.qtwebengine python3-pyqt5.qtmultimedia
+
+pip install --user aqt
+pip install --user git+https://github.com/lervag/apy.git#egg=apy
+```
+
+#### Other
+
+In other environments, one must first ensure that Python is installed with the
+`venv` package and `pip` available. Also, the PyQt5 libraries are necessary and
+must be installed at the system level. These are named something like:
+`python3-pyqt5.qtwebengine` and `python3-pyqt5.qtmultimedia`. Then, one can
+install Anki and `apy` inside a virtual environment like this:
+
+```sh
+python3 -m venv .venv
+source .venv/bin/activate
+
+pip install --upgrade pip
+pip install aqt==2.1.53
+pip install git+https://github.com/lervag/apy.git#egg=apy
+
+# Need to allow system site packages for the PyQt5 stuff
+sed -i 's/false/true/' .venv/pyvenv.cfg
+```
 
 ## Usage
 
@@ -154,7 +199,7 @@ compatible with which versions of Anki.
 
 | Version | Version note                                |
 |:-------:| ------------------------------------------- |
-| `HEAD`  | Development branch (works with Anki 2.1.52) |
+| `HEAD`  | Development branch (works with Anki 2.1.53) |
 | 0.9     | Compatible with Anki 2.1.49                 |
 | 0.8     | Compatible with Anki 2.1.35--2.1.44         |
 | 0.7     | Several improvements                        |
