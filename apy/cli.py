@@ -22,7 +22,7 @@ def main(ctx, base, profile, version):
     The base directory may be specified with the -b / --base option. For
     convenience, it may also be specified in the config file
     `~/.config/apy/apy.json` or with the environment variable APY_BASE or
-    ANKI_BASE. This should point to the base directory where Anki stores it's
+    ANKI_BASE. This should point to the base directory where Anki stores its
     database and related files. See the Anki documentation for information
     about where this is located on different systems
     (https://apps.ankiweb.net/docs/manual.html#file-locations).
@@ -33,7 +33,7 @@ def main(ctx, base, profile, version):
     command.
 
     One may specify a different editor with the EDITOR environment variable.
-    For example, to use emacs one can add this to ones `~/.bashrc` (or similar)
+    For example, to use emacs one can add this to one's `~/.bashrc` (or similar)
     file:
 
         export EDITOR=emacs
@@ -179,7 +179,7 @@ def info():
         click.echo("Config file:             Not found")
 
     with Anki(**cfg) as a:
-        click.echo(f"Collecton path:          {a.col.path}")
+        click.echo(f"Collection path:          {a.col.path}")
         click.echo(f"Scheduler version:       {a.col.sched_ver()}")
 
         if a.col.decks.count() > 1:
