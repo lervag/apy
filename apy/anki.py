@@ -167,7 +167,7 @@ class Anki:
                 out = self.col.media.render_all_latex()
                 if out is not None:
                     nid, _ = out
-                    click.secho(f'Error prosessing node: {nid}', fg='red')
+                    click.secho(f'Error processing node: {nid}', fg='red')
 
                     if click.confirm('Review note?'):
                         note = Note(self, self.col.get_note(nid))
