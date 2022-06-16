@@ -179,7 +179,7 @@ def info():
         click.echo("Config file:             Not found")
 
     with Anki(**cfg) as a:
-        click.echo(f"Collection path:          {a.col.path}")
+        click.echo(f"Collection path:         {a.col.path}")
         click.echo(f"Scheduler version:       {a.col.sched_ver()}")
 
         if a.col.decks.count() > 1:
