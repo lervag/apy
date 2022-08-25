@@ -196,7 +196,7 @@ class Anki:
         if not isinstance(ids, list):
             ids = [ids]
 
-        self.col.remNotes(ids)
+        self.col.remove_notes(ids)
         self.modified = True
 
     def get_model(self, model_name):
