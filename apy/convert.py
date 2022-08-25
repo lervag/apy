@@ -2,16 +2,19 @@
 
 import base64
 import re
+import warnings
 
 import click
 import markdown
-from bs4 import BeautifulSoup, Tag
+from bs4 import BeautifulSoup, Tag, MarkupResemblesLocatorWarning
 from markdown.extensions.abbr import AbbrExtension
 from markdown.extensions.codehilite import CodeHiliteExtension
 from markdown.extensions.def_list import DefListExtension
 from markdown.extensions.fenced_code import FencedCodeExtension
 from markdown.extensions.footnotes import FootnoteExtension
 from markdownify import markdownify as to_md
+
+warnings.filterwarnings('ignore', category=MarkupResemblesLocatorWarning)
 
 
 def markdown_file_to_notes(filename):
@@ -207,7 +210,7 @@ def markdown_to_html(md):
         DefListExtension(),
         FencedCodeExtension(),
         FootnoteExtension(),
-    ], output_format="html5")
+    ], output_format="html")
 
     html_tree = BeautifulSoup(html, 'html.parser')
 
