@@ -6,9 +6,8 @@ Anki.
 
 ### Important
 
-* This is currently **WORK IN PROGRESS**, and there may still be some major
-  changes.
-* The current version should be compatible with Anki versions 2.1.45 to 2.1.53
+* `apy` is **WORK IN PROGRESS**, and there may still be some major changes.
+* The current version should be compatible with Anki versions 2.1.45 to 2.1.55
   (see the [changelog](#changelog) to find versions compatible with older
   versions of Anki).
 * This script and its author(s) are not affiliated/associated with the main
@@ -199,7 +198,7 @@ compatible with which versions of Anki.
 
 | Version | Version note                                |
 |:-------:| ------------------------------------------- |
-| `HEAD`  | Development branch (works with Anki 2.1.53) |
+| `HEAD`  | Development branch (works with Anki 2.1.55) |
 | 0.9     | Compatible with Anki 2.1.49                 |
 | 0.8     | Compatible with Anki 2.1.35--2.1.44         |
 | 0.7     | Several improvements                        |
