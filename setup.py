@@ -14,7 +14,7 @@ def readme():
 
 setup(
     name='apy',
-    version='0.9.0',
+    version='0.9.1',
     description='CLI script for interacting with local Anki collection',
     long_description=readme(),
     url='https://github.com/lervag/apy',
