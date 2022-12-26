@@ -3,6 +3,27 @@ import json
 import os
 from pathlib import Path
 
+
+def get_base_path():
+    # If base not defined: Look in environment variables
+    if path := os.environ.get("APY_BASE"):
+        return path
+
+    if path := os.environ.get("ANKI_BASE"):
+        return path
+
+    # Otherwise look in usual paths:
+    # https://docs.ankiweb.net/files.html#file-locations
+    if (path := Path.home() / ".local/share/Anki2").exists():
+        return str(path)
+
+    if xdg_data_home := os.environ.get("XDG_DATA_HOME"):
+        if (path := Path(xdg_data_home) / "Anki2").exists():
+            return str(path)
+
+    return None
+
+
 # Parse configuration file (if it exists)
 cfg_path = os.environ.get('APY_CONFIG', '~/.config/apy/apy.json')
 cfg_file = Path(cfg_path).expanduser()
@@ -27,25 +48,21 @@ for required, default in [('base', None),
         cfg[required] = default
 
 
+if cfg["base"] is None:
+    cfg["base"] = get_base_path()
+
+
+# Ensure base path is a proper absolute path
+if cfg['base']:
+    cfg['base'] = os.path.abspath(os.path.expanduser(cfg['base']))
+
+
 # Ensure that default preset is defined
 if 'default' not in cfg['presets']:
     cfg['presets']['default'] = {
         'model': 'Basic',
         'tags': [],
     }
-
-
-# If base not defined: Look in environment variables
-if cfg['base'] is None:
-    for var in ['APY_BASE', 'ANKI_BASE']:
-        if var in os.environ:
-            cfg['base'] = os.environ[var]
-            break
-
-
-# Ensure base path is a proper absolute path
-if cfg['base']:
-    cfg['base'] = os.path.abspath(os.path.expanduser(cfg['base']))
 
 
 # Set terminal width for output
