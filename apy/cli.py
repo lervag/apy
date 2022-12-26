@@ -25,7 +25,7 @@ def main(ctx, base, profile, version):
     ANKI_BASE. This should point to the base directory where Anki stores its
     database and related files. See the Anki documentation for information
     about where this is located on different systems
-    (https://apps.ankiweb.net/docs/manual.html#file-locations).
+    (https://docs.ankiweb.net/files.html#file-locations).
 
     A few sub commands will open an editor for input. Vim is used by default.
     The input is parsed when one saves and quits. To abort, one should exit the

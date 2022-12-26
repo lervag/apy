@@ -216,7 +216,7 @@ databases and code:
 * [AnkiDroid: Database
   Structure](https://github.com/ankidroid/Anki-Android/wiki/Database-Structure)
 * [AnkiConnect.py](https://github.com/FooSoft/anki-connect/blob/master/AnkiConnect.py)
-* [The Anki Manual](https://apps.ankiweb.net/docs/manual.html)
+* [The Anki Manual](https://docs.ankiweb.net)
 
 ## Alternatives
 
