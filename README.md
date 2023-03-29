@@ -312,6 +312,15 @@ all (or most) of my requirements. Also, `inka` requires the AnkiConnect plugin.
 
 _The Dealbreaker_: Requires AnkiConnect.
 
+### Markdown2Anki
+
+[Markdown2Anki](https://github.com/Mochitto/Markdown2Anki) is a Python script that allows you to easily format your cards
+using Markdown syntax, and then import them into Anki while retaining the
+structure you gave them.
+
+As many other alternatives, you need to manually import cards. It may provide
+support for AnkiConnect.
+
 ## Contributing
 
 The following is a short and simple guide to getting started with contributing
