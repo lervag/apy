@@ -328,32 +328,42 @@ and developing the `apy` code.
 
 ### Setup
 
-First, fork the repository. Then clone your fork and install the package
-dependencies. The following listing should give an indication of how to get
-started.
+This project uses [Poetry](https://python-poetry.org/) as the build system and
+to manage dependencies.
+
+Install Poetry first if you don't have it already. Fork the repository, then
+clone your fork and install a local development build of the project using
+Poetry.
 
 ```sh
 # Clone the forked repo
 git clone git@github.com:<username>/apy.git
 cd apy/
 
-# Create a virtualenv
-mkvirtualenv anki -p python3.8
+# Install the project with Poetry
+poetry install
+```
 
-# The following is convenient if you use a virtualenv loader like
-# zsh-autoswitch-virtualenv
-echo "anki" > .venv
+Poetry will create a virtual environment for you (see
+[here](https://python-poetry.org/docs/configuration/#virtualenvsin-project) for
+where the environment is created). You can either activate this environment
+yourself then issue commands in the usual way, or you can prefix your commands
+with `poetry run`. Example:
 
-# Activate the virtualenv, then:
-./setup.py install
-pip install -r requirements-dev.txt
+```sh
+poetry run apy --version
 ```
 
 ### Tests
 
-To run the tests, do this:
+To run the tests, activate the virtual environment and run:
 
 ```sh
 pytest
 ```
 
+Alternatively, without activating the environment:
+
+```sh
+poetry run pytest
+```
