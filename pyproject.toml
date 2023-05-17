@@ -26,6 +26,20 @@ pyqtwebengine = "^5.15.6"
 [tool.pytest]
 filterwarnings = ["ignore::DeprecationWarning:html5lib.*:"]
 
+[tool.pylint.master]
+init-hook = 'import sys; sys.path.append("/usr/share/anki")'
+
+[tool.pylint.reports]
+output-format = "colorized"
+
+[tool.pylint."messages control"]
+max-statements = 75
+disable = [
+    "invalid-name",
+    "too-many-branches",
+    "too-many-instance-attributes",
+]
+
 [build-system]
 requires = ["poetry-core"]
 build-backend = "poetry.core.masonry.api"
