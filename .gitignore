@@ -6,3 +6,4 @@ tests/data
 .venv
 .vimspector.json
 poetry.lock
+.python-version
