@@ -97,7 +97,7 @@ def add_single(fields, tags=None, preset=None, model_name=None, deck=None):
 @click.option('-m', '--model', 'model_name', default='Basic',
               help=('Specify default model for new cards.'))
 @click.option('-d', '--deck',
-              help=('Specify defauly deck for new cards.'))
+              help=('Specify default deck for new cards.'))
 def add(tags, model_name, deck):
     """Add notes interactively from terminal.
 
