@@ -1,5 +1,0 @@
-anki==2.1.26
-aqt==2.1.26
-pylint==2.6.0
-PyQtWebEngine==5.15.1
-pytest==6.1.0

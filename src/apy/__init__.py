@@ -1,8 +1,9 @@
 """Package for interfacing and manipulating Anki decks"""
-__version__ = '0.9.1'
-
 import os
 from importlib.util import find_spec
+from importlib.metadata import version
+
+__version__ = version("apy")
 
 
 # Reduce rust verbosity, unless already explicitly increased. Anki by default
