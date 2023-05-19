@@ -87,26 +87,34 @@ class Note:
         """Print to screen (similar to __repr__ but with colors)"""
         lines = [click.style('# Note', fg='green')]
 
-        types = ', '.join({['new', 'learning', 'review', 'relearning'][c.type]
-                           for c in self.n.cards()})
+        types = ', '.join(
+            {
+                ['new', 'learning', 'review', 'relearning'][c.type]
+                for c in self.n.cards()
+            }
+        )
 
-        lines += [click.style('nid: ', fg='yellow') + f'{self.n.id}'
-                  + click.style('    card type(s): ', fg='yellow') + types]
+        lines += [
+            click.style('nid: ', fg='yellow')
+            + f'{self.n.id}'
+            + click.style('    card type(s): ', fg='yellow')
+            + types
+        ]
 
-        lines += [click.style('model: ', fg='yellow')
-                  + f'{self.model_name} ({len(self.n.cards())} cards)']
+        lines += [
+            click.style('model: ', fg='yellow')
+            + f'{self.model_name} ({len(self.n.cards())} cards)'
+        ]
 
         if self.a.n_decks > 1:
-            lines += [click.style('deck: ', fg='yellow')+self.get_deck()]
+            lines += [click.style('deck: ', fg='yellow') + self.get_deck()]
 
-        lines += [click.style('tags: ', fg='yellow')
-                  + self.get_tag_string()]
+        lines += [click.style('tags: ', fg='yellow') + self.get_tag_string()]
 
-        flags = [c.template()["name"] for c in self.n.cards() if c.flags > 0]
+        flags = [c.template()['name'] for c in self.n.cards() if c.flags > 0]
         if flags:
             flags = [click.style(x, fg='magenta') for x in flags]
-            lines += [f"{click.style('flagged:', fg='yellow')} "
-                      f"{', '.join(flags)}"]
+            lines += [f"{click.style('flagged:', fg='yellow')} " f"{', '.join(flags)}"]
 
         if not any(is_generated_html(x) for x in self.n.values()):
             lines += [f"{click.style('markdown:', fg='yellow')} false"]
@@ -145,16 +153,16 @@ class Note:
 
         with cd(self.a.col.media.dir()):
             for file in images:
-                view_cmd = cfg['img_viewers'].get(file.suffix[1:],
-                                                  cfg['img_viewers_default'])
+                view_cmd = cfg['img_viewers'].get(
+                    file.suffix[1:], cfg['img_viewers_default']
+                )
                 Popen(view_cmd + [file], stdout=DEVNULL, stderr=DEVNULL)
 
     def edit(self):
         """Edit tags and fields of current note"""
-        with tempfile.NamedTemporaryFile(mode='w+',
-                                         dir=os.getcwd(),
-                                         prefix='edit_note_',
-                                         suffix='.md') as tf:
+        with tempfile.NamedTemporaryFile(
+            mode='w+', dir=os.getcwd(), prefix='edit_note_', suffix='.md'
+        ) as tf:
             tf.write(str(self))
             tf.flush()
 
@@ -177,8 +185,9 @@ class Note:
                 click.echo(f'* nid: {note.n.id} (with {len(cards)} cards)')
                 for card in note.n.cards():
                     click.echo(f'  * cid: {card.id}')
-            click.confirm('\nPress <cr> to continue.',
-                          prompt_suffix='', show_default=False)
+            click.confirm(
+                '\nPress <cr> to continue.', prompt_suffix='', show_default=False
+            )
 
         note = notes[0]
 
@@ -199,8 +208,9 @@ class Note:
         self.n.flush()
         self.a.modified = True
         if self.n.dupeOrEmpty():
-            click.confirm('The updated note is now a dupe!',
-                          prompt_suffix='', show_default=False)
+            click.confirm(
+                'The updated note is now a dupe!', prompt_suffix='', show_default=False
+            )
 
     def delete(self):
         """Delete the note"""
@@ -218,9 +228,11 @@ class Note:
         """Change the note type"""
         click.clear()
         click.secho('Warning!', fg='red')
-        click.echo('\nThe note type is changed by creating a new note with '
-                   'the selected\ntype and then deleting the old note. This '
-                   'means that the review\nprogress is lost!')
+        click.echo(
+            '\nThe note type is changed by creating a new note with '
+            'the selected\ntype and then deleting the old note. This '
+            'means that the review\nprogress is lost!'
+        )
         if not click.confirm('\nContinue?'):
             return False
 
@@ -333,8 +345,7 @@ class Note:
         """Move note to deck, interactive"""
         click.clear()
 
-        click.secho('Specify target deck (CTRL-c/CTRL-d to abort):',
-                    fg='white')
+        click.secho('Specify target deck (CTRL-c/CTRL-d to abort):', fg='white')
         for d in self.a.col.decks.all_names_and_ids(include_filtered=False):
             click.echo(f'* {d.name}')
         click.echo('* OTHER -> create new deck')
@@ -395,8 +406,9 @@ class Note:
         }
 
         if remove_actions:
-            actions = {key: val for key, val in actions.items()
-                       if val not in remove_actions}
+            actions = {
+                key: val for key, val in actions.items() if val not in remove_actions
+            }
 
         _pprint = True
         refresh = True
@@ -408,8 +420,9 @@ class Note:
                 elif number_of_notes is None:
                     click.secho(f'Reviewing note {i+1}', fg='white')
                 else:
-                    click.secho(f'Reviewing note {i+1} of {number_of_notes}',
-                                fg='white')
+                    click.secho(
+                        f'Reviewing note {i+1} of {number_of_notes}', fg='white'
+                    )
 
                 column = 0
                 for x, y in actions.items():
@@ -438,12 +451,13 @@ class Note:
                 continue
 
             if action == 'Add new':
-                click.echo('-'*width + '\n')
+                click.echo('-' * width + '\n')
 
                 notes = self.a.add_notes_with_editor(
                     tags=self.get_tag_string(),
                     model_name=self.model_name,
-                    template=self)
+                    template=self,
+                )
 
                 click.echo(f'Added {len(notes)} notes')
                 for note in notes:
@@ -451,12 +465,14 @@ class Note:
                     click.echo(f'* nid: {note.n.id} (with {len(cards)} cards)')
                     for card in note.n.cards():
                         click.echo(f'  * cid: {card.id}')
-                click.confirm('Press any key to continue.',
-                              prompt_suffix='', show_default=False)
+                click.confirm(
+                    'Press any key to continue.', prompt_suffix='', show_default=False
+                )
                 continue
 
             if action == 'Delete' and click.confirm(
-                    'Are you sure you want to delete the note?'):
+                'Are you sure you want to delete the note?'
+            ):
                 self.delete()
                 return True
 
@@ -509,8 +525,9 @@ class Note:
             if action == 'Abort':
                 if self.a.modified:
                     if not click.confirm(
-                            'Abort: Changes will be lost. Continue [y/n]?',
-                            show_default=False):
+                        'Abort: Changes will be lost. Continue [y/n]?',
+                        show_default=False,
+                    ):
                         continue
                     self.a.modified = False
                 raise click.Abort()
@@ -532,9 +549,7 @@ def _get_imgs_from_html_latex(field_html, note_type, anki):
     """
     # pylint: disable=protected-access
     proto = anki.col._backend.extract_latex(
-        text=field_html,
-        svg=note_type.get("latexsvg", False),
-        expand_clozes=False
+        text=field_html, svg=note_type.get('latexsvg', False), expand_clozes=False
     )
     out = latex.ExtractedLatexOutput.from_proto(proto)
     return [Path(ltx.filename) for ltx in out.latex]

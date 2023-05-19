@@ -12,9 +12,9 @@ CONTEXT_SETTINGS = dict(help_option_names=['-h', '--help'])
 
 
 @click.group(context_settings=CONTEXT_SETTINGS, invoke_without_command=True)
-@click.option('-b', '--base', help="Set Anki base directory")
-@click.option('-p', '--profile', help="Set Anki profile to be used")
-@click.option('-V', '--version', is_flag=True, help="Show apy version")
+@click.option('-b', '--base', help='Set Anki base directory')
+@click.option('-p', '--profile', help='Set Anki profile to be used')
+@click.option('-V', '--version', is_flag=True, help='Show apy version')
 @click.pass_context
 def main(ctx, base, profile, version):
     """A script to interact with the Anki database.
@@ -57,8 +57,9 @@ def main(ctx, base, profile, version):
 @main.command('add-single')
 @click.option('-s', '--preset', default='default', help='Specify a preset.')
 @click.option('-t', '--tags', help='Specify default tags for new cards.')
-@click.option('-m', '--model', 'model_name',
-              help=('Specify default model for new cards.'))
+@click.option(
+    '-m', '--model', 'model_name', help=('Specify default model for new cards.')
+)
 @click.option('-d', '--deck', help=('Specify default deck for new cards.'))
 @click.argument('fields', nargs=-1)
 def add_single(fields, tags=None, preset=None, model_name=None, deck=None):
@@ -92,12 +93,15 @@ def add_single(fields, tags=None, preset=None, model_name=None, deck=None):
 
 
 @main.command()
-@click.option('-t', '--tags', default='',
-              help='Specify default tags for new cards.')
-@click.option('-m', '--model', 'model_name', default='Basic',
-              help=('Specify default model for new cards.'))
-@click.option('-d', '--deck',
-              help=('Specify default deck for new cards.'))
+@click.option('-t', '--tags', default='', help='Specify default tags for new cards.')
+@click.option(
+    '-m',
+    '--model',
+    'model_name',
+    default='Basic',
+    help=('Specify default model for new cards.'),
+)
+@click.option('-d', '--deck', help=('Specify default deck for new cards.'))
 def add(tags, model_name, deck):
     """Add notes interactively from terminal.
 
@@ -118,8 +122,7 @@ def add(tags, model_name, deck):
 
 @main.command('add-from-file')
 @click.argument('file', type=click.Path(exists=True, dir_okay=False))
-@click.option('-t', '--tags', default='',
-              help='Specify default tags for new cards.')
+@click.option('-t', '--tags', default='', help='Specify default tags for new cards.')
 def add_from_file(file, tags):
     """Add notes from Markdown file.
 
@@ -135,13 +138,13 @@ def _added_notes_postprocessing(a, notes):
     """Common postprocessing after 'apy add[-from-file]'."""
     n_notes = len(notes)
     if n_notes == 0:
-        click.echo("No notes added")
+        click.echo('No notes added')
         return
 
     decks = [a.col.decks.name(c.did) for n in notes for c in n.n.cards()]
     n_decks = len(decks)
     if n_decks == 0:
-        click.echo("No notes added")
+        click.echo('No notes added')
         return
 
     if a.n_decks > 1:
@@ -172,20 +175,20 @@ def check_media():
 def info():
     """Print some basic statistics."""
     if cfg_file.exists():
-        click.echo(f"Config file:             {cfg_file}")
+        click.echo(f'Config file:             {cfg_file}')
         for key in cfg.keys():
-            click.echo(f"Config loaded:           {key}")
+            click.echo(f'Config loaded:           {key}')
     else:
-        click.echo("Config file:             Not found")
+        click.echo('Config file:             Not found')
 
     with Anki(**cfg) as a:
-        click.echo(f"Collection path:         {a.col.path}")
-        click.echo(f"Scheduler version:       {a.col.sched_ver()}")
+        click.echo(f'Collection path:         {a.col.path}')
+        click.echo(f'Scheduler version:       {a.col.sched_ver()}')
 
         if a.col.decks.count() > 1:
-            click.echo("Decks:")
+            click.echo('Decks:')
             for name in sorted(a.deck_names):
-                click.echo(f"  - {name}")
+                click.echo(f'  - {name}')
 
         sum_notes = a.col.note_count()
         sum_cards = a.col.card_count()
@@ -195,10 +198,12 @@ def info():
         sum_new = len(a.col.find_notes('is:new'))
         sum_susp = len(a.col.find_notes('is:suspended'))
 
-        click.echo(f"\n{'Model':24s} {'notes':>7s} {'cards':>7s} "
-                   f"{'due':>7s} {'new':>7s} {'susp.':>7s} "
-                   f"{'marked':>7s} {'flagged':>7s}")
-        click.echo("-"*80)
+        click.echo(
+            f"\n{'Model':24s} {'notes':>7s} {'cards':>7s} "
+            f"{'due':>7s} {'new':>7s} {'susp.':>7s} "
+            f"{'marked':>7s} {'flagged':>7s}"
+        )
+        click.echo('-' * 80)
         models = sorted(a.model_names)
         for m in models:
             nnotes = len(set(a.col.find_notes(f'"note:{m}"')))
@@ -209,14 +214,18 @@ def info():
             nnew = len(a.find_cards(f'"note:{m}" is:new'))
             nsusp = len(a.find_cards(f'"note:{m}" is:suspended'))
             name = m[:24]
-            click.echo(f"{name:24s} {nnotes:7d} {ncards:7d} "
-                       f"{ndue:7d} {nnew:7d} {nsusp:7d} "
-                       f"{nmarked:7d} {nflagged:7d}")
-        click.echo("-"*80)
-        click.echo(f"{'Sum':24s} {sum_notes:7d} {sum_cards:7d} "
-                   f"{sum_due:7d} {sum_new:7d} {sum_susp:7d} "
-                   f"{sum_marked:7d} {sum_flagged:7d}")
-        click.echo("-"*80)
+            click.echo(
+                f'{name:24s} {nnotes:7d} {ncards:7d} '
+                f'{ndue:7d} {nnew:7d} {nsusp:7d} '
+                f'{nmarked:7d} {nflagged:7d}'
+            )
+        click.echo('-' * 80)
+        click.echo(
+            f"{'Sum':24s} {sum_notes:7d} {sum_cards:7d} "
+            f'{sum_due:7d} {sum_new:7d} {sum_susp:7d} '
+            f'{sum_marked:7d} {sum_flagged:7d}'
+        )
+        click.echo('-' * 80)
 
 
 @main.group(context_settings=CONTEXT_SETTINGS, invoke_without_command=True)
@@ -225,10 +234,13 @@ def model():
 
 
 @model.command('edit-css')
-@click.option('-m', '--model-name', default='Basic',
-              help='Specify for which model to edit CSS template.')
-@click.option('-s', '--sync-after', is_flag=True,
-              help='Perform sync after any change.')
+@click.option(
+    '-m',
+    '--model-name',
+    default='Basic',
+    help='Specify for which model to edit CSS template.',
+)
+@click.option('-s', '--sync-after', is_flag=True, help='Perform sync after any change.')
 def edit_css(model_name, sync_after):
     """Edit the CSS template for the specified model."""
     with Anki(**cfg) as a:
@@ -250,8 +262,7 @@ def rename(old_name, new_name):
 
 @main.command('list')
 @click.argument('query', required=False, nargs=-1)
-@click.option('-v', '--verbose', is_flag=True,
-              help='Be verbose, show more info')
+@click.option('-v', '--verbose', is_flag=True, help='Be verbose, show more info')
 def list_cards(query, verbose):
     """List cards that match QUERY.
 
@@ -264,9 +275,9 @@ def list_cards(query, verbose):
     }
     """
     if query:
-        query = " ".join(query)
+        query = ' '.join(query)
     else:
-        query = cfg["query"]
+        query = cfg['query']
 
     with Anki(**cfg) as a:
         a.list_cards(query, verbose)
@@ -274,10 +285,19 @@ def list_cards(query, verbose):
 
 @main.command()
 @click.argument('query', required=False, nargs=-1)
-@click.option('-m', '--check-markdown-consistency', is_flag=True,
-              help='Check for Markdown consistency')
-@click.option('-n', '--cmc-range', default=7, type=int,
-              help='Number of days backwards to check consistency')
+@click.option(
+    '-m',
+    '--check-markdown-consistency',
+    is_flag=True,
+    help='Check for Markdown consistency',
+)
+@click.option(
+    '-n',
+    '--cmc-range',
+    default=7,
+    type=int,
+    help='Number of days backwards to check consistency',
+)
 def review(query, check_markdown_consistency, cmc_range):
     """Review/Edit notes that match QUERY.
 
@@ -290,17 +310,20 @@ def review(query, check_markdown_consistency, cmc_range):
     }
     """
     if query:
-        query = " ".join(query)
+        query = ' '.join(query)
     else:
-        query = cfg["query"]
+        query = cfg['query']
 
     with Anki(**cfg) as a:
         notes = list(a.find_notes(query))
 
         # Add inconsistent notes
         if check_markdown_consistency:
-            notes += [n for n in a.find_notes(f"rated:{cmc_range}")
-                      if not n.consistent_markdown()]
+            notes += [
+                n
+                for n in a.find_notes(f'rated:{cmc_range}')
+                if not n.consistent_markdown()
+            ]
 
         number_of_notes = len(notes)
         for i, note in enumerate(notes):
@@ -317,10 +340,8 @@ def sync():
 
 @main.command()
 @click.argument('query', required=False, nargs=-1)
-@click.option('-a', '--add-tags',
-              help='Add specified tags to matched notes.')
-@click.option('-r', '--remove-tags',
-              help='Remove specified tags from matched notes.')
+@click.option('-a', '--add-tags', help='Add specified tags to matched notes.')
+@click.option('-r', '--remove-tags', help='Remove specified tags from matched notes.')
 def tag(query, add_tags, remove_tags):
     """Add/Remove tags to/from notes that match QUERY.
 
@@ -336,9 +357,9 @@ def tag(query, add_tags, remove_tags):
     this command simply lists all tags.
     """
     if query:
-        query = " ".join(query)
+        query = ' '.join(query)
     else:
-        query = cfg["query"]
+        query = cfg['query']
 
     with Anki(**cfg) as a:
         if add_tags is None and remove_tags is None:
@@ -350,8 +371,7 @@ def tag(query, add_tags, remove_tags):
             click.echo('No matching notes!')
             raise click.Abort()
 
-        click.echo(
-            f'The operation will be applied to {n_notes} matched notes:')
+        click.echo(f'The operation will be applied to {n_notes} matched notes:')
         a.list_notes(query)
         click.echo('')
 
@@ -380,7 +400,7 @@ def reposition(position, query):
 
     Note that repositioning only works with new cards!
     """
-    query = " ".join(query)
+    query = ' '.join(query)
 
     with Anki(**cfg) as a:
         cids = list(a.find_cards(query))
