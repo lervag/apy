@@ -5,7 +5,6 @@ from pathlib import Path
 from subprocess import DEVNULL, Popen
 import tempfile
 
-from anki import latex
 from bs4 import BeautifulSoup
 import click
 import readchar
@@ -85,6 +84,8 @@ class Note:
 
     def print(self, pprint=True):
         """Print to screen (similar to __repr__ but with colors)"""
+        from anki import latex
+
         lines = [click.style("# Note", fg="green")]
 
         types = ", ".join(
@@ -547,6 +548,8 @@ def _get_imgs_from_html_latex(field_html, note_type, anki):
 
     Note: The returned paths are relative to the Anki media directory.
     """
+    from anki import latex
+
     # pylint: disable=protected-access
     proto = anki.col._backend.extract_latex(
         text=field_html, svg=note_type.get("latexsvg", False), expand_clozes=False

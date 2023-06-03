@@ -12,19 +12,18 @@ CONTEXT_SETTINGS = dict(help_option_names=["-h", "--help"])
 
 
 @click.group(context_settings=CONTEXT_SETTINGS, invoke_without_command=True)
-@click.option("-b", "--base", help="Set Anki base directory")
-@click.option("-p", "--profile", help="Set Anki profile to be used")
+@click.option("-b", "--base-path", help="Set Anki base directory")
+@click.option("-p", "--profile-name", help="Specify name of Anki profile to use")
 @click.option("-V", "--version", is_flag=True, help="Show apy version")
 @click.pass_context
-def main(ctx, base, profile, version):
+def main(ctx, base_path, profile_name, version):
     """A script to interact with the Anki database.
 
-    The base directory may be specified with the -b / --base option. For
-    convenience, it may also be specified in the config file
-    `~/.config/apy/apy.json` or with the environment variable APY_BASE or
-    ANKI_BASE. This should point to the base directory where Anki stores its
-    database and related files. See the Anki documentation for information
-    about where this is located on different systems
+    The base_path directory may be specified with the -b / --base-path option. For
+    convenience, it may also be specified in the config file `~/.config/apy/apy.json`
+    or with the environment variable APY_BASE or ANKI_BASE. This should point to the
+    base directory where Anki stores its database and related files. See the Anki
+    documentation for information about where this is located on different systems
     (https://docs.ankiweb.net/files.html#file-locations).
 
     A few sub commands will open an editor for input. Vim is used by default.
@@ -44,11 +43,11 @@ def main(ctx, base, profile, version):
         click.echo(f"apy {__version__}")
         sys.exit()
 
-    if base:
-        cfg["base"] = os.path.abspath(os.path.expanduser(base))
+    if base_path:
+        cfg["base_path"] = os.path.abspath(os.path.expanduser(base_path))
 
-    if profile:
-        cfg["profile"] = profile
+    if profile_name:
+        cfg["profile_name"] = profile_name
 
     if ctx.invoked_subcommand is None:
         ctx.invoke(info)

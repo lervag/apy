@@ -129,7 +129,7 @@ this, see [the Wiki](https://github.com/lervag/apy/wiki/Vim).
 `apy` loads configuration from `~/.config/apy/apy.json`. The following keys are
 currently recognized:
 
-- `base`: Specify where `apy` should look for your Anki database. This is
+- `base_path`: Specify where `apy` should look for your Anki database. This is
   usually something like `/home/your_name/.local/share/Anki2/`.
 - `img_viewers`: Specify a dictionary of image viewer commands. Each key is
   a file extension. The value is a command list, e.g. `['display', 'density',
@@ -145,15 +145,15 @@ currently recognized:
   process](https://ankiweb.net/shared/info/937148547) addon to Anki.
 - `presets`: Specify preset combination of model and tags for use with `apy
   add-single`.
-- `profile`: Specify which profile to load by default.
+- `profile_name`: Specify which profile to load by default.
 - `query`: Specify default query for `apy list`, `apy review` and `apy tag`.
 
 An example configuration:
 
 ```json
 {
-  "base": "/home/your_name/.local/share/Anki2/",
-  "profile": "MyAnkiProfile",
+  "base_path": "/home/your_name/.local/share/Anki2/",
+  "profile_name": "MyAnkiProfile",
   "query": "tag:leech",
   "presets": {
     "default": { "model": "Custom", "tags": ["marked"] }
