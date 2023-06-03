@@ -16,17 +16,17 @@ def test_empty_collection():
 def test_add_basic():
     """Test adding two Basic notes from file"""
     with AnkiEmpty() as a:
-        input_file = testDir + '/data/basic.md'
+        input_file = testDir + "/data/basic.md"
         notes = a.add_notes_from_file(input_file)
 
         assert a.col.card_count() == 2
         assert a.col.note_count() == 2
-        assert notes[1].n.note_type()['name'] == 'Basic (type in the answer)'
+        assert notes[1].n.note_type()["name"] == "Basic (type in the answer)"
 
 
 def test_add_different_models():
     """Test adding with different models"""
     with AnkiSimple() as a:
         n_cards = a.col.card_count()
-        a.add_notes_from_file(testDir + '/data/models.md')
+        a.add_notes_from_file(testDir + "/data/models.md")
         assert a.col.card_count() == n_cards + 6
