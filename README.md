@@ -193,12 +193,13 @@ fpath=($HOME/.local/zsh-functions $fpath)
 ## Changelog
 
 This is just a simple changelog. See the commit history and issue threads for
-details. The main purpose of the changelog is to show which versions of apy are
+details. The main purpose of the changelog is to show which versions of `apy` are
 compatible with which versions of Anki.
 
 | Version | Version note                                |
 |:-------:| ------------------------------------------- |
-| `HEAD`  | Development branch (works with Anki 2.1.55) |
+| `HEAD`  | Development branch (works with Anki 2.1.64) |
+| 0.10    | Compatible with Anki 2.1.64                 |
 | 0.9     | Compatible with Anki 2.1.49                 |
 | 0.8     | Compatible with Anki 2.1.35--2.1.44         |
 | 0.7     | Several improvements                        |
