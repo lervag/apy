@@ -31,7 +31,7 @@ jobs:
         run: poetry run black --check .
 
   test:
-    needs: linting
+    needs: lint
     strategy:
       fail-fast: true
       matrix:
