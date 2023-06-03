@@ -3,7 +3,7 @@ import pytest
 
 from common import testDir, AnkiSimple
 
-pytestmark = pytest.mark.filterwarnings('ignore')
+pytestmark = pytest.mark.filterwarnings("ignore")
 
 
 def test_decks():

@@ -31,9 +31,9 @@ def editor(filepath):
 def edit_text(input_text, prefix=None):
     """Use EDITOR to edit text (from a temporary file)"""
     if prefix is not None:
-        prefix = prefix + '_'
+        prefix = prefix + "_"
 
-    with NamedTemporaryFile(mode='w+', prefix=prefix, suffix='.md') as tf:
+    with NamedTemporaryFile(mode='w+', prefix=prefix, suffix=".md") as tf:
         tf.write(input_text)
         tf.flush()
         editor(tf.name)
@@ -43,12 +43,12 @@ def edit_text(input_text, prefix=None):
     return edited_message
 
 
-def choose(items, text='Choose from list:'):
+def choose(items, text="Choose from list:"):
     """Choose from list of items"""
     click.echo(text)
     for i, element in enumerate(items):
-        click.echo(f'{i+1}: {element}')
-    click.echo('> ', nl=False)
+        click.echo(f"{i+1}: {element}")
+    click.echo("> ", nl=False)
 
     while True:
         choice = readchar.readchar()
@@ -59,7 +59,7 @@ def choose(items, text='Choose from list:'):
             continue
 
         try:
-            reply = items[index - 1]
+            reply = items[index-1]
             click.echo(index)
             return reply
         except IndexError:

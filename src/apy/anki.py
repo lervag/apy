@@ -10,12 +10,8 @@ from aqt.profiles import ProfileManager
 from bs4 import BeautifulSoup
 
 from apy.config import cfg
-from apy.convert import (
-    html_to_screen,
-    markdown_file_to_notes,
-    markdown_to_html,
-    plain_to_html,
-)
+from apy.convert import (html_to_screen, markdown_file_to_notes,
+                         markdown_to_html, plain_to_html)
 from apy.note import Note
 from apy.utilities import cd, choose, editor
 
@@ -29,10 +25,12 @@ class Anki:
         self._init_load_collection(base, path, profile)
         self._init_load_config()
 
-        self.model_name_to_id = {m['name']: m['id'] for m in self.col.models.all()}
+        self.model_name_to_id = {m['name']: m['id']
+                                 for m in self.col.models.all()}
         self.model_names = self.model_name_to_id.keys()
 
-        self.deck_name_to_id = {d['name']: d['id'] for d in self.col.decks.all()}
+        self.deck_name_to_id = {d['name']: d['id']
+                                for d in self.col.decks.all()}
         self.deck_names = self.deck_name_to_id.keys()
         self.n_decks = len(self.deck_names)
 
@@ -146,7 +144,7 @@ class Anki:
                 if not debug_output:
                     click.echo('done!')
         except Exception as e:
-            if 'sync cancelled' in str(e):
+            if "sync cancelled" in str(e):
                 return
             raise
 
@@ -164,7 +162,8 @@ class Anki:
             for file in output.missing:
                 click.secho(f'Missing: {file}', fg='red')
 
-            if len(output.missing) > 0 and click.confirm('Render missing LaTeX?'):
+            if len(output.missing) > 0 \
+                    and click.confirm('Render missing LaTeX?'):
                 out = self.col.media.render_all_latex()
                 if out is not None:
                     nid, _ = out
@@ -177,7 +176,8 @@ class Anki:
             for file in output.unused:
                 click.secho(f'Unused: {file}', fg='red')
 
-            if len(output.unused) > 0 and click.confirm('Delete unused media?'):
+            if len(output.unused) > 0 \
+                    and click.confirm('Delete unused media?'):
                 for file in output.unused:
                     if os.path.isfile(file):
                         os.remove(file)
@@ -188,9 +188,8 @@ class Anki:
 
     def find_notes(self, query):
         """Find notes in Collection and return Note objects"""
-        return (
-            Note(self, self.col.get_note(i)) for i in set(self.col.find_notes(query))
-        )
+        return (Note(self, self.col.get_note(i))
+                for i in set(self.col.find_notes(query)))
 
     def delete_notes(self, ids):
         """Delete notes by note ids"""
@@ -221,7 +220,7 @@ class Anki:
     def rename_model(self, old_model_name, new_model_name):
         """Rename a model"""
         if old_model_name not in self.model_names:
-            click.echo('Can' 't rename model!')
+            click.echo('Can''t rename model!')
             click.echo(f'No such model: {old_model_name}')
             raise click.Abort()
 
@@ -230,7 +229,8 @@ class Anki:
         model['name'] = new_model_name
 
         # Update local storage
-        self.model_name_to_id = {m['name']: m['id'] for m in self.col.models.all()}
+        self.model_name_to_id = {m['name']: m['id']
+                                 for m in self.col.models.all()}
         self.model_names = self.model_name_to_id.keys()
 
         # Save changes
@@ -239,13 +239,14 @@ class Anki:
 
     def list_tags(self):
         """List all tags"""
-        tags = [(t, len(self.col.find_notes(f'tag:{t}'))) for t in self.col.tags.all()]
+        tags = [(t, len(self.col.find_notes(f'tag:{t}')))
+                for t in self.col.tags.all()]
         width = len(max(tags, key=lambda x: len(x[0]))[0]) + 2
-        filler = ' ' * (cfg['width'] - 2 * width - 8)
+        filler = " "*(cfg['width'] - 2*width - 8)
 
         for (t1, n1), (t2, n2) in zip(
-            sorted(tags, key=lambda x: x[0]), sorted(tags, key=lambda x: x[1])
-        ):
+                sorted(tags, key=lambda x: x[0]),
+                sorted(tags, key=lambda x: x[1])):
             click.echo(f'{t1:{width}s}{n1:4d}{filler}{t2:{width}s}{n2:4d}')
 
     def change_tags(self, query, tags, add=True):
@@ -257,9 +258,8 @@ class Anki:
         """Edit the CSS part of a given model."""
         model = self.get_model(model_name)
 
-        with tempfile.NamedTemporaryFile(
-            mode='w+', prefix='_apy_edit_', suffix='.css', delete=False
-        ) as tf:
+        with tempfile.NamedTemporaryFile(mode='w+', prefix='_apy_edit_',
+                                         suffix='.css', delete=False) as tf:
             tf.write(model['css'])
             tf.flush()
 
@@ -282,7 +282,8 @@ class Anki:
             first_field = html_to_screen(note.n.values()[0])
             first_field = first_field.replace('\n', ' ')
             first_field = re.sub(r'\s\s\s+', ' ', first_field)
-            first_field = first_field[: cfg['width'] - 14] + click.style('', reset=True)
+            first_field = first_field[:cfg['width']-14] \
+                + click.style('', reset=True)
 
             first = 'Q: '
             if note.suspended:
@@ -298,12 +299,14 @@ class Anki:
         """List cards that match a query"""
         for cid in self.find_cards(query):
             c = self.col.get_card(cid)
-            question = BeautifulSoup(html_to_screen(c.question()), features='html5lib')
-            question = re.sub(
-                r'\s\s+', ' ', question.get_text().replace('\n', ' ').strip()
-            )
-            answer = BeautifulSoup(html_to_screen(c.answer()), features='html5lib')
-            answer = re.sub(r'\s\s+', ' ', answer.get_text().replace('\n', ' ').strip())
+            question = BeautifulSoup(html_to_screen(c.question()),
+                                     features='html5lib')
+            question = re.sub(r'\s\s+', ' ',
+                              question.get_text().replace('\n', ' ').strip())
+            answer = BeautifulSoup(html_to_screen(c.answer()),
+                                   features='html5lib')
+            answer = re.sub(r'\s\s+', ' ',
+                            answer.get_text().replace('\n', ' ').strip())
 
             def _styled(key, value):
                 """Simple convenience printer."""
@@ -312,9 +315,9 @@ class Anki:
             cardtype = int(c.type)
             card_type = ['new', 'learning', 'review', 'relearning'][cardtype]
 
-            click.echo(_styled('Q', question[: cfg['width']]))
+            click.echo(_styled('Q', question[:cfg['width']]))
             if verbose:
-                click.echo(_styled('A', answer[: cfg['width']]))
+                click.echo(_styled('A', answer[:cfg['width']]))
 
                 click.echo(
                     f"{_styled('model', c.note_type()['name'])} "
@@ -322,25 +325,23 @@ class Anki:
                     f"{_styled('ease', c.factor/10)}% "
                     f"{_styled('lapses', c.lapses)}\n"
                     f"{_styled('cid', cid)} "
-                    f"{_styled('due', c.due)}\n"
-                )
+                    f"{_styled('due', c.due)}\n")
 
-    def add_notes_with_editor(
-        self, tags='', model_name=None, deck_name=None, template=None
-    ):
+    def add_notes_with_editor(self, tags='', model_name=None, deck_name=None,
+                              template=None):
         """Add new notes to collection with editor"""
         if isinstance(template, Note):
             input_string = template.get_template()
         else:
             if model_name is None or model_name.lower() == 'ask':
-                model_name = choose(sorted(self.model_names), 'Choose model:')
+                model_name = choose(sorted(self.model_names), "Choose model:")
 
             model = self.set_model(model_name)
 
             if deck_name is None:
                 deck_name = self.col.decks.current()['name']
             elif deck_name.lower() == 'ask':
-                deck_name = choose(sorted(self.deck_names), 'Choose deck:')
+                deck_name = choose(sorted(self.deck_names), "Choose deck:")
 
             input_string = [f'model: {model_name}']
 
@@ -354,17 +355,17 @@ class Anki:
 
             input_string += ['\n# Note\n']
 
-            input_string += [
-                x
-                for y in [[f'## {field["name"]}', ''] for field in model['flds']]
-                for x in y
-            ]
+            input_string += [x for y in
+                             [[f'## {field["name"]}', '']
+                              for field in model['flds']]
+                             for x in y]
 
             input_string = '\n'.join(input_string) + '\n'
 
-        with tempfile.NamedTemporaryFile(
-            mode='w+', prefix='apy_note_', suffix='.md', delete=False
-        ) as tf:
+        with tempfile.NamedTemporaryFile(mode='w+',
+                                         prefix='apy_note_',
+                                         suffix='.md',
+                                         delete=False) as tf:
             tf.write(input_string)
             tf.flush()
             retcode = editor(tf.name)
@@ -377,7 +378,8 @@ class Anki:
 
     def add_notes_from_file(self, filename, tags=''):
         """Add new notes to collection from Markdown file"""
-        return self.add_notes_from_list(markdown_file_to_notes(filename), tags)
+        return self.add_notes_from_list(markdown_file_to_notes(filename),
+                                        tags)
 
     def add_notes_from_list(self, parsed_notes, tags=''):
         """Add new notes to collection from note list (from parsed file)"""
@@ -397,16 +399,13 @@ class Anki:
 
             for x, y in zip(model_field_names, field_names):
                 if x != y:
-                    click.echo('Warning: Inconsistent field names ' f'({x} != {y})')
+                    click.echo('Warning: Inconsistent field names '
+                               f'({x} != {y})')
 
-            notes.append(
-                self._add_note(
-                    field_values,
-                    f"{tags} {note['tags']}",
-                    note['markdown'],
-                    note.get('deck'),
-                )
-            )
+            notes.append(self._add_note(field_values,
+                                        f"{tags} {note['tags']}",
+                                        note['markdown'],
+                                        note.get('deck')))
 
         return notes
 

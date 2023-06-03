@@ -74,14 +74,11 @@ def markdown_file_to_notes(filename):
         defaults['tags'] = defaults['tags'].replace(',', '')
 
     # Add some explicit defaults (unless added in file)
-    defaults = {
-        **{
-            'model': 'Basic',
-            'markdown': True,
-            'tags': '',
-        },
-        **defaults,
-    }
+    defaults = {**{
+        'model': 'Basic',
+        'markdown': True,
+        'tags': '',
+    }, **defaults}
 
     # Ensure each note has all necessary properties
     for note in notes:
@@ -97,7 +94,8 @@ def markdown_file_to_notes(filename):
             note['tags'] = note['tags'].replace(',', '')
 
         # note = {**defaults, **note}
-        note.update({k: v for k, v in defaults.items() if k not in note})
+        note.update({k: v for k, v in defaults.items()
+                     if k not in note})
 
     return notes
 
@@ -177,47 +175,42 @@ def _parse_file(filename):
 def markdown_to_html(md):
     """Convert Markdown to HTML"""
     # Don't convert if md text is really plain
-    if re.match(r'[a-zA-Z0-9æøåÆØÅ ,.?+-]*$', md):
+    if re.match(r"[a-zA-Z0-9æøåÆØÅ ,.?+-]*$", md):
         return md
 
     # Prepare original markdown for restoring
     # Note: convert newlines to <br> to make text readable in the Anki viewer
     original_encoded = base64.b64encode(
-        md.replace('\n', '<br />').encode('utf-8')
-    ).decode()
+        md.replace("\n", "<br />").encode('utf-8')).decode()
 
     # For convenience: Escape some common LaTeX constructs
-    md = md.replace(r'\\', r'\\\\')
-    md = md.replace(r'\{', r'\\{')
-    md = md.replace(r'\}', r'\\}')
-    md = md.replace(r'*}', r'\*}')
+    md = md.replace(r"\\", r"\\\\")
+    md = md.replace(r"\{", r"\\{")
+    md = md.replace(r"\}", r"\\}")
+    md = md.replace(r"*}", r"\*}")
 
     # Fix whitespaces in input
-    md = md.replace('\xc2\xa0', ' ').replace('\xa0', ' ')
+    md = md.replace("\xc2\xa0", " ").replace("\xa0", " ")
 
     # For convenience: Fix mathjax escaping
-    md = md.replace(r'\[', r'\\[')
-    md = md.replace(r'\]', r'\\]')
-    md = md.replace(r'\(', r'\\(')
-    md = md.replace(r'\)', r'\\)')
+    md = md.replace(r"\[", r"\\[")
+    md = md.replace(r"\]", r"\\]")
+    md = md.replace(r"\(", r"\\(")
+    md = md.replace(r"\)", r"\\)")
 
-    html = markdown.markdown(
-        md,
-        extensions=[
-            'tables',
-            AbbrExtension(),
-            CodeHiliteExtension(
-                noclasses=True,
-                linenums=False,
-                pygments_style='friendly',
-                guess_lang=False,
-            ),
-            DefListExtension(),
-            FencedCodeExtension(),
-            FootnoteExtension(),
-        ],
-        output_format='html',
-    )
+    html = markdown.markdown(md, extensions=[
+        'tables',
+        AbbrExtension(),
+        CodeHiliteExtension(
+            noclasses=True,
+            linenums=False,
+            pygments_style='friendly',
+            guess_lang=False,
+        ),
+        DefListExtension(),
+        FencedCodeExtension(),
+        FootnoteExtension(),
+    ], output_format="html")
 
     html_tree = BeautifulSoup(html, 'html.parser')
 
@@ -226,8 +219,8 @@ def markdown_to_html(md):
     if not tag:
         if not html:
             # Add space to prevent input field from shrinking in UI
-            html = '&nbsp;'
-        html_tree = BeautifulSoup(f'<div>{html}</div>', 'html.parser')
+            html = "&nbsp;"
+        html_tree = BeautifulSoup(f"<div>{html}</div>", "html.parser")
         tag = _get_first_tag(html_tree)
 
     # Store original_encoded as data-attribute on tree root
@@ -258,16 +251,16 @@ def html_to_markdown(html):
     tag = _get_first_tag(BeautifulSoup(html, 'html.parser'))
     encoded_bytes = tag['data-original-markdown'].encode()
     converted = base64.b64decode(encoded_bytes).decode('utf-8')
-    return converted.replace('<br>', '\n').replace('<br />', '\n')
+    return converted.replace("<br>", "\n").replace("<br />", "\n")
 
 
 def html_to_screen(html, pprint=True, parseable=False):
     """Convert html for printing to screen"""
     if not pprint:
-        soup = BeautifulSoup(html.replace('\n', ''), features='html5lib').next.next.next
-        return ''.join(
-            [el.prettify() if isinstance(el, Tag) else el for el in soup.contents]
-        )
+        soup = BeautifulSoup(html.replace('\n', ''),
+                             features='html5lib').next.next.next
+        return "".join([el.prettify() if isinstance(el, Tag) else el
+                        for el in soup.contents])
 
     html = re.sub(r'\<style\>.*\<\/style\>', '', html, flags=re.S)
 
@@ -277,24 +270,23 @@ def html_to_screen(html, pprint=True, parseable=False):
         if html != markdown_to_html(plain):
             html_clean = re.sub(r' data-original-markdown="[^"]*"', '', html)
             if parseable:
-                plain += '\n\n### Current HTML → Markdown\n' f'{to_md(html_clean)}'
-                plain += f'\n### Current HTML\n{html_clean}'
+                plain += ("\n\n### Current HTML → Markdown\n"
+                          f"{to_md(html_clean)}")
+                plain += f"\n### Current HTML\n{html_clean}"
             else:
-                plain += '\n'
+                plain += "\n"
                 plain += click.style(
-                    'The current HTML value is inconsistent with Markdown!',
-                    fg='red',
-                    bold=True,
-                )
-                plain += '\n' + click.style(html_clean, fg='white')
+                    "The current HTML value is inconsistent with Markdown!",
+                    fg='red', bold=True)
+                plain += "\n" + click.style(html_clean, fg='white')
     else:
         plain = html
 
     # For convenience: Un-escape some common LaTeX constructs
-    plain = plain.replace(r'\\\\', r'\\')
-    plain = plain.replace(r'\\{', r'\{')
-    plain = plain.replace(r'\\}', r'\}')
-    plain = plain.replace(r'\*}', r'*}')
+    plain = plain.replace(r"\\\\", r"\\")
+    plain = plain.replace(r"\\{", r"\{")
+    plain = plain.replace(r"\\}", r"\}")
+    plain = plain.replace(r"\*}", r"*}")
 
     plain = plain.replace(r'&lt;', '<')
     plain = plain.replace(r'&gt;', '>')
@@ -309,25 +301,29 @@ def html_to_screen(html, pprint=True, parseable=False):
 
     # For convenience: Fix mathjax escaping (but only if the html is generated)
     if generated:
-        plain = plain.replace(r'\[', r'[')
-        plain = plain.replace(r'\]', r']')
-        plain = plain.replace(r'\(', r'(')
-        plain = plain.replace(r'\)', r')')
+        plain = plain.replace(r"\[", r"[")
+        plain = plain.replace(r"\]", r"]")
+        plain = plain.replace(r"\(", r"(")
+        plain = plain.replace(r"\)", r")")
 
     plain = re.sub(r'\<b\>\s*\<\/b\>', '', plain)
 
     if not parseable:
-        plain = re.sub(r'\*\*(.*?)\*\*', click.style(r'\1', bold=True), plain, re.S)
+        plain = re.sub(r'\*\*(.*?)\*\*',
+                       click.style(r'\1', bold=True),
+                       plain, re.S)
 
-        plain = re.sub(r'\<b\>(.*?)\<\/b\>', click.style(r'\1', bold=True), plain, re.S)
+        plain = re.sub(r'\<b\>(.*?)\<\/b\>',
+                       click.style(r'\1', bold=True),
+                       plain, re.S)
 
         plain = re.sub(r'_(.*?)_', _italize(r'\1'), plain, re.S)
 
         plain = re.sub(r'\<i\>(.*?)\<\/i\>', _italize(r'\1'), plain, re.S)
 
-        plain = re.sub(
-            r'\<u\>(.*?)\<\/u\>', click.style(r'\1', underline=True), plain, re.S
-        )
+        plain = re.sub(r'\<u\>(.*?)\<\/u\>',
+                       click.style(r'\1', underline=True),
+                       plain, re.S)
 
     return plain.strip()
 
@@ -339,11 +335,9 @@ def is_generated_html(html):
 
     tag = _get_first_tag(BeautifulSoup(html, 'html.parser'))
 
-    return (
-        tag is not None
-        and tag.attrs is not None
-        and 'data-original-markdown' in tag.attrs
-    )
+    return (tag is not None
+            and tag.attrs is not None
+            and 'data-original-markdown' in tag.attrs)
 
 
 def _get_first_tag(tree):
