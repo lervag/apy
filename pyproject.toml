@@ -13,7 +13,6 @@ markdown = "^3.4.3"
 readchar = "^4.0.5"
 markdownify = "^0.11.6"
 anki = "^2.1.63"
-aqt = "^2.1.63"
 html5lib = "^1.1"
 
 [tool.poetry.scripts]
@@ -34,6 +33,9 @@ init-hook = 'import sys; sys.path.append("/usr/share/anki")'
 
 [tool.pylint.reports]
 output-format = "colorized"
+
+[tool.pylint.format]
+max-line-length = "88"
 
 [tool.pylint."messages control"]
 max-statements = 75
