@@ -3,10 +3,11 @@ import os
 import re
 import tempfile
 from pathlib import Path
+import sqlite3
+import pickle
 
 import anki
 import click
-from aqt.profiles import ProfileManager
 from bs4 import BeautifulSoup
 
 from apy.config import cfg
@@ -28,7 +29,13 @@ class Anki:
     ):
         self.modified = False
 
-        self._init_load_collection(base_path, collection_db_path, profile_name)
+        self._meta = None
+        self._collection_db_path = ""
+        self._profile_name = profile_name
+        self._profile = None
+
+        self._init_load_profile(base_path, collection_db_path)
+        self._init_load_collection()
         self._init_load_config()
 
         self.model_name_to_id = {m["name"]: m["id"] for m in self.col.models.all()}
@@ -38,43 +45,65 @@ class Anki:
         self.deck_names = self.deck_name_to_id.keys()
         self.n_decks = len(self.deck_names)
 
-    def _init_load_collection(self, base, path, profile):
-        """Load the Anki collection"""
-        # Save CWD (because Anki changes it)
-        save_cwd = os.getcwd()
-
-        if path is None:
-            if base is None:
+    def _init_load_profile(self, base_path, collection_db_path):
+        """Load the Anki profile from database"""
+        if base_path is None:
+            if collection_db_path:
+                self._collection_db_path = str(Path(collection_db_path).absolute())
+                return
+            else:
                 click.echo("Base path is not properly set!")
                 raise click.Abort()
 
-            basepath = Path(base)
-            if not (basepath / "prefs21.db").exists():
-                click.echo("Invalid base path!")
-                click.echo(f"path = {basepath.absolute()}")
-                raise click.Abort()
+        base_path = Path(base_path)
+        db_path = base_path / "prefs21.db"
 
-            # Initialize a profile manager to get an interface to the profile
-            # settings and main database path; also required for syncing
-            self.pm = ProfileManager(base)
-            self.pm.setupMeta()
+        if not db_path.exists():
+            click.echo("Invalid base path!")
+            click.echo(f"path = {base_path.absolute()}")
+            raise click.Abort()
 
-            if profile is None:
-                profile = self.pm.profiles()[0]
+        # Load metadata and profiles from database
+        conn = sqlite3.connect(db_path)
+        try:
+            res = conn.execute(
+                "select cast(data as blob) from profiles where name = '_global'"
+            )
+            self._meta = pickle.loads(res.fetchone()[0])
 
-            # Load the main Anki database/collection
-            self.pm.load(profile)
-            path = self.pm.collectionPath()
-        else:
-            self.pm = None
+            profiles = conn.execute(
+                "select name, cast(data as blob) from profiles where name != '_global'"
+            ).fetchall()
+        finally:
+            conn.close()
+
+        profiles_dict = {name: pickle.loads(data) for name, data in profiles}
+
+        if self._profile_name is None:
+            self._profile_name = self._meta.get(
+                "last_loaded_profile_name", profiles[0][0]
+            )
+
+        self._collection_db_path = str(
+            base_path / self._profile_name / "collection.anki2"
+        )
+        self._profile = profiles_dict[self._profile_name]
+
+    def _init_load_collection(self):
+        """Load the Anki collection"""
+        from anki.collection import Collection
+        from anki.errors import DBError
+
+        # Save CWD (because Anki changes it)
+        save_cwd = os.getcwd()
 
         try:
-            self.col = anki.Collection(path)
+            self.col = Collection(self._collection_db_path)
         except AssertionError as error:
             click.echo("Path to database is not valid!")
-            click.echo(f"path = {path}")
+            click.echo(f"path = {self._collection_db_path}")
             raise click.Abort() from error
-        except anki.errors.DBError as error:
+        except DBError as error:
             click.echo("Database is NA/locked!")
             raise click.Abort() from error
 
@@ -97,7 +126,7 @@ class Anki:
     def __exit__(self, exception_type, exception_value, traceback):
         if self.modified:
             click.echo("Database was modified.")
-            if self.pm is not None and self.pm.profile["syncKey"]:
+            if self._profile is not None and self._profile["syncKey"]:
                 click.secho("Remember to sync!", fg="blue")
             self.col.close()
         elif self.col.db:
@@ -105,10 +134,23 @@ class Anki:
 
     def sync(self):
         """Sync collection to AnkiWeb"""
-        if self.pm is None:
+        from anki.sync import SyncAuth
+
+        if self._profile is None:
             return
 
-        auth = self.pm.sync_auth()
+        hkey = self._profile.get("syncKey")
+        if not hkey:
+            return
+
+        auth = SyncAuth(
+            hkey=hkey,
+            endpoint=self._profile.get("currentSyncUrl")
+            or self._profile.get("customSyncUrl")
+            or None,
+            io_timeout_secs=self._profile.get("networkTimeout") or 30,
+        )
+
         if auth is None:
             return
 
