@@ -24,6 +24,9 @@ pylint = "^2.17.4"
 pyqtwebengine = "^5.15.6"
 bump2version = "^1.0.1"
 black = "^23.3.0"
+mypy = "^1.3.0"
+types-beautifulsoup4 = "^4.12.0.5"
+types-markdown = "^3.4.2.9"
 
 [tool.pytest]
 filterwarnings = ["ignore::DeprecationWarning:html5lib.*:"]
@@ -48,3 +51,22 @@ disable = [
 [build-system]
 requires = ["poetry-core"]
 build-backend = "poetry.core.masonry.api"
+
+[tool.mypy]
+exclude = ".venv"
+strict = true
+
+# We're currently adding incremental type checking to the codebase, one file at
+# a time. This means that we need to ignore errors in files that have not yet
+# been type checked. Once a file has been type checked, it should be removed
+# from the list below.
+[[tool.mypy.overrides]]
+module = [
+    "apy.anki",
+    "apy.cli",
+    "apy.convert",
+    "apy.__init__",
+    "apy.note",
+    "apy.utilities",
+]
+ignore_errors = true
