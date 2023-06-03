@@ -94,9 +94,9 @@ class Anki:
 
     def __exit__(self, exception_type, exception_value, traceback):
         if self.modified:
-            click.echo("Database was modified.")
+            click.echo('Database was modified.')
             if self.pm is not None and self.pm.profile["syncKey"]:
-                click.secho("Remember to sync!", fg="blue")
+                click.secho('Remember to sync!', fg="blue")
             self.col.close()
         elif self.col.db:
             self.col.close(False)
