@@ -1,0 +1,35 @@
+[changelog]
+header = """
+## What's Changed
+"""
+body = """
+{% for group, commits in commits | group_by(attribute="group") %}
+### {{ group | upper_first }}
+{% for commit in commits %}
+* {{ commit.message | upper_first }}\
+  {% if commit.breaking %} (**breaking**){% endif %}\
+  {%- if commit.links %} ({% for link in commit.links %}{{link.text}}{% endfor -%}){% endif %}\
+  {%- if commit.body %}\n  → {{ commit.body }}{%- endif %}\
+{% endfor %}
+{% endfor %}\n
+"""
+footer = """
+### Acknowledgements
+
+Thanks to XYZ for their contributions!
+"""
+trim = false
+
+[git]
+conventional_commits = true
+filter_unconventional = true
+commit_parsers = [
+    { message = "^feat", group = "Features"},
+    { message = "^fix", group = "Bug Fixes"},
+    { message = "^merge", group = "Merges"},
+    { message = "^doc", group = "Documentation"},
+    { message = "^perf", group = "Performance"},
+    { message = "^test", skip = true},
+    { message = "^chore", skip = true},
+]
+link_parsers = [ { pattern = "#(\\d+)", href = "$1"} ]
