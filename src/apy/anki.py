@@ -6,7 +6,6 @@ from pathlib import Path
 import sqlite3
 import pickle
 
-import anki
 import click
 from bs4 import BeautifulSoup
 
@@ -113,12 +112,14 @@ class Anki:
     @staticmethod
     def _init_load_config():
         """Load custom configuration"""
+        from anki import latex
+
         # Update LaTeX commands
         # * Idea based on Anki addon #1546037973 ("Edit LaTeX build process")
         if "pngCommands" in cfg:
-            anki.latex.pngCommands = cfg["pngCommands"]
+            latex.pngCommands = cfg["pngCommands"]
         if "svgCommands" in cfg:
-            anki.latex.svgCommands = cfg["svgCommands"]
+            latex.svgCommands = cfg["svgCommands"]
 
     def __enter__(self):
         return self
