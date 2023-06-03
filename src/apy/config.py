@@ -2,15 +2,16 @@
 import json
 import os
 from pathlib import Path
+from typing import Optional, Any
 
 
-def get_base_path():
+def get_base_path() -> Optional[str]:
     # If base_path not defined: Look in environment variables
-    if path := os.environ.get("APY_BASE"):
-        return path
+    if path_as_str := os.environ.get("APY_BASE"):
+        return path_as_str
 
-    if path := os.environ.get("ANKI_BASE"):
-        return path
+    if path_as_str := os.environ.get("ANKI_BASE"):
+        return path_as_str
 
     # Otherwise look in usual paths:
     # https://docs.ankiweb.net/files.html#file-locations
@@ -34,21 +35,20 @@ else:
     cfg = {}
 
 
+CFG_DEFAULT_VALUES: dict[str, Any] = {
+    "base_path": None,
+    "img_viewers": {
+        "svg": ["display", "-density", "300"],
+    },
+    "img_viewers_default": ["feh"],
+    "markdown_models": ["Basic"],
+    "presets": {},
+    "profile_name": None,
+    "query": "tag:marked OR -flag:0",
+}
+
 # Ensure that cfg has required keys
-for required, default in [
-    ("base_path", None),
-    (
-        "img_viewers",
-        {
-            "svg": ["display", "-density", "300"],
-        },
-    ),
-    ("img_viewers_default", ["feh"]),
-    ("markdown_models", ["Basic"]),
-    ("presets", {}),
-    ("profile_name", None),
-    ("query", "tag:marked OR -flag:0"),
-]:
+for required, default in CFG_DEFAULT_VALUES.items():
     if required not in cfg:
         cfg[required] = default
 
