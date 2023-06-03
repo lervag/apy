@@ -25,7 +25,7 @@ class cd:
 
 def editor(filepath):
     """Use EDITOR to edit file at given path"""
-    return call([os.environ.get('EDITOR', 'vim'), filepath])
+    return call([os.environ.get("EDITOR", "vim"), filepath])
 
 
 def edit_text(input_text, prefix=None):
@@ -33,7 +33,7 @@ def edit_text(input_text, prefix=None):
     if prefix is not None:
         prefix = prefix + "_"
 
-    with NamedTemporaryFile(mode='w+', prefix=prefix, suffix=".md") as tf:
+    with NamedTemporaryFile(mode="w+", prefix=prefix, suffix=".md") as tf:
         tf.write(input_text)
         tf.flush()
         editor(tf.name)
@@ -59,7 +59,7 @@ def choose(items, text="Choose from list:"):
             continue
 
         try:
-            reply = items[index-1]
+            reply = items[index - 1]
             click.echo(index)
             return reply
         except IndexError:

@@ -11,4 +11,4 @@ def test_basepath_is_none():
         Anki(base=None)
 
     with pytest.raises(click.Abort):
-        Anki(base='/non/existing/path')
+        Anki(base="/non/existing/path")
