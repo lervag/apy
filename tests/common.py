@@ -11,6 +11,7 @@ testDir = os.path.dirname(__file__)
 
 class AnkiTest:
     """Create Anki collection wrapper"""
+
     def __init__(self, anki):
         self.a = anki
 
@@ -23,6 +24,7 @@ class AnkiTest:
 
 class AnkiEmpty(AnkiTest):
     """Create Anki collection wrapper for an empty collection"""
+
     def __init__(self):
         (self.fd, self.name) = tempfile.mkstemp(suffix=".anki2")
         os.close(self.fd)
@@ -32,10 +34,10 @@ class AnkiEmpty(AnkiTest):
 
 class AnkiSimple(AnkiTest):
     """Create Anki collection wrapper"""
+
     def __init__(self):
-        self.tmppath = os.path.join(tempfile.gettempdir(), 'tempfile.anki2')
-        shutil.copy2(testDir + '/data/test_base/Test/collection.anki2',
-                     self.tmppath)
+        self.tmppath = os.path.join(tempfile.gettempdir(), "tempfile.anki2")
+        shutil.copy2(testDir + "/data/test_base/Test/collection.anki2", self.tmppath)
         super().__init__(Anki(path=self.tmppath))
 
     def __exit__(self, exception_type, exception_value, traceback):

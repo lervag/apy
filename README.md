@@ -367,3 +367,11 @@ Alternatively, without activating the environment:
 ```sh
 poetry run pytest
 ```
+
+### Linting
+
+To format the code, run:
+
+```sh
+poetry run black .
+```
