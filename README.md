@@ -329,7 +329,7 @@ and developing the `apy` code.
 ### Setup
 
 This project uses [Poetry](https://python-poetry.org/) as the build system and
-to manage dependencies and [pre-commit](https://pre-commit.com/) for linting.
+to manage dependencies.
 
 Install Poetry first if you don't have it already. Fork the repository, then
 clone your fork and install a local development build of the project using
@@ -342,12 +342,6 @@ cd apy/
 
 # Install the project with Poetry
 poetry install
-```
-
-Set up pre-commit.
-
-```sh
-poetry run pre-commit
 ```
 
 Poetry will create a virtual environment for you (see
