@@ -5,7 +5,7 @@ from pathlib import Path
 
 
 def get_base_path():
-    # If base not defined: Look in environment variables
+    # If base_path not defined: Look in environment variables
     if path := os.environ.get("APY_BASE"):
         return path
 
@@ -36,7 +36,7 @@ else:
 
 # Ensure that cfg has required keys
 for required, default in [
-    ("base", None),
+    ("base_path", None),
     (
         "img_viewers",
         {
@@ -46,20 +46,20 @@ for required, default in [
     ("img_viewers_default", ["feh"]),
     ("markdown_models", ["Basic"]),
     ("presets", {}),
-    ("profile", None),
+    ("profile_name", None),
     ("query", "tag:marked OR -flag:0"),
 ]:
     if required not in cfg:
         cfg[required] = default
 
 
-if cfg["base"] is None:
-    cfg["base"] = get_base_path()
+if cfg["base_path"] is None:
+    cfg["base_path"] = get_base_path()
 
 
 # Ensure base path is a proper absolute path
-if cfg["base"]:
-    cfg["base"] = os.path.abspath(os.path.expanduser(cfg["base"]))
+if cfg["base_path"]:
+    cfg["base_path"] = os.path.abspath(os.path.expanduser(cfg["base_path"]))
 
 
 # Ensure that default preset is defined

@@ -23,10 +23,12 @@ from apy.utilities import cd, choose, editor
 class Anki:
     """My Anki collection wrapper class."""
 
-    def __init__(self, base=None, path=None, profile=None, **_kwargs):
+    def __init__(
+        self, base_path=None, collection_db_path=None, profile_name=None, **_kwargs
+    ):
         self.modified = False
 
-        self._init_load_collection(base, path, profile)
+        self._init_load_collection(base_path, collection_db_path, profile_name)
         self._init_load_config()
 
         self.model_name_to_id = {m["name"]: m["id"] for m in self.col.models.all()}
