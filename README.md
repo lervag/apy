@@ -244,6 +244,9 @@ A couple of relevant applications that use Ankiconnect:
 * [anki-cli](https://github.com/towercity/anki-cli) is a simple nodejs based
   command-line interface for Anki.
 
+* [trrc](https://github.com/Constantin1489/trrc) is a command-line program to
+  add a card to Anki using AnkiConnect API.
+
 _The Dealbreaker_: I wanted a script that does not require Anki to be running.
 
 ### Anki::Import - Anki note generation made easy
