@@ -3,6 +3,8 @@
 import os
 from tempfile import NamedTemporaryFile
 from subprocess import call
+from typing import Any
+from types import TracebackType
 
 import click
 import readchar
@@ -11,26 +13,31 @@ import readchar
 class cd:
     """Context manager for changing the current working directory"""
 
-    def __init__(self, newPath):
+    def __init__(self, newPath: str) -> None:
         self.newPath = os.path.expanduser(newPath)
-        self.savedPath = None
+        self.savedPath = ""
 
-    def __enter__(self):
+    def __enter__(self) -> None:
         self.savedPath = os.getcwd()
         os.chdir(self.newPath)
 
-    def __exit__(self, etype, value, traceback):
+    def __exit__(
+        self,
+        exc_type: type[BaseException] | None,
+        exc_val: BaseException | None,
+        exc_tb: TracebackType | None,
+    ) -> None:
         os.chdir(self.savedPath)
 
 
-def editor(filepath):
+def editor(filepath: str) -> int:
     """Use EDITOR to edit file at given path"""
     return call([os.environ.get("EDITOR", "vim"), filepath])
 
 
-def edit_text(input_text, prefix=None):
+def edit_text(input_text: str, prefix: str = "") -> str:
     """Use EDITOR to edit text (from a temporary file)"""
-    if prefix is not None:
+    if prefix:
         prefix = prefix + "_"
 
     with NamedTemporaryFile(mode="w+", prefix=prefix, suffix=".md") as tf:
@@ -43,7 +50,7 @@ def edit_text(input_text, prefix=None):
     return edited_message
 
 
-def choose(items, text="Choose from list:"):
+def choose(items: list[Any], text: str = "Choose from list:") -> Any:
     """Choose from list of items"""
     click.echo(text)
     for i, element in enumerate(items):

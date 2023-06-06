@@ -65,8 +65,6 @@ module = [
     "apy.anki",
     "apy.cli",
     "apy.convert",
-    "apy.__init__",
     "apy.note",
-    "apy.utilities",
 ]
 ignore_errors = true
