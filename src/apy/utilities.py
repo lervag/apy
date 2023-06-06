@@ -3,7 +3,7 @@
 import os
 from tempfile import NamedTemporaryFile
 from subprocess import call
-from typing import Any
+from typing import Optional, Any
 from types import TracebackType
 
 import click
@@ -23,9 +23,9 @@ class cd:
 
     def __exit__(
         self,
-        exc_type: type[BaseException] | None,
-        exc_val: BaseException | None,
-        exc_tb: TracebackType | None,
+        exc_type: Optional[type[BaseException]],
+        exc_val: Optional[BaseException],
+        exc_tb: Optional[TracebackType],
     ) -> None:
         os.chdir(self.savedPath)
 
