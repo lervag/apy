@@ -59,10 +59,11 @@ pipx install git+https://github.com/lervag/apy
 
 `apy` should work for Python 3.9 and later.
 
-Technically, it does **not** depend on an existing Anki installation; it pulls
-in a copy of the non-GUI components of Anki as a separate dependency. However,
-you still need to have an Anki database of collections and profile settings
-already existin on your machine, since it can't create one from nothing.
+Technically, `apy` does **not** depend on any existing Anki installation, since
+it pulls in a copy of the non-GUI components of Anki as a separate dependency.
+However, you still need to have an Anki database with collections and profile
+settings already existing on your machine, since `apy` can't create one from
+nothing.
 
 ## Usage
 
