@@ -26,30 +26,33 @@ Anki.
 
 ## Install instructions
 
-For normal usage, the best way to install `apy` is with `pipx`. This will
-ensure `apy` doesn't interfere with any Python packages already on your system.
-
-If you don't already have `pipx`, install it with your distribution's package
-manager. E.g. on Ubuntu:
+`apy` can be installed in the "usual" way with `pip`:
 
 ```bash
-sudo apt update && sudo apt install pipx
+pip install git+https://github.com/lervag/apy
 ```
 
-Then, install `apy`:
+**However**, notice that installing Python packages outside virtual
+environments is not recommended, even at the user level! If you do this, then
+be aware that you may experience issues due to conflicts with other
+packages/tools installed in the same manner.
+
+Instead, the best way to install `apy` for normal usage is with
+[`pipx`](https://pypa.github.io/pipx/). This will ensure `apy` doesn't
+interfere with other Python packages already on your system.
+
+If you don't already have `pipx`, install it with your distribution's package
+manager. For instance, on Ubuntu:
+
+```bash
+sudo apt update
+sudo apt install pipx
+```
+
+Then, install `apy` with:
 
 ```bash
 pipx install git+https://github.com/lervag/apy
-```
-
-If you don't want to use `pipx`, `apy` can also be installed in the usual way
-by `pip`. But in that case you must create and manage the virtual environment
-yourself:
-
-```bash
-python -m venv .venv
-source .venv/bin/activate
-pip install git+https://github.com/lervag/apy
 ```
 
 ### Requirements
