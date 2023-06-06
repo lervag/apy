@@ -29,6 +29,8 @@ jobs:
         run: poetry install --no-interaction --no-root
       - name: Run black
         run: poetry run black --check .
+      - name: Run mypy
+        run: poetry run mypy src
 
   test:
     needs: lint

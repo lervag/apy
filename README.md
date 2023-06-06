@@ -348,3 +348,9 @@ To format the code, run:
 ```sh
 poetry run black .
 ```
+
+To type-check the code, run:
+
+```sh
+poetry run mypy src
+```
