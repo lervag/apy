@@ -26,75 +26,43 @@ Anki.
 
 ## Install instructions
 
-To install `apy`, you can do something like this:
+`apy` can be installed in the "usual" way with `pip`:
 
 ```bash
-# Install apy from github
-pip install --user git+https://github.com/lervag/apy.git#egg=apy
-
-# One can also do
-git clone https://github.com/lervag/apy.git
-pip install -e .
+pip install git+https://github.com/lervag/apy
 ```
 
-**Please also notice the following requirements specification!**
+**However**, notice that installing Python packages outside virtual
+environments is not recommended, even at the user level! If you do this, then
+be aware that you may experience issues due to conflicts with other
+packages/tools installed in the same manner.
+
+Instead, the best way to install `apy` for normal usage is with
+[`pipx`](https://pypa.github.io/pipx/). This will ensure `apy` doesn't
+interfere with other Python packages already on your system.
+
+If you don't already have `pipx`, install it with your distribution's package
+manager. For instance, on Ubuntu:
+
+```bash
+sudo apt update
+sudo apt install pipx
+```
+
+Then, install `apy` with:
+
+```bash
+pipx install git+https://github.com/lervag/apy
+```
 
 ### Requirements
 
-`apy` should work well for Python 3.9 and later.
+`apy` should work for Python 3.9 and later.
 
-`apy` uses the Anki Python packages, similar to how Anki addons do. We
-therefore need these available for `apy` to work! Some relevant references:
-* [Anki dev docs: Pre-built Python wheels](https://github.com/ankitects/anki/blob/main/docs/development.md#pre-built-python-wheels)
-* [Anki betas: Install via PyPI/pip](https://betas.ankiweb.net/intro.html#via-pypipip)
-
-`apy` assumes that the Anki source is available at `/usr/share/anki`. If you
-put it somewhere else, then you may have to set the environment variable
-`APY_ANKI_PATH`, e.g. `export APY_ANKI_PATH=/my/path/to/anki`.
-
-The following guides should help for some users on some specified systems.
-
-#### Arch Linux
-
-It should suffice to install Anki from AUR with e.g.
-
-```sh
-paru -S anki
-```
-
-#### Ubuntu
-
-The following should work and will install the latest Anki version as well as
-`apy` itself at user level with `pip`.
-
-```
-sudo apt install git
-sudo apt install python3-pip
-sudo apt install python3-pyqt5.qtwebengine python3-pyqt5.qtmultimedia
-
-pip install --user aqt
-pip install --user git+https://github.com/lervag/apy.git#egg=apy
-```
-
-#### Other
-
-In other environments, one must first ensure that Python is installed with the
-`venv` package and `pip` available. Also, the PyQt5 libraries are necessary and
-must be installed at the system level. These are named something like:
-`python3-pyqt5.qtwebengine` and `python3-pyqt5.qtmultimedia`. Then, one can
-install Anki and `apy` inside a virtual environment like this:
-
-```sh
-python3 -m venv .venv
-source .venv/bin/activate
-
-pip install --upgrade pip
-pip install aqt==2.1.53
-pip install git+https://github.com/lervag/apy.git#egg=apy
-
-# Need to allow system site packages for the PyQt5 stuff
-sed -i 's/false/true/' .venv/pyvenv.cfg
-```
+Technically, it does **not** depend on an existing Anki installation; it pulls
+in a copy of the non-GUI components of Anki as a separate dependency. However,
+you still need to have an Anki database of collections and profile settings
+already existin on your machine, since it can't create one from nothing.
 
 ## Usage
 
