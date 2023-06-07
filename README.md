@@ -2,7 +2,7 @@
 
 [Anki](https://apps.ankiweb.net/index.html) is a flash card program which makes
 remembering things easy. `apy` is a Python script for easily adding cards to
-Anki.
+Anki. It does not require Anki to be running at the same time.
 
 ### Important
 
@@ -32,10 +32,10 @@ Anki.
 pip install git+https://github.com/lervag/apy
 ```
 
-**However**, notice that installing Python packages outside virtual
-environments is not recommended, even at the user level! If you do this, then
-be aware that you may experience issues due to conflicts with other
-packages/tools installed in the same manner.
+**However**, note that installing Python packages outside [virtual
+environments](https://docs.python.org/3/library/venv.html) is not recommended,
+even at the user level! If you do this, then be aware that you may experience
+issues due to conflicts with other packages/tools installed in the same manner.
 
 Instead, the best way to install `apy` for normal usage is with
 [`pipx`](https://pypa.github.io/pipx/). This will ensure `apy` doesn't
