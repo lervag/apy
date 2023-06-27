@@ -54,14 +54,17 @@ def main(ctx, base_path, profile_name, version):
 
 
 @main.command("add-single")
+@click.argument("fields", nargs=-1)
+@click.option("-p", "--parse-markdown", is_flag=True, help=("Parse input as Markdown."))
 @click.option("-s", "--preset", default="default", help="Specify a preset.")
 @click.option("-t", "--tags", help="Specify default tags for new cards.")
 @click.option(
     "-m", "--model", "model_name", help=("Specify default model for new cards.")
 )
 @click.option("-d", "--deck", help=("Specify default deck for new cards."))
-@click.argument("fields", nargs=-1)
-def add_single(fields, tags=None, preset=None, model_name=None, deck=None):
+def add_single(
+    fields, parse_markdown, tags=None, preset=None, model_name=None, deck=None
+):
     """Add a single note from command line arguments.
 
     Examples:
@@ -88,7 +91,7 @@ def add_single(fields, tags=None, preset=None, model_name=None, deck=None):
         if not model_name:
             model_name = cfg["presets"][preset]["model"]
 
-        a.add_notes_single(fields, tags, model_name, deck)
+        a.add_notes_single(fields, parse_markdown, tags, model_name, deck)
 
 
 @main.command()

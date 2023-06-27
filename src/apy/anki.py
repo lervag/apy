@@ -455,12 +455,12 @@ class Anki:
 
         return notes
 
-    def add_notes_single(self, fields, tags="", model=None, deck=None):
+    def add_notes_single(self, fields, markdown, tags="", model=None, deck=None):
         """Add new note to collection from args"""
         if model is not None:
             self.set_model(model)
 
-        self._add_note(fields, tags, False, deck)
+        return self._add_note(fields, tags, markdown, deck)
 
     def _add_note(self, fields, tags, markdown=True, deck=None):
         """Add new note to collection"""

@@ -45,3 +45,23 @@ def test_cli_add_from_file(note_files):
         result = runner.invoke(main, ["-b", tmpdirname, "add-from-file", note_files])
 
         assert result.exit_code == 0
+
+
+def test_cli_add_single():
+    """Test 'apy add-single' with Markdown parser."""
+    runner = CliRunner()
+
+    with tempfile.TemporaryDirectory() as tmpdirname:
+        shutil.copytree(test_collection_dir, tmpdirname, dirs_exist_ok=True)
+        result = runner.invoke(
+            main,
+            [
+                "-b",
+                tmpdirname,
+                "add-single",
+                "-p",
+                "This is **strong** question.",
+                "This is `code` answer.",
+            ],
+        )
+        assert result.exit_code == 0
