@@ -339,7 +339,7 @@ class Note:
         cids = [c.id for c in self.n.cards()]
 
         if cids:
-            self.a.col.decks.setDeck(cids, newdid)
+            self.a.col.set_deck(cids, newdid)
             self.a.modified = True
 
     def set_deck_interactive(self):

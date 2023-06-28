@@ -30,3 +30,15 @@ def test_add_different_models():
         n_cards = a.col.card_count()
         a.add_notes_from_file(testDir + "/data/models.md")
         assert a.col.card_count() == n_cards + 6
+
+
+def test_add_single_with_markdown():
+    """Test adding single note with Markdown parser."""
+    with AnkiEmpty() as a:
+        note = a.add_notes_single(
+            ["This is **strong** question.", "This is `code` answer."], markdown=True
+        )
+
+        assert "data-original-markdown" in note.n.fields[0]
+        assert "<strong>" in note.n.fields[0]
+        assert "<code>" in note.n.fields[1]

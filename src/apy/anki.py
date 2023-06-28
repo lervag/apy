@@ -295,7 +295,12 @@ class Anki:
 
     def change_tags(self, query, tags, add=True):
         """Add/Remove tags from notes that match query"""
-        self.col.tags.bulkAdd(self.col.find_notes(query), tags, add)
+        note_ids = self.col.find_notes(query)
+        if add:
+            self.col.tags.bulk_add(note_ids, tags)
+        else:
+            self.col.tags.bulk_remove(note_ids, tags)
+
         self.modified = True
 
     def edit_model_css(self, model_name):
@@ -455,12 +460,12 @@ class Anki:
 
         return notes
 
-    def add_notes_single(self, fields, tags="", model=None, deck=None):
+    def add_notes_single(self, fields, markdown, tags="", model=None, deck=None):
         """Add new note to collection from args"""
         if model is not None:
             self.set_model(model)
 
-        self._add_note(fields, tags, False, deck)
+        return self._add_note(fields, tags, markdown, deck)
 
     def _add_note(self, fields, tags, markdown=True, deck=None):
         """Add new note to collection"""
