@@ -15,12 +15,15 @@ def get_base_path() -> Optional[str]:
 
     # Otherwise look in usual paths:
     # https://docs.ankiweb.net/files.html#file-locations
-    if (path := Path.home() / ".local/share/Anki2").exists():
-        return str(path)
-
     if xdg_data_home := os.environ.get("XDG_DATA_HOME"):
         if (path := Path(xdg_data_home) / "Anki2").exists():
             return str(path)
+
+    if (path := Path.home() / ".local/share/Anki2").exists():
+        return str(path)
+
+    if (path := Path.home() / "Library/Application Support/Anki2").exists():
+        return str(path)
 
     return None
 
