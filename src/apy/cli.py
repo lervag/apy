@@ -125,14 +125,15 @@ def add(tags, model_name, deck):
 @main.command("add-from-file")
 @click.argument("file", type=click.Path(exists=True, dir_okay=False))
 @click.option("-t", "--tags", default="", help="Specify default tags for new cards.")
-def add_from_file(file, tags):
+@click.option("-d", "--deck", help=("Specify default deck for new cards."))
+def add_from_file(file, tags, deck):
     """Add notes from Markdown file.
 
     For input file syntax specification, see docstring for
     markdown_file_to_notes() in convert.py.
     """
     with Anki(**cfg) as a:
-        notes = a.add_notes_from_file(file, tags)
+        notes = a.add_notes_from_file(file, tags, deck)
         _added_notes_postprocessing(a, notes)
 
 

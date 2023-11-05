@@ -425,11 +425,11 @@ class Anki:
 
             return self.add_notes_from_file(tf.name)
 
-    def add_notes_from_file(self, filename, tags=""):
+    def add_notes_from_file(self, filename, tags="", deck=None):
         """Add new notes to collection from Markdown file"""
-        return self.add_notes_from_list(markdown_file_to_notes(filename), tags)
+        return self.add_notes_from_list(markdown_file_to_notes(filename), tags, deck)
 
-    def add_notes_from_list(self, parsed_notes, tags=""):
+    def add_notes_from_list(self, parsed_notes, tags="", deck=None):
         """Add new notes to collection from note list (from parsed file)"""
         notes = []
         for note in parsed_notes:
@@ -454,7 +454,7 @@ class Anki:
                     field_values,
                     f"{tags} {note['tags']}",
                     note["markdown"],
-                    note.get("deck"),
+                    note.get("deck", deck),
                 )
             )
 
