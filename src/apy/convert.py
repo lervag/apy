@@ -96,7 +96,6 @@ def markdown_file_to_notes(filename):
         if "tags" in note:
             note["tags"] = note["tags"].replace(",", "")
 
-        # note = {**defaults, **note}
         note.update({k: v for k, v in defaults.items() if k not in note})
 
     return notes
