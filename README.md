@@ -167,7 +167,8 @@ compatible with which versions of Anki.
 
 | Version | Version note                                |
 |:-------:| ------------------------------------------- |
-| `HEAD`  | Development branch (works with Anki 2.1.64) |
+| `HEAD`  | Development branch                          |
+| 0.11    | Compatible with Anki 2.1.66                 |
 | 0.10    | Compatible with Anki 2.1.64                 |
 | 0.9     | Compatible with Anki 2.1.49                 |
 | 0.8     | Compatible with Anki 2.1.35--2.1.44         |
