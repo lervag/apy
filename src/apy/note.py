@@ -330,11 +330,8 @@ class Note:
         """Return which deck the note belongs to"""
         return self.a.col.decks.name(self.n.cards()[0].did)
 
-    def set_deck(self, deck):
+    def set_deck(self, deck: str) -> None:
         """Move note to deck"""
-        if not isinstance(deck, str):
-            raise Exception('Argument "deck" should be string!')
-
         newdid = self.a.col.decks.id(deck)
         cids = [c.id for c in self.n.cards()]
 
@@ -412,6 +409,7 @@ class Note:
             }
 
         _pprint = True
+        width = os.get_terminal_size()[0]
         refresh = True
         while True:
             if refresh:

@@ -50,9 +50,9 @@ class Anki:
             if collection_db_path:
                 self._collection_db_path = str(Path(collection_db_path).absolute())
                 return
-            else:
-                click.echo("Base path is not properly set!")
-                raise click.Abort()
+
+            click.echo("Base path is not properly set!")
+            raise click.Abort()
 
         base_path = Path(base_path)
         db_path = base_path / "prefs21.db"
@@ -133,7 +133,7 @@ class Anki:
         elif self.col.db:
             self.col.close(False)
 
-    def sync(self):
+    def sync(self) -> None:
         """Sync collection to AnkiWeb"""
         from anki.sync import SyncAuth
 
@@ -167,7 +167,7 @@ class Anki:
             else:
                 click.echo("Syncing deck ... ", nl=False)
 
-            self.col.sync_collection(auth)
+            self.col.sync_collection(auth, True)
 
             if not debug_output:
                 click.echo("done!")
@@ -195,8 +195,10 @@ class Anki:
                 return
             raise
 
-    def check_media(self):
+    def check_media(self) -> None:
         """Check media (will rebuild missing LaTeX files)"""
+        from anki.notes import NoteId
+
         with cd(self.col.media.dir()):
             click.echo("Checking media DB ... ", nl=False)
             output = self.col.media.check()
@@ -212,7 +214,7 @@ class Anki:
             if len(output.missing) > 0 and click.confirm("Render missing LaTeX?"):
                 out = self.col.media.render_all_latex()
                 if out is not None:
-                    nid, _ = out
+                    nid = NoteId(out[0])
                     click.secho(f"Error processing node: {nid}", fg="red")
 
                     if click.confirm("Review note?"):
@@ -245,9 +247,17 @@ class Anki:
         self.col.remove_notes(ids)
         self.modified = True
 
-    def get_model(self, model_name):
+    def get_model(self, model_name: str):
         """Get model from model name"""
-        return self.col.models.get(self.model_name_to_id.get(model_name))
+        from anki.models import NotetypeId
+
+        model_id = self.model_name_to_id.get(model_name)
+        if isinstance(model_id, str):
+            model_id = int(model_id)
+        elif not isinstance(model_id, int):
+            return None
+
+        return self.col.models.get(NotetypeId(model_id))
 
     def set_model(self, model_name):
         """Set current model based on model name"""
@@ -263,15 +273,15 @@ class Anki:
         self.col.models.set_current(model)
         return model
 
-    def rename_model(self, old_model_name, new_model_name):
+    def rename_model(self, old_model_name: str, new_model_name: str) -> None:
         """Rename a model"""
-        if old_model_name not in self.model_names:
-            click.echo("Can" "t rename model!")
+        model = self.get_model(old_model_name)
+        if not model:
+            click.echo("Can't rename model!")
             click.echo(f"No such model: {old_model_name}")
             raise click.Abort()
 
         # Change the name
-        model = self.get_model(old_model_name)
         model["name"] = new_model_name
 
         # Update local storage
@@ -303,9 +313,12 @@ class Anki:
 
         self.modified = True
 
-    def edit_model_css(self, model_name):
+    def edit_model_css(self, model_name: str) -> None:
         """Edit the CSS part of a given model."""
         model = self.get_model(model_name)
+        if not model:
+            click.echo(f"Could not find model: {model_name}!")
+            return
 
         with tempfile.NamedTemporaryFile(
             mode="w+", prefix="_apy_edit_", suffix=".css", delete=False
@@ -471,9 +484,10 @@ class Anki:
         """Add new note to collection"""
         notetype = self.col.models.current(for_deck=False)
         note = self.col.new_note(notetype)
+        note_type = note.note_type()
 
-        if deck is not None:
-            note.note_type()["did"] = self.deck_name_to_id[deck]
+        if deck is not None and note_type is not None:
+            note_type["did"] = self.deck_name_to_id[deck]
 
         if markdown:
             note.fields = [markdown_to_html(x) for x in fields]

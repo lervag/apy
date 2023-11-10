@@ -4,6 +4,8 @@ import base64
 import re
 import warnings
 
+from typing import Optional
+
 import click
 import markdown
 from bs4 import BeautifulSoup, Tag, MarkupResemblesLocatorWarning
@@ -17,7 +19,7 @@ from markdownify import markdownify as to_md
 warnings.filterwarnings("ignore", category=MarkupResemblesLocatorWarning)
 
 
-def markdown_file_to_notes(filename):
+def markdown_file_to_notes(filename: str) -> list:
     """Parse notes data from Markdown file
 
     The following example should adequately specify the syntax.
@@ -101,7 +103,7 @@ def markdown_file_to_notes(filename):
     return notes
 
 
-def _parse_file(filename):
+def _parse_file(filename: str) -> tuple[dict, list]:
     """Get data from file"""
     defaults = {}
     notes = []
@@ -173,7 +175,7 @@ def _parse_file(filename):
     return defaults, notes
 
 
-def markdown_to_html(md):
+def markdown_to_html(md: str) -> str:
     """Convert Markdown to HTML"""
     # Don't convert if md text is really plain
     if re.match(r"[a-zA-Z0-9æøåÆØÅ ,.?+-]*$", md):
@@ -229,13 +231,14 @@ def markdown_to_html(md):
         html_tree = BeautifulSoup(f"<div>{html}</div>", "html.parser")
         tag = _get_first_tag(html_tree)
 
-    # Store original_encoded as data-attribute on tree root
-    tag["data-original-markdown"] = original_encoded
+    if tag:
+        # Store original_encoded as data-attribute on tree root
+        tag["data-original-markdown"] = original_encoded
 
     return str(html_tree)
 
 
-def plain_to_html(plain):
+def plain_to_html(plain: str) -> str:
     """Convert plain text to html"""
     # Minor clean up
     plain = plain.replace(r"&lt;", "<")
@@ -252,21 +255,39 @@ def plain_to_html(plain):
     return plain.strip()
 
 
-def html_to_markdown(html):
+def html_to_markdown(html: str) -> str:
     """Extract Markdown from generated HTML"""
     tag = _get_first_tag(BeautifulSoup(html, "html.parser"))
-    encoded_bytes = tag["data-original-markdown"].encode()
+    if not tag:
+        return html
+
+    original_markdown = tag["data-original-markdown"]
+    if isinstance(original_markdown, list):
+        original_markdown = "\n".join(original_markdown)
+
+    encoded_bytes = original_markdown.encode()
     converted = base64.b64decode(encoded_bytes).decode("utf-8")
     return converted.replace("<br>", "\n").replace("<br />", "\n")
 
 
-def html_to_screen(html, pprint=True, parseable=False):
+def html_to_screen(html: str, pprint: bool = True, parseable: bool = False) -> str:
     """Convert html for printing to screen"""
     if not pprint:
-        soup = BeautifulSoup(html.replace("\n", ""), features="html5lib").next.next.next
-        return "".join(
-            [el.prettify() if isinstance(el, Tag) else el for el in soup.contents]
-        )
+        soup = BeautifulSoup(html.replace("\n", ""), features="html5lib")
+        soup = soup.next
+        if soup:
+            soup = soup.next
+            if soup:
+                soup = soup.next
+                if soup and isinstance(soup, Tag) and isinstance(soup.contents, list):
+                    return "".join(
+                        [
+                            el.prettify() if isinstance(el, Tag) else str(el)
+                            for el in soup.contents
+                        ]
+                    )
+
+        return "Could not parse!\n" + html
 
     html = re.sub(r"\<style\>.*\<\/style\>", "", html, flags=re.S)
 
@@ -331,7 +352,7 @@ def html_to_screen(html, pprint=True, parseable=False):
     return plain.strip()
 
 
-def is_generated_html(html):
+def is_generated_html(html: str) -> bool:
     """Check if text is a generated HTML"""
     if html is None:
         return False
@@ -345,7 +366,7 @@ def is_generated_html(html):
     )
 
 
-def _get_first_tag(tree):
+def _get_first_tag(tree: BeautifulSoup) -> Optional[Tag]:
     """Get first tag among children of tree"""
     for child in tree.children:
         if isinstance(child, Tag):
@@ -354,6 +375,6 @@ def _get_first_tag(tree):
     return None
 
 
-def _italize(string):
+def _italize(string: str) -> str:
     """Italize string"""
     return "\x1b[3m" + string + "\x1b[0m"

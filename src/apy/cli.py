@@ -8,7 +8,7 @@ from apy import __version__
 from apy.anki import Anki
 from apy.config import cfg, cfg_file
 
-CONTEXT_SETTINGS = dict(help_option_names=["-h", "--help"])
+CONTEXT_SETTINGS = {"help_option_names": ["-h", "--help"]}
 
 
 @click.group(context_settings=CONTEXT_SETTINGS, invoke_without_command=True)
@@ -55,13 +55,13 @@ def main(ctx, base_path, profile_name, version):
 
 @main.command("add-single")
 @click.argument("fields", nargs=-1)
-@click.option("-p", "--parse-markdown", is_flag=True, help=("Parse input as Markdown."))
+@click.option("-p", "--parse-markdown", is_flag=True, help="Parse input as Markdown.")
 @click.option("-s", "--preset", default="default", help="Specify a preset.")
 @click.option("-t", "--tags", help="Specify default tags for new cards.")
 @click.option(
-    "-m", "--model", "model_name", help=("Specify default model for new cards.")
+    "-m", "--model", "model_name", help="Specify default model for new cards."
 )
-@click.option("-d", "--deck", help=("Specify default deck for new cards."))
+@click.option("-d", "--deck", help="Specify default deck for new cards.")
 def add_single(
     fields, parse_markdown, tags=None, preset=None, model_name=None, deck=None
 ):
@@ -103,7 +103,7 @@ def add_single(
     default="Basic",
     help=("Specify default model for new cards."),
 )
-@click.option("-d", "--deck", help=("Specify default deck for new cards."))
+@click.option("-d", "--deck", help="Specify default deck for new cards.")
 def add(tags, model_name, deck):
     """Add notes interactively from terminal.
 
@@ -125,7 +125,7 @@ def add(tags, model_name, deck):
 @main.command("add-from-file")
 @click.argument("file", type=click.Path(exists=True, dir_okay=False))
 @click.option("-t", "--tags", default="", help="Specify default tags for new cards.")
-@click.option("-d", "--deck", help=("Specify default deck for new cards."))
+@click.option("-d", "--deck", help="Specify default deck for new cards.")
 def add_from_file(file, tags, deck):
     """Add notes from Markdown file.
 
