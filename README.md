@@ -7,9 +7,6 @@ Anki. It does not require Anki to be running at the same time.
 ### Important
 
 * `apy` is **WORK IN PROGRESS**, and there may still be some major changes.
-* The current version should be compatible with Anki versions 2.1.45 to 2.1.55
-  (see the [changelog](#changelog) to find versions compatible with older
-  versions of Anki).
 * This script and its author(s) are not affiliated/associated with the main
   Anki project in any way.
 * Use this software entirely at your own risk. Frequent backups are encouraged.
@@ -165,9 +162,12 @@ This is just a simple changelog. See the commit history and issue threads for
 details. The main purpose of the changelog is to show which versions of `apy` are
 compatible with which versions of Anki.
 
+PS! In future updates this changelog will be removed in favor of the [release
+history on GitHub](https://github.com/lervag/apy/releases).
+
 | Version | Version note                                |
 |:-------:| ------------------------------------------- |
-| `HEAD`  | Development branch                          |
+| `HEAD`  | Development branch (works with Anki 23.10)  |
 | 0.11    | Compatible with Anki 2.1.66                 |
 | 0.10    | Compatible with Anki 2.1.64                 |
 | 0.9     | Compatible with Anki 2.1.49                 |
