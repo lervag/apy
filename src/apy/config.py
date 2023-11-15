@@ -6,6 +6,7 @@ from typing import Optional, Any
 
 
 def get_base_path() -> Optional[str]:
+    """Get base path on current system"""
     # If base_path not defined: Look in environment variables
     if path_as_str := os.environ.get("APY_BASE"):
         return path_as_str

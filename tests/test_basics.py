@@ -10,7 +10,7 @@ def test_empty_collection():
     """Test empty collection"""
     with AnkiEmpty() as a:
         assert a.col.card_count() == 0
-        assert len(a.model_names) == 5
+        assert len(a.model_names) == 6
 
 
 def test_add_basic():
