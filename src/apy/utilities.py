@@ -1,12 +1,12 @@
 """Simple utility functions."""
 
-import os
-from io import TextIOWrapper
 from contextlib import contextmanager, redirect_stdout
-from tempfile import NamedTemporaryFile
+from io import TextIOWrapper
+import os
 from subprocess import call
-from typing import Optional, Any, Generator
+from tempfile import NamedTemporaryFile
 from types import TracebackType
+from typing import Any, Generator, Optional, TypeVar
 
 import click
 import readchar
@@ -52,7 +52,10 @@ def edit_text(input_text: str, prefix: str = "") -> str:
     return edited_message
 
 
-def choose(items: list[Any], text: str = "Choose from list:") -> Any:
+chooseType = TypeVar("chooseType")
+
+
+def choose(items: list[chooseType], text: str = "Choose from list:") -> chooseType:
     """Choose from list of items"""
     click.echo(text)
     for i, element in enumerate(items):

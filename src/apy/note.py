@@ -1,9 +1,11 @@
 """A Note wrapper class"""
 
+from __future__ import annotations
 import os
 from pathlib import Path
 from subprocess import DEVNULL, Popen
 import tempfile
+from typing import Optional, TYPE_CHECKING
 
 from bs4 import BeautifulSoup
 import click
@@ -20,18 +22,27 @@ from apy.convert import (
 )
 from apy.utilities import cd, choose, editor
 
+if TYPE_CHECKING:
+    from apy.anki import Anki
+    from anki.notes import Note as ANote
+    from anki.models import NotetypeDict
+
 
 class Note:
     """A Note wrapper class"""
 
-    def __init__(self, anki, note):
+    def __init__(self, anki: Anki, note: ANote) -> None:
         self.a = anki
         self.n = note
-        self.model_name = note.note_type()["name"]
-        self.fields = [x for x, y in self.n.items()]
+        note_type = note.note_type()
+        if note_type:
+            self.model_name = note_type["name"]
+        else:
+            self.model_name = "__invalid-note__"
+        self.fields = [x for x, _ in self.n.items()]
         self.suspended = any(c.queue == -1 for c in self.n.cards())
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         """Convert note to Markdown format"""
         lines = [
             "# Note",
@@ -56,7 +67,7 @@ class Note:
 
         return "\n".join(lines)
 
-    def get_template(self):
+    def get_template(self) -> str:
         """Convert note to Markdown format as a template for new notes"""
         lines = [f"model: {self.model_name}"]
 
@@ -82,7 +93,7 @@ class Note:
 
         return "\n".join(lines)
 
-    def print(self, pprint=True):
+    def print(self, pprint: bool = True) -> None:
         """Print to screen (similar to __repr__ but with colors)"""
         from anki import latex
 
@@ -112,7 +123,7 @@ class Note:
 
         lines += [click.style("tags: ", fg="yellow") + self.get_tag_string()]
 
-        flags = [c.template()["name"] for c in self.n.cards() if c.flags > 0]
+        flags = [str(c.template()["name"]) for c in self.n.cards() if c.flags > 0]
         if flags:
             flags = [click.style(x, fg="magenta") for x in flags]
             lines += [f"{click.style('flagged:', fg='yellow')} " f"{', '.join(flags)}"]
@@ -125,12 +136,13 @@ class Note:
 
         lines += [""]
 
-        imgs = []
+        imgs: list[Path] = []
         for key, html in self.n.items():
             # Render LaTeX if necessary
             note_type = self.n.note_type()
-            latex.render_latex(html, note_type, self.a.col)
-            imgs += _get_imgs_from_html_latex(html, note_type, self.a)
+            if note_type:
+                latex.render_latex(html, note_type, self.a.col)
+                imgs += _get_imgs_from_html_latex(html, note_type, self.a)
 
             lines.append(click.style("## " + key, fg="blue"))
             lines.append(html_to_screen(html, pprint))
@@ -144,10 +156,13 @@ class Note:
 
         click.echo("\n".join(lines))
 
-    def show_images(self):
+    def show_images(self) -> None:
         """Show in the fields"""
         note_type = self.n.note_type()
-        images = []
+        if not note_type:
+            return
+
+        images: list[Path] = []
         for html in self.n.values():
             images += _get_imgs_from_html_latex(html, note_type, self.a)
             images += _get_imgs_from_html(html)
@@ -159,7 +174,7 @@ class Note:
                 )
                 Popen(view_cmd + [file], stdout=DEVNULL, stderr=DEVNULL)
 
-    def edit(self):
+    def edit(self) -> None:
         """Edit tags and fields of current note"""
         with tempfile.NamedTemporaryFile(
             mode="w+", dir=os.getcwd(), prefix="edit_note_", suffix=".md"
@@ -181,10 +196,10 @@ class Note:
         if len(notes) > 1:
             added_notes = self.a.add_notes_from_list(notes[1:])
             click.echo(f"\nAdded {len(added_notes)} new notes while editing.")
-            for note in added_notes:
-                cards = note.n.cards()
-                click.echo(f"* nid: {note.n.id} (with {len(cards)} cards)")
-                for card in note.n.cards():
+            for new_note in added_notes:
+                cards = new_note.n.cards()
+                click.echo(f"* nid: {new_note.n.id} (with {len(cards)} cards)")
+                for card in new_note.n.cards():
                     click.echo(f"  * cid: {card.id}")
             click.confirm(
                 "\nPress <cr> to continue.", prompt_suffix="", show_default=False
@@ -213,11 +228,11 @@ class Note:
                 "The updated note is now a dupe!", prompt_suffix="", show_default=False
             )
 
-    def delete(self):
+    def delete(self) -> None:
         """Delete the note"""
         self.a.delete_notes(self.n.id)
 
-    def consistent_markdown(self):
+    def consistent_markdown(self) -> bool:
         """Check if markdown fields are consistent with html values"""
         for html in [h for h in self.n.values() if is_generated_html(h)]:
             if html != markdown_to_html(html_to_markdown(html)):
@@ -225,7 +240,7 @@ class Note:
 
         return True
 
-    def change_model(self):
+    def change_model(self) -> bool:
         """Change the note type"""
         click.clear()
         click.secho("Warning!", fg="red")
@@ -237,21 +252,23 @@ class Note:
         if not click.confirm("\nContinue?"):
             return False
 
-        models = list(self.a.model_names)
-        models.sort()
+        models = sorted(self.a.model_names)  # type: ignore[has-type]
         while True:
             click.clear()
             click.echo("Please choose new model:")
             for n, m in enumerate(models):
                 click.echo(f"  {n+1}: {m}")
-            index = click.prompt(">>> ", prompt_suffix="", type=int) - 1
+            index: int = click.prompt(">>> ", prompt_suffix="", type=int) - 1
             try:
                 new_model = models[index]
                 self.a.set_model(new_model)
                 model = self.a.get_model(new_model)
-                break
+                if not model:
+                    continue
             except IndexError:
                 continue
+
+            break
 
         fields = ["" for _ in range(len(model["flds"]))]
         for key, val in self.n.items():
@@ -268,16 +285,16 @@ class Note:
 
         return True
 
-    def toggle_marked(self):
+    def toggle_marked(self) -> None:
         """Toggle marked tag for note"""
         if "marked" in self.n.tags:
-            self.n.delTag("marked")
+            self.n.remove_tag("marked")
         else:
-            self.n.addTag("marked")
+            self.n.add_tag("marked")
         self.n.flush()
         self.a.modified = True
 
-    def toggle_suspend(self):
+    def toggle_suspend(self) -> None:
         """Toggle suspend for note"""
         cids = [c.id for c in self.n.cards()]
 
@@ -289,7 +306,7 @@ class Note:
         self.suspended = not self.suspended
         self.a.modified = True
 
-    def toggle_markdown(self, index=None):
+    def toggle_markdown(self, index: int | None = None) -> None:
         """Toggle markdown on a field"""
         if index is None:
             fields = self.fields
@@ -306,7 +323,7 @@ class Note:
         self.n.flush()
         self.a.modified = True
 
-    def clear_flags(self):
+    def clear_flags(self) -> None:
         """Clear flags for note"""
         for c in self.n.cards():
             if c.flags > 0:
@@ -314,7 +331,7 @@ class Note:
                 c.flush()
                 self.a.modified = True
 
-    def show_cards(self):
+    def show_cards(self) -> None:
         """Show cards for note"""
         for i, c in enumerate(self.n.cards()):
             number = f'{str(i) + ".":>3s}'
@@ -326,7 +343,7 @@ class Note:
         click.secho("\nPress any key to continue ... ", fg="blue", nl=False)
         readchar.readchar()
 
-    def get_deck(self):
+    def get_deck(self) -> str:
         """Return which deck the note belongs to"""
         return self.a.col.decks.name(self.n.cards()[0].did)
 
@@ -335,11 +352,11 @@ class Note:
         newdid = self.a.col.decks.id(deck)
         cids = [c.id for c in self.n.cards()]
 
-        if cids:
+        if cids and newdid:
             self.a.col.set_deck(cids, newdid)
             self.a.modified = True
 
-    def set_deck_interactive(self):
+    def set_deck_interactive(self) -> None:
         """Move note to deck, interactive"""
         click.clear()
 
@@ -355,7 +372,7 @@ class Note:
 
         self.set_deck(newdeck)
 
-    def get_field(self, index_or_name):
+    def get_field(self, index_or_name: str | int) -> str:
         """Return field with given index or name"""
         if isinstance(index_or_name, str):
             index = self.fields.index(index_or_name)
@@ -367,13 +384,18 @@ class Note:
         if is_generated_html(reply):
             reply = html_to_markdown(reply)
 
-        return reply
+        return reply  # type: ignore[no-any-return]
 
-    def get_tag_string(self):
+    def get_tag_string(self) -> str:
         """Get tag string"""
         return ", ".join(self.n.tags)
 
-    def review(self, i=None, number_of_notes=None, remove_actions=None):
+    def review(
+        self,
+        i: Optional[int] = None,
+        number_of_notes: Optional[int] = None,
+        remove_actions: Optional[list[str]] = None,
+    ) -> bool:
         """Interactive review of the note
 
         This method is used by the review command.
@@ -532,7 +554,7 @@ class Note:
                 raise click.Abort()
 
 
-def _get_imgs_from_html(field_html):
+def _get_imgs_from_html(field_html: str) -> list[Path]:
     """Gather image filenames from <img> tags in field html.
 
     Note: The returned paths are relative to the Anki media directory.
@@ -541,7 +563,9 @@ def _get_imgs_from_html(field_html):
     return [Path(x["src"]) for x in soup.find_all("img")]
 
 
-def _get_imgs_from_html_latex(field_html, note_type, anki):
+def _get_imgs_from_html_latex(
+    field_html: str, note_type: NotetypeDict, anki: Anki
+) -> list[Path]:
     """Gather the generated LaTeX image filenames from field html.
 
     Note: The returned paths are relative to the Anki media directory.

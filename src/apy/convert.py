@@ -2,13 +2,12 @@
 
 import base64
 import re
+from typing import Any, Optional
 import warnings
 
-from typing import Optional
-
+from bs4 import BeautifulSoup, MarkupResemblesLocatorWarning, Tag
 import click
 import markdown
-from bs4 import BeautifulSoup, Tag, MarkupResemblesLocatorWarning
 from markdown.extensions.abbr import AbbrExtension
 from markdown.extensions.codehilite import CodeHiliteExtension
 from markdown.extensions.def_list import DefListExtension
@@ -19,7 +18,7 @@ from markdownify import markdownify as to_md
 warnings.filterwarnings("ignore", category=MarkupResemblesLocatorWarning)
 
 
-def markdown_file_to_notes(filename: str) -> list:
+def markdown_file_to_notes(filename: str) -> list[dict[str, Any]]:
     """Parse notes data from Markdown file
 
     The following example should adequately specify the syntax.
@@ -103,11 +102,11 @@ def markdown_file_to_notes(filename: str) -> list:
     return notes
 
 
-def _parse_file(filename: str) -> tuple[dict, list]:
+def _parse_file(filename: str) -> tuple[dict[str, Any], list[dict[str, Any]]]:
     """Get data from file"""
-    defaults = {}
-    notes = []
-    note = {}
+    defaults: dict[str, Any] = {}
+    notes: list[dict[str, Any]] = []
+    note: dict[str, Any] = {}
     codeblock = False
     field = None
     with open(filename, "r", encoding="utf8") as f:
@@ -274,18 +273,19 @@ def html_to_screen(html: str, pprint: bool = True, parseable: bool = False) -> s
     """Convert html for printing to screen"""
     if not pprint:
         soup = BeautifulSoup(html.replace("\n", ""), features="html5lib")
-        soup = soup.next
-        if soup:
-            soup = soup.next
-            if soup:
-                soup = soup.next
-                if soup and isinstance(soup, Tag) and isinstance(soup.contents, list):
-                    return "".join(
-                        [
-                            el.prettify() if isinstance(el, Tag) else str(el)
-                            for el in soup.contents
-                        ]
-                    )
+        if (
+            (first := soup.next)
+            and (second := first.next)
+            and (third := second.next)
+            and isinstance(third, Tag)
+            and isinstance(third.contents, list)
+        ):
+            return "".join(
+                [
+                    el.prettify() if isinstance(el, Tag) else str(el)
+                    for el in third.contents
+                ]
+            )
 
         return "Could not parse!\n" + html
 
