@@ -417,7 +417,7 @@ def reposition(position, query):
                 click.echo("Can only reposition new cards!")
                 raise click.Abort()
 
-        a.col.sched.sortCards(cids, position, 1, False, True)
+        a.col.sched.reposition_new_cards(cids, position, 1, False, True)
         a.modified = True
 
 
