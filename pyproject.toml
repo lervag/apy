@@ -55,15 +55,8 @@ build-backend = "poetry.core.masonry.api"
 exclude = ".venv"
 strict = true
 
-# We're currently adding incremental type checking to the codebase, one file at
-# a time. This means that we need to ignore errors in files that have not yet
-# been type checked. Once a file has been type checked, it should be removed
-# from the list below.
 [[tool.mypy.overrides]]
 module = [
-    "apy.anki",
-    "apy.cli",
-    "apy.convert",
-    "apy.note",
+    "markdownify",
 ]
-ignore_errors = true
+ignore_missing_imports = true

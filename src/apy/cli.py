@@ -1,12 +1,15 @@
 """A script to interact with the Anki database"""
 import os
+from pathlib import Path
 import sys
+from typing import Any, Optional
 
 import click
 
 from apy import __version__
 from apy.anki import Anki
 from apy.config import cfg, cfg_file
+from apy.note import Note
 
 CONTEXT_SETTINGS = {"help_option_names": ["-h", "--help"]}
 
@@ -16,7 +19,7 @@ CONTEXT_SETTINGS = {"help_option_names": ["-h", "--help"]}
 @click.option("-p", "--profile-name", help="Specify name of Anki profile to use")
 @click.option("-V", "--version", is_flag=True, help="Show apy version")
 @click.pass_context
-def main(ctx, base_path, profile_name, version):
+def main(ctx: Any, base_path: str, profile_name: str, version: bool) -> None:
     """A script to interact with the Anki database.
 
     The base_path directory may be specified with the -b / --base-path option. For
@@ -63,8 +66,13 @@ def main(ctx, base_path, profile_name, version):
 )
 @click.option("-d", "--deck", help="Specify default deck for new cards.")
 def add_single(
-    fields, parse_markdown, tags=None, preset=None, model_name=None, deck=None
-):
+    fields: list[str],
+    parse_markdown: bool,
+    tags: Optional[str] = None,
+    preset: Optional[str] = None,
+    model_name: Optional[str] = None,
+    deck: Optional[str] = None,
+) -> None:
     """Add a single note from command line arguments.
 
     Examples:
@@ -104,7 +112,7 @@ def add_single(
     help=("Specify default model for new cards."),
 )
 @click.option("-d", "--deck", help="Specify default deck for new cards.")
-def add(tags, model_name, deck):
+def add(tags: str, model_name: str, deck: str) -> None:
     """Add notes interactively from terminal.
 
     Examples:
@@ -126,18 +134,18 @@ def add(tags, model_name, deck):
 @click.argument("file", type=click.Path(exists=True, dir_okay=False))
 @click.option("-t", "--tags", default="", help="Specify default tags for new cards.")
 @click.option("-d", "--deck", help="Specify default deck for new cards.")
-def add_from_file(file, tags, deck):
+def add_from_file(file: Path, tags: str, deck: str) -> None:
     """Add notes from Markdown file.
 
     For input file syntax specification, see docstring for
     markdown_file_to_notes() in convert.py.
     """
     with Anki(**cfg) as a:
-        notes = a.add_notes_from_file(file, tags, deck)
+        notes = a.add_notes_from_file(str(file), tags, deck)
         _added_notes_postprocessing(a, notes)
 
 
-def _added_notes_postprocessing(a, notes):
+def _added_notes_postprocessing(a: Anki, notes: list[Note]) -> None:
     """Common postprocessing after 'apy add[-from-file]'."""
     n_notes = len(notes)
     if n_notes == 0:
@@ -168,14 +176,14 @@ def _added_notes_postprocessing(a, notes):
 
 
 @main.command("check-media")
-def check_media():
+def check_media() -> None:
     """Check media."""
     with Anki(**cfg) as a:
         a.check_media()
 
 
 @main.command()
-def info():
+def info() -> None:
     """Print some basic statistics."""
     if cfg_file.exists():
         click.echo(f"Config file:             {cfg_file}")
@@ -232,7 +240,7 @@ def info():
 
 
 @main.group(context_settings=CONTEXT_SETTINGS, invoke_without_command=True)
-def model():
+def model() -> None:
     """Interact with Anki models."""
 
 
@@ -244,7 +252,7 @@ def model():
     help="Specify for which model to edit CSS template.",
 )
 @click.option("-s", "--sync-after", is_flag=True, help="Perform sync after any change.")
-def edit_css(model_name, sync_after):
+def edit_css(model_name: str, sync_after: bool) -> None:
     """Edit the CSS template for the specified model."""
     with Anki(**cfg) as a:
         a.edit_model_css(model_name)
@@ -257,7 +265,7 @@ def edit_css(model_name, sync_after):
 @model.command()
 @click.argument("old-name")
 @click.argument("new-name")
-def rename(old_name, new_name):
+def rename(old_name: str, new_name: str) -> None:
     """Rename model from old_name to new_name."""
     with Anki(**cfg) as a:
         a.rename_model(old_name, new_name)
@@ -266,7 +274,7 @@ def rename(old_name, new_name):
 @main.command("list")
 @click.argument("query", required=False, nargs=-1)
 @click.option("-v", "--verbose", is_flag=True, help="Be verbose, show more info")
-def list_cards(query, verbose):
+def list_cards(query: str, verbose: bool) -> None:
     """List cards that match QUERY.
 
     The default QUERY is "tag:marked OR -flag:0". This default can be
@@ -301,7 +309,7 @@ def list_cards(query, verbose):
     type=int,
     help="Number of days backwards to check consistency",
 )
-def review(query, check_markdown_consistency, cmc_range):
+def review(query: str, check_markdown_consistency: bool, cmc_range: int) -> None:
     """Review/Edit notes that match QUERY.
 
     The default QUERY is "tag:marked OR -flag:0". This default can be
@@ -335,7 +343,7 @@ def review(query, check_markdown_consistency, cmc_range):
 
 
 @main.command()
-def sync():
+def sync() -> None:
     """Synchronize collection with AnkiWeb."""
     with Anki(**cfg) as a:
         a.sync()
@@ -345,7 +353,7 @@ def sync():
 @click.argument("query", required=False, nargs=-1)
 @click.option("-a", "--add-tags", help="Add specified tags to matched notes.")
 @click.option("-r", "--remove-tags", help="Remove specified tags from matched notes.")
-def tag(query, add_tags, remove_tags):
+def tag(query: str, add_tags: str, remove_tags: str) -> None:
     """Add/Remove tags to/from notes that match QUERY.
 
     The default QUERY is "tag:marked OR -flag:0". This default can be
@@ -396,7 +404,7 @@ def tag(query, add_tags, remove_tags):
 @main.command()
 @click.argument("position", type=int, required=True, nargs=1)
 @click.argument("query", required=True, nargs=-1)
-def reposition(position, query):
+def reposition(position: int, query: str) -> None:
     """Reposition cards that match QUERY.
 
     Sets the new position to POSITION and shifts other cards.

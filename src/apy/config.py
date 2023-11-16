@@ -1,8 +1,9 @@
 """Simple module to load configuration from file"""
+
 import json
 import os
 from pathlib import Path
-from typing import Optional, Any
+from typing import Any, Optional
 
 
 def get_base_path() -> Optional[str]:
@@ -30,6 +31,7 @@ def get_base_path() -> Optional[str]:
 
 
 # Parse configuration file (if it exists)
+cfg: dict[str, Any]
 cfg_path = os.environ.get("APY_CONFIG", "~/.config/apy/apy.json")
 cfg_file = Path(cfg_path).expanduser()
 if cfg_file.exists():
