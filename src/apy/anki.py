@@ -155,9 +155,6 @@ class Anki:
         if auth is None:
             return
 
-        # Make sure database is saved first
-        self.col.save(trx=False)
-
         # Perform main sync
         try:
             debug_output = "anki::sync=debug" in os.environ.get("RUST_LOG", "")
