@@ -167,7 +167,8 @@ history on GitHub](https://github.com/lervag/apy/releases).
 
 | Version | Version note                                |
 |:-------:| ------------------------------------------- |
-| `HEAD`  | Development branch (works with Anki 23.10)  |
+| `HEAD`  | Development branch (works with Anki 23.12)  |
+| 0.12    | Compatible with Anki 23.12                  |
 | 0.11    | Compatible with Anki 2.1.66                 |
 | 0.10    | Compatible with Anki 2.1.64                 |
 | 0.9     | Compatible with Anki 2.1.49                 |
