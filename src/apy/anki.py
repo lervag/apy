@@ -170,12 +170,19 @@ class Anki:
                     resp = self.col.media_sync_status()
                     if not resp.active:
                         p = resp.progress
-                        click.echo(f"\rSyncing media ...       ({p.added}, {p.removed}, {p.checked})", nl=False)
+                        click.echo(
+                            f"\rSyncing media ...       ({p.added}, {p.removed}, {p.checked})",
+                            nl=False,
+                        )
                         break
                     if p := resp.progress:
-                        click.echo(f"\rSyncing media ...       ({p.added}, {p.removed}, {p.checked})", nl=False)
+                        click.echo(
+                            f"\rSyncing media ...       ({p.added}, {p.removed}, {p.checked})",
+                            nl=False,
+                        )
 
                     import time
+
                     time.sleep(0.01)
             except Exception as e:
                 if "sync cancelled" in str(e):
