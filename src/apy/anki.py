@@ -158,7 +158,7 @@ class Anki:
         # Perform main sync
         click.echo("Syncing deck ... ", nl=False)
         with suppress_stdout():
-            sync_output = self.col.sync_collection(auth, True)
+            self.col.sync_collection(auth, True)
         click.echo("done!")
 
         # Perform media sync

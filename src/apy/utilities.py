@@ -1,10 +1,11 @@
 """Simple utility functions."""
 
 import os
+from io import TextIOWrapper
 from contextlib import contextmanager, redirect_stdout
 from tempfile import NamedTemporaryFile
 from subprocess import call
-from typing import Optional, Any
+from typing import Optional, Any, Generator
 from types import TracebackType
 
 import click
@@ -75,7 +76,7 @@ def choose(items: list[Any], text: str = "Choose from list:") -> Any:
 
 
 @contextmanager
-def suppress_stdout():
+def suppress_stdout() -> Generator[TextIOWrapper, Any, Any]:
     """A context manager that redirects stdout to devnull"""
     with open(os.devnull, "w") as fnull:
         with redirect_stdout(fnull) as out:
