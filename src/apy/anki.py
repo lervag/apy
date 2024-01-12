@@ -156,41 +156,33 @@ class Anki:
             return
 
         # Perform main sync
-        try:
-            debug_output = "anki::sync=debug" in os.environ.get("RUST_LOG", "")
-
-            if debug_output:
-                click.secho("Syncing deck:", fg="blue")
-            else:
-                click.echo("Syncing deck ... ", nl=False)
-
-            self.col.sync_collection(auth, True)
-
-            if not debug_output:
-                click.echo("done!")
-            else:
-                click.echo("")
-        except Exception as e:
-            click.secho("Error during sync!", fg="red")
-            click.echo(e)
-            raise click.Abort()
+        click.echo("Syncing deck ... ", nl=False)
+        sync_output = self.col.sync_collection(auth, True)
+        click.echo("done!")
 
         # Perform media sync
-        try:
-            debug_output = "media=debug" in os.environ.get("RUST_LOG", "")
+        with cd(self.col.media.dir()):
+            click.echo("Syncing media ... ", nl=False)
+            self.col.sync_media(auth)
 
-            with cd(self.col.media.dir()):
-                if debug_output:
-                    click.secho("Syncing media:", fg="blue")
-                else:
-                    click.echo("Syncing media ... ", nl=False)
-                self.col.sync_media(auth)
-                if not debug_output:
-                    click.echo("done!")
-        except Exception as e:
-            if "sync cancelled" in str(e):
-                return
-            raise
+            try:
+                while True:
+                    resp = self.col.media_sync_status()
+                    if not resp.active:
+                        p = resp.progress
+                        click.echo(f"\rSyncing media ...       ({p.added}, {p.removed}, {p.checked})", nl=False)
+                        break
+                    if p := resp.progress:
+                        click.echo(f"\rSyncing media ...       ({p.added}, {p.removed}, {p.checked})", nl=False)
+
+                    import time
+                    time.sleep(0.01)
+            except Exception as e:
+                if "sync cancelled" in str(e):
+                    return
+                raise
+
+            click.echo("\rSyncing media ... done! ")
 
     def check_media(self) -> None:
         """Check media (will rebuild missing LaTeX files)"""
