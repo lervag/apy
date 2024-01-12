@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "apy"
-version = "0.12.0"
+version = "0.12.1"
 description = "CLI script for interacting with local Anki collection"
 authors = ["Karl Yngve Lervåg <karl.yngve@lervag.net>"]
 readme = "README.md"
