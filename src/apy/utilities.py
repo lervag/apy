@@ -1,6 +1,7 @@
 """Simple utility functions."""
 
 import os
+from contextlib import contextmanager, redirect_stdout
 from tempfile import NamedTemporaryFile
 from subprocess import call
 from typing import Optional, Any
@@ -71,3 +72,11 @@ def choose(items: list[Any], text: str = "Choose from list:") -> Any:
             return reply
         except IndexError:
             continue
+
+
+@contextmanager
+def suppress_stdout():
+    """A context manager that redirects stdout to devnull"""
+    with open(os.devnull, "w") as fnull:
+        with redirect_stdout(fnull) as out:
+            yield out

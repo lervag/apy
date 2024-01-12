@@ -17,7 +17,7 @@ from apy.convert import (
     plain_to_html,
 )
 from apy.note import Note
-from apy.utilities import cd, choose, editor
+from apy.utilities import cd, choose, editor, suppress_stdout
 
 
 class Anki:
@@ -157,7 +157,8 @@ class Anki:
 
         # Perform main sync
         click.echo("Syncing deck ... ", nl=False)
-        sync_output = self.col.sync_collection(auth, True)
+        with suppress_stdout():
+            sync_output = self.col.sync_collection(auth, True)
         click.echo("done!")
 
         # Perform media sync
