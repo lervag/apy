@@ -5,6 +5,7 @@ import os
 from pathlib import Path
 from subprocess import DEVNULL, Popen
 import tempfile
+from time import localtime, strftime
 from typing import Optional, TYPE_CHECKING
 
 from bs4 import BeautifulSoup
@@ -97,7 +98,7 @@ class Note:
         """Print to screen (similar to __repr__ but with colors)"""
         from anki import latex
 
-        lines = [click.style("# Note", fg="green")]
+        lines = [click.style(f"# Note ({self.n.id})", fg="green")]
 
         types = ", ".join(
             {
@@ -107,15 +108,17 @@ class Note:
         )
 
         lines += [
-            click.style("nid: ", fg="yellow")
-            + f"{self.n.id}"
-            + click.style("    card type(s): ", fg="yellow")
-            + types
+            click.style("created: ", fg="yellow")
+            + strftime("%Y-%m-%d %H:%M:%S", localtime(self.n.id / 1000))
+            + click.style("  modified: ", fg="yellow")
+            + strftime("%Y-%m-%d %H:%M:%S", localtime(self.n.mod))
         ]
 
         lines += [
             click.style("model: ", fg="yellow")
             + f"{self.model_name} ({len(self.n.cards())} cards)"
+            + click.style("        card type(s): ", fg="yellow")
+            + types
         ]
 
         if self.a.n_decks > 1:
