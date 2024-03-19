@@ -258,10 +258,12 @@ def info() -> None:
             f"{'due':>7s} {'new':>7s} {'susp.':>7s} "
             f"{'marked':>7s} {'flagged':>7s}"
         )
-        console.print("-" * 80)
+        console.rule()
         models = sorted(a.model_names)
         for m in models:
             nnotes = len(set(a.col.find_notes(f'"note:{m}"')))
+            if nnotes == 0:
+                continue
             ncards = len(a.find_cards(f'"note:{m}"'))
             ndue = len(a.find_cards(f'"note:{m}" is:due'))
             nmarked = len(a.find_cards(f'"note:{m}" tag:marked'))
@@ -274,13 +276,13 @@ def info() -> None:
                 f"{ndue:7d} {nnew:7d} {nsusp:7d} "
                 f"{nmarked:7d} {nflagged:7d}"
             )
-        console.print("-" * 80)
+        console.rule()
         console.print(
             f"{'Sum':24s} {sum_notes:7d} {sum_cards:7d} "
             f"{sum_due:7d} {sum_new:7d} {sum_susp:7d} "
             f"{sum_marked:7d} {sum_flagged:7d}"
         )
-        console.print("-" * 80)
+        console.rule()
 
 
 @main.group(context_settings=CONTEXT_SETTINGS, invoke_without_command=True)
