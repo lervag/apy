@@ -256,7 +256,7 @@ class Note:
         if not click.confirm("\nContinue?"):
             return False
 
-        models = sorted(self.a.model_names) # type: ignore[has-type]
+        models = sorted(self.a.model_names)  # type: ignore[has-type]
         while True:
             click.clear()
             click.echo("Please choose new model:")
