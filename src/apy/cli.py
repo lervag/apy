@@ -10,6 +10,7 @@ import click
 from apy import __version__
 from apy.anki import Anki
 from apy.config import cfg, cfg_file
+from apy.console import console
 from apy.note import Note
 
 CONTEXT_SETTINGS = {"help_option_names": ["-h", "--help"]}
@@ -44,7 +45,7 @@ def main(ctx: Any, base_path: str, profile_name: str, version: bool) -> None:
     Note: Use `apy subcmd --help` to get detailed help for a given subcommand.
     """
     if version:
-        click.echo(f"apy {__version__}")
+        console.print(f"apy {__version__}")
         sys.exit()
 
     if base_path:
@@ -138,8 +139,50 @@ def add(tags: str, model_name: str, deck: str) -> None:
 def add_from_file(file: Path, tags: str, deck: str) -> None:
     """Add notes from Markdown file.
 
-    For input file syntax specification, see docstring for
-    markdown_file_to_notes() in convert.py.
+    The example below should adequately specify the syntax. Any initial "key: value"
+    pairs specify default values for all the following notes. The following keys are
+    accepted:
+
+    * model:    The note model (required)
+    * tags:     The note model (optional)
+    * deck:     Which deck the note should be added to (optional)
+    * markdown: Set to "false" or "no" if apy should not use a markdown converter while
+                converting the input note to an Anki note. (optional)
+
+    Here is the example Markdown input:
+
+        // example.md
+        model: Basic
+        tags: marked
+
+        # Note 1
+        ## Front
+        Question?
+
+        ## Back
+        Answer.
+
+        # Note 2
+        tag: silly-tag
+
+        ## Front
+        Question?
+
+        ## Back
+        Answer
+
+        # Note 3
+        model: NewModel
+        markdown: false (default is true)
+
+        ## NewFront
+        FieldOne
+
+        ## NewBack
+        FieldTwo
+
+        ## FieldThree
+        FieldThree
     """
     with Anki(**cfg) as a:
         notes = a.add_notes_from_file(str(file), tags, deck)
@@ -150,30 +193,30 @@ def _added_notes_postprocessing(a: Anki, notes: list[Note]) -> None:
     """Common postprocessing after 'apy add[-from-file]'."""
     n_notes = len(notes)
     if n_notes == 0:
-        click.echo("No notes added")
+        console.print("No notes added")
         return
 
     decks = [a.col.decks.name(c.did) for n in notes for c in n.n.cards()]
     n_decks = len(decks)
     if n_decks == 0:
-        click.echo("No notes added")
+        console.print("No notes added")
         return
 
     if a.n_decks > 1:
         if n_notes == 1:
-            click.echo(f"Added note to deck: {decks[0]}")
+            console.print(f"Added note to deck: {decks[0]}")
         elif n_decks > 1:
-            click.echo(f"Added {n_notes} notes to {n_decks} different decks")
+            console.print(f"Added {n_notes} notes to {n_decks} different decks")
         else:
-            click.echo(f"Added {n_notes} notes to deck: {decks[0]}")
+            console.print(f"Added {n_notes} notes to deck: {decks[0]}")
     else:
-        click.echo(f"Added {n_notes} notes")
+        console.print(f"Added {n_notes} notes")
 
     for note in notes:
         cards = note.n.cards()
-        click.echo(f"* nid: {note.n.id} (with {len(cards)} cards)")
+        console.print(f"* nid: {note.n.id} (with {len(cards)} cards)")
         for card in note.n.cards():
-            click.echo(f"  * cid: {card.id}")
+            console.print(f"  * cid: {card.id}")
 
 
 @main.command("check-media")
@@ -188,19 +231,19 @@ def info() -> None:
     """Print some basic statistics."""
     if cfg_file.exists():
         for key in cfg.keys():
-            click.echo(f"Config loaded:           {key}")
-        click.echo(f"Config file:             {cfg_file}")
+            console.print(f"Config loaded:     {key}")
+        console.print(f"Config file:       {cfg_file}")
     else:
-        click.echo("Config file:             Not found")
+        console.print("Config file:       Not found")
 
     with Anki(**cfg) as a:
-        click.echo(f"Collection path:         {a.col.path}")
-        click.echo(f"Scheduler version:       {a.col.sched_ver()}")
+        console.print(f"Collection path:   {a.col.path}")
+        console.print(f"Scheduler version: {a.col.sched_ver()}")
 
         if a.col.decks.count() > 1:
-            click.echo("Decks:")
+            console.print("Decks:")
             for name in sorted(a.deck_names):
-                click.echo(f"  - {name}")
+                console.print(f"  - {name}")
 
         sum_notes = a.col.note_count()
         sum_cards = a.col.card_count()
@@ -210,12 +253,12 @@ def info() -> None:
         sum_new = len(a.col.find_notes("is:new"))
         sum_susp = len(a.col.find_notes("is:suspended"))
 
-        click.echo(
+        console.print(
             f"\n{'Model':24s} {'notes':>7s} {'cards':>7s} "
             f"{'due':>7s} {'new':>7s} {'susp.':>7s} "
             f"{'marked':>7s} {'flagged':>7s}"
         )
-        click.echo("-" * 80)
+        console.print("-" * 80)
         models = sorted(a.model_names)
         for m in models:
             nnotes = len(set(a.col.find_notes(f'"note:{m}"')))
@@ -226,18 +269,18 @@ def info() -> None:
             nnew = len(a.find_cards(f'"note:{m}" is:new'))
             nsusp = len(a.find_cards(f'"note:{m}" is:suspended'))
             name = m[:24]
-            click.echo(
+            console.print(
                 f"{name:24s} {nnotes:7d} {ncards:7d} "
                 f"{ndue:7d} {nnew:7d} {nsusp:7d} "
                 f"{nmarked:7d} {nflagged:7d}"
             )
-        click.echo("-" * 80)
-        click.echo(
+        console.print("-" * 80)
+        console.print(
             f"{'Sum':24s} {sum_notes:7d} {sum_cards:7d} "
             f"{sum_due:7d} {sum_new:7d} {sum_susp:7d} "
             f"{sum_marked:7d} {sum_flagged:7d}"
         )
-        click.echo("-" * 80)
+        console.print("-" * 80)
 
 
 @main.group(context_settings=CONTEXT_SETTINGS, invoke_without_command=True)
@@ -380,19 +423,19 @@ def tag(query: str, add_tags: str, remove_tags: str) -> None:
 
         n_notes = len(list(a.find_notes(query)))
         if n_notes == 0:
-            click.echo("No matching notes!")
+            console.print("No matching notes!")
             raise click.Abort()
 
-        click.echo(f"The operation will be applied to {n_notes} matched notes:")
+        console.print(f"The operation will be applied to {n_notes} matched notes:")
         a.list_notes(query)
-        click.echo("")
+        console.print("")
 
         if add_tags is not None:
-            click.echo(f'Add tags:    {click.style(add_tags, fg="green")}')
+            console.print(f"Add tags:    [green]{add_tags}")
         if remove_tags is not None:
-            click.echo(f'Remove tags: {click.style(remove_tags, fg="red")}')
+            console.print(f"Remove tags: [red]{remove_tags}")
 
-        if not click.confirm(click.style("Continue?", fg="blue")):
+        if not console.confirm("Continue?"):
             raise click.Abort()
 
         if add_tags is not None:
@@ -417,13 +460,13 @@ def reposition(position: int, query: str) -> None:
     with Anki(**cfg) as a:
         cids = list(a.find_cards(query))
         if not cids:
-            click.echo(f"No matching cards for query: {query}!")
+            console.print(f"No matching cards for query: {query}!")
             raise click.Abort()
 
         for cid in cids:
             card = a.col.get_card(cid)
             if card.type != 0:
-                click.echo("Can only reposition new cards!")
+                console.print("Can only reposition new cards!")
                 raise click.Abort()
 
         a.col.sched.reposition_new_cards(cids, position, 1, False, True)

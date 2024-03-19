@@ -1,32 +1,39 @@
-"""A Note wrapper class"""
+"""Classes and functions for interacting with and creating notes"""
 
 from __future__ import annotations
+from dataclasses import dataclass
 import os
 from pathlib import Path
+import re
 from subprocess import DEVNULL, Popen
 import tempfile
 from time import localtime, strftime
-from typing import Optional, TYPE_CHECKING
+from typing import Any, Optional, TYPE_CHECKING
 
-from bs4 import BeautifulSoup
-import click
+from click import Abort
 import readchar
+from rich.columns import Columns
+from rich.text import Text
+from rich.markdown import Markdown
 
 from apy.config import cfg
-from apy.convert import (
-    html_to_markdown,
-    html_to_screen,
-    is_generated_html,
-    markdown_file_to_notes,
-    markdown_to_html,
-    plain_to_html,
+from apy.console import console, consolePlain
+from apy.fields import (
+    check_if_generated_from_markdown,
+    check_if_inconsistent_markdown,
+    convert_field_to_text,
+    convert_text_to_field,
+    img_paths_from_field,
+    img_paths_from_field_latex,
+    prepare_field_for_cli,
+    prepare_field_for_cli_raw,
+    toggle_field_to_markdown,
 )
 from apy.utilities import cd, choose, editor
 
 if TYPE_CHECKING:
     from apy.anki import Anki
     from anki.notes import Note as ANote
-    from anki.models import NotetypeDict
 
 
 class Note:
@@ -47,60 +54,33 @@ class Note:
         """Convert note to Markdown format"""
         lines = [
             "# Note",
-            f"nid: {self.n.id}",
             f"model: {self.model_name}",
+            f"tags: {self.get_tag_string()}",
         ]
 
         if self.a.n_decks > 1:
             lines += [f"deck: {self.get_deck()}"]
 
-        lines += [f"tags: {self.get_tag_string()}"]
-
-        if not any(is_generated_html(x) for x in self.n.values()):
+        if not any(check_if_generated_from_markdown(f) for f in self.n.values()):
             lines += ["markdown: false"]
 
         lines += [""]
 
-        for key, val in self.n.items():
-            lines.append("## " + key)
-            lines.append(html_to_screen(val, parseable=True))
+        for name, field in self.n.items():
+            lines.append(f"## {name}")
+            lines.append(convert_field_to_text(field))
             lines.append("")
 
         return "\n".join(lines)
 
-    def get_template(self) -> str:
-        """Convert note to Markdown format as a template for new notes"""
-        lines = [f"model: {self.model_name}"]
-
-        if self.a.n_decks > 1:
-            lines += [f"deck: {self.get_deck()}"]
-
-        lines += [f"tags: {self.get_tag_string()}"]
-
-        if not any(is_generated_html(x) for x in self.n.values()):
-            lines += ["markdown: false"]
-
-        lines += [""]
-        lines += ["# Note"]
-        lines += [""]
-
-        for key, val in self.n.items():
-            if is_generated_html(val):
-                key += " (md)"
-
-            lines.append("## " + key)
-            lines.append(html_to_screen(val, parseable=True))
-            lines.append("")
-
-        return "\n".join(lines)
-
-    def print(self, pprint: bool = True) -> None:
-        """Print to screen (similar to __repr__ but with colors)"""
+    def pprint(self, print_raw: bool = False) -> None:
+        """Print to screen"""
         # pylint: disable=import-outside-toplevel
         from anki import latex
 
-        lines = [click.style(f"# Note ({self.n.id})", fg="green")]
-
+        created = strftime("%F %H:%M", localtime(self.n.id / 1000))
+        modified = strftime("%F %H:%M", localtime(self.n.mod))
+        next_due = min(c.due for c in self.n.cards()) - self.a.today
         types = ", ".join(
             {
                 ["new", "learning", "review", "relearning"][c.type]
@@ -108,57 +88,58 @@ class Note:
             }
         )
 
-        lines += [
-            click.style("created: ", fg="yellow")
-            + strftime("%Y-%m-%d %H:%M:%S", localtime(self.n.id / 1000))
-            + click.style("  modified: ", fg="yellow")
-            + strftime("%Y-%m-%d %H:%M:%S", localtime(self.n.mod))
-        ]
+        header = f"[green]# Note (nid: {self.n.id})[/green]"
+        if self.suspended:
+            header += " [red](suspended)[/red]"
 
-        lines += [
-            click.style("model: ", fg="yellow")
-            + f"{self.model_name} ({len(self.n.cards())} cards)"
-            + click.style("        card type(s): ", fg="yellow")
-            + types
+        columned = [
+            f"[yellow]model:[/yellow] {self.model_name} ({len(self.n.cards())} cards)",
+            f"[yellow]card type:[/yellow] {types}",
+            f"[yellow]created:[/yellow] {created}",
+            f"[yellow]modified:[/yellow] {modified}",
+            f"[yellow]next due:[/yellow] {next_due} days",
+            f"[yellow]tags:[/yellow] {self.get_tag_string()}",
         ]
-
         if self.a.n_decks > 1:
-            lines += [click.style("deck: ", fg="yellow") + self.get_deck()]
-
-        lines += [click.style("tags: ", fg="yellow") + self.get_tag_string()]
+            columned += ["[yellow]deck:[/yellow] " + self.get_deck()]
 
         flags = [str(c.template()["name"]) for c in self.n.cards() if c.flags > 0]
         if flags:
-            flags = [click.style(x, fg="magenta") for x in flags]
-            lines += [f"{click.style('flagged:', fg='yellow')} " f"{', '.join(flags)}"]
+            flag_str = ", ".join(["[magenta]x[/magenta]" for x in flags])
+            columned += [f"[yellow]flagged:[/yellow] {flag_str}"]
 
-        if not any(is_generated_html(x) for x in self.n.values()):
-            lines += [f"{click.style('markdown:', fg='yellow')} false"]
-
-        if self.suspended:
-            lines[0] += f" ({click.style('suspended', fg='red')})"
-
-        lines += [""]
+        consolePlain.print(header)
+        consolePlain.print(Columns(columned, width=37))
+        console.print()
 
         imgs: list[Path] = []
-        for key, html in self.n.items():
-            # Render LaTeX if necessary
+        for name, field in self.n.items():
+            is_markdown = check_if_generated_from_markdown(field)
+            if is_markdown:
+                name += " [italic](markdown)[/italic]"
+
+            console.print(f"[blue]## {name}[/blue]")
+            if print_raw:
+                console.print(Markdown(prepare_field_for_cli_raw(field)))
+            else:
+                text = prepare_field_for_cli(field, is_markdown)
+                if is_markdown:
+                    console.print(Markdown(text))
+                else:
+                    console.print(text)
+            console.print("")
+
+            # Render LaTeX if necessary and fill list of LaTeX images
             note_type = self.n.note_type()
             if note_type:
-                latex.render_latex(html, note_type, self.a.col)
-                imgs += _get_imgs_from_html_latex(html, note_type, self.a)
-
-            lines.append(click.style("## " + key, fg="blue"))
-            lines.append(html_to_screen(html, pprint))
-            lines.append("")
+                latex.render_latex(field, note_type, self.a.col)
+                imgs += img_paths_from_field_latex(field, note_type, self.a)
 
         if imgs:
-            lines.append(click.style("LaTeX sources", fg="blue"))
+            console.print("[blue]## LaTeX sources[/blue]")
             for line in imgs:
-                lines.append("- " + str(line))
-            lines.append("")
-
-        click.echo("\n".join(lines))
+                console.print("- " + str(line))
+            console.print("")
 
     def show_images(self) -> None:
         """Show in the fields"""
@@ -168,8 +149,8 @@ class Note:
 
         images: list[Path] = []
         for html in self.n.values():
-            images += _get_imgs_from_html_latex(html, note_type, self.a)
-            images += _get_imgs_from_html(html)
+            images += img_paths_from_field_latex(html, note_type, self.a)
+            images += img_paths_from_field(html)
 
         with cd(self.a.col.media.dir()):
             for file in images:
@@ -188,49 +169,39 @@ class Note:
 
             retcode = editor(tf.name)
             if retcode != 0:
-                click.echo(f"Editor return with exit code {retcode}!")
+                console.print(f"[red]Editor return with exit code {retcode}![/red]")
                 return
 
             notes = markdown_file_to_notes(tf.name)
 
         if not notes:
-            click.echo("Something went wrong when editing note!")
+            console.print("[red]Something went wrong when editing note![/red]")
             return
 
         if len(notes) > 1:
             added_notes = self.a.add_notes_from_list(notes[1:])
-            click.echo(f"\nAdded {len(added_notes)} new notes while editing.")
-            for new_note in added_notes:
-                cards = new_note.n.cards()
-                click.echo(f"* nid: {new_note.n.id} (with {len(cards)} cards)")
-                for card in new_note.n.cards():
-                    click.echo(f"  * cid: {card.id}")
-            click.confirm(
-                "\nPress <cr> to continue.", prompt_suffix="", show_default=False
+            console.print(
+                f"[green]Added {len(added_notes)} new notes while editing.[/green]"
             )
+            console.wait_for_keypress()
 
         note = notes[0]
 
-        new_tags = note["tags"].split()
+        new_tags = note.tags.split()
         if new_tags != self.n.tags:
             self.n.tags = new_tags
 
-        new_deck = note.get("deck", None)
-        if new_deck is not None and new_deck != self.get_deck():
-            self.set_deck(new_deck)
+        if note.deck is not None and note.deck != self.get_deck():
+            self.set_deck(note.deck)
 
-        for i, value in enumerate(note["fields"].values()):
-            if note["markdown"]:
-                self.n.fields[i] = markdown_to_html(value)
-            else:
-                self.n.fields[i] = plain_to_html(value)
+        for i, text in enumerate(note.fields.values()):
+            self.n.fields[i] = convert_text_to_field(text, use_markdown=note.markdown)
 
         self.n.flush()
         self.a.modified = True
         if self.n.dupeOrEmpty():
-            click.confirm(
-                "The updated note is now a dupe!", prompt_suffix="", show_default=False
-            )
+            console.print("The updated note is now a dupe!")
+            console.wait_for_keypress()
 
     def delete(self) -> None:
         """Delete the note"""
@@ -238,31 +209,27 @@ class Note:
 
     def has_consistent_markdown(self) -> bool:
         """Check if markdown fields are consistent with html values"""
-        for html in [h for h in self.n.values() if is_generated_html(h)]:
-            if html != markdown_to_html(html_to_markdown(html)):
-                return False
-
-        return True
+        return any(check_if_inconsistent_markdown(f) for f in self.n.values())
 
     def change_model(self) -> bool:
         """Change the note type"""
-        click.clear()
-        click.secho("Warning!", fg="red")
-        click.echo(
-            "\nThe note type is changed by creating a new note with "
-            "the selected\ntype and then deleting the old note. This "
-            "means that the review\nprogress is lost!"
+        console.clear()
+        console.print("[red]Warning![/red]")
+        console.print(
+            "The note type is changed by creating a new note with the selected "
+            "type and then deleting the old note. This means that the review "
+            "progress is lost!"
         )
-        if not click.confirm("\nContinue?"):
+        if not console.confirm("\nContinue?"):
             return False
 
         models = sorted(self.a.model_names)  # type: ignore[has-type]
         while True:
-            click.clear()
-            click.echo("Please choose new model:")
+            console.clear()
+            console.print("Please choose new model:")
             for n, m in enumerate(models):
-                click.echo(f"  {n+1}: {m}")
-            index: int = click.prompt(">>> ", prompt_suffix="", type=int) - 1
+                console.print(f"  {n+1}: {m}")
+            index: int = console.prompt_int(">>> ", prompt_suffix="") - 1
             try:
                 new_model = models[index]
                 self.a.set_model(new_model)
@@ -274,17 +241,23 @@ class Note:
 
             break
 
-        fields = ["" for _ in range(len(model["flds"]))]
-        for key, val in self.n.items():
-            fields[0] += f"### {key}\n{val}\n"
+        fields: dict[str, str] = {}
+        first_field: str = model["flds"][0]
+        for field_name in model["flds"]:
+            fields[field_name] = ""
 
-        tags = ", ".join(self.n.tags)
-        is_markdown = any(is_generated_html(x) for x in self.n.values())
+        for old_field_name, old_field in self.n.items():
+            fields[first_field] += f"### {old_field_name}\n{old_field}\n"
 
-        # pylint: disable=protected-access
-        new_note = self.a._add_note(fields, tags, is_markdown)
+        note_data = NoteData(
+            model["name"],
+            " ".join(self.n.tags),
+            fields,
+            any(check_if_generated_from_markdown(f) for f in self.n.values()),
+        )
+
+        new_note = note_data.add_to_collection(self.a)
         new_note.edit()
-        # pylint: enable=protected-access
         self.a.delete_notes(self.n.id)
 
         return True
@@ -313,16 +286,10 @@ class Note:
     def toggle_markdown(self, index: int | None = None) -> None:
         """Toggle markdown on a field"""
         if index is None:
-            field = choose(self.field_names, "Toggle markdown for field:")
-            index = self.field_names.index(field)
+            field_name = choose(self.field_names, "Toggle markdown for field:")
+            index = self.field_names.index(field_name)
 
-        field_value = self.n.fields[index]
-
-        if is_generated_html(field_value):
-            self.n.fields[index] = html_to_markdown(field_value)
-        else:
-            self.n.fields[index] = markdown_to_html(field_value)
-
+        self.n.fields[index] = toggle_field_to_markdown(self.n.fields[index])
         self.n.flush()
         self.a.modified = True
 
@@ -340,11 +307,10 @@ class Note:
             number = f'{str(i) + ".":>3s}'
             name = c.template()["name"]
             if c.flags > 0:
-                name = click.style(name, fg="red")
-            click.echo(f'  {click.style(number, fg="white")} {name}')
+                name = f"[red]{name}[/red]"
+            console.print(f"  [white]{number}[/white] {name}")
 
-        click.secho("\nPress any key to continue ... ", fg="blue", nl=False)
-        readchar.readchar()
+        console.wait_for_keypress()
 
     def get_deck(self) -> str:
         """Return which deck the note belongs to"""
@@ -361,16 +327,15 @@ class Note:
 
     def set_deck_interactive(self) -> None:
         """Move note to deck, interactive"""
-        click.clear()
-
-        click.secho("Specify target deck (CTRL-c/CTRL-d to abort):", fg="white")
+        console.clear()
+        console.print("[white]Available decks:")
         for d in self.a.col.decks.all_names_and_ids(include_filtered=False):
-            click.echo(f"* {d.name}")
-        click.echo("* OTHER -> create new deck")
+            console.print(f"* {d.name}")
+        console.print("* OTHER -> create new deck")
 
         try:
-            newdeck = click.prompt("> ", prompt_suffix="")
-        except click.Abort:
+            newdeck = console.prompt("[white]Specify target deck")
+        except Abort:
             return
 
         self.set_deck(newdeck)
@@ -420,37 +385,33 @@ class Note:
                 key: val for key, val in actions.items() if val not in remove_actions
             }
 
-        _pprint = True
-        width = os.get_terminal_size()[0]
+        note_number_string = ""
+        if i is not None:
+            if number_of_notes:
+                note_number_string = f" {i+1} of {number_of_notes}"
+            else:
+                note_number_string = f" {i+1}"
+
+        menu = Columns(
+            [f"[blue]{key}[/blue]: {value}" for key, value in actions.items()],
+            padding=(0, 2),
+            title=Text(
+                f"Reviewing note{note_number_string}",
+                justify="left",
+                style="white",
+            ),
+        )
+
+        print_raw_fields = False
         refresh = True
         while True:
             if refresh:
-                click.clear()
-                if i is None:
-                    click.secho("Reviewing note", fg="white")
-                elif number_of_notes is None:
-                    click.secho(f"Reviewing note {i+1}", fg="white")
-                else:
-                    click.secho(
-                        f"Reviewing note {i+1} of {number_of_notes}", fg="white"
-                    )
+                console.clear()
+                console.print(menu)
+                console.print("")
+                self.pprint(print_raw_fields)
 
-                column = 0
-                for x, y in actions.items():
-                    menu = click.style(x, fg="blue") + ": " + y
-                    if column < 3:
-                        click.echo(f"{menu:28s}", nl=False)
-                    else:
-                        click.echo(menu)
-                    column = (column + 1) % 4
-
-                width = os.get_terminal_size()[0]
-                click.echo("\n")
-
-                self.print(_pprint)
-            else:
-                refresh = True
-
+            refresh = True
             choice = readchar.readchar()
             action = actions.get(choice)
 
@@ -462,26 +423,17 @@ class Note:
                 continue
 
             if action == "Add new":
-                click.echo("-" * width + "\n")
-
                 notes = self.a.add_notes_with_editor(
                     tags=self.get_tag_string(),
                     model_name=self.model_name,
                     template=self,
                 )
 
-                click.echo(f"Added {len(notes)} notes")
-                for note in notes:
-                    cards = note.n.cards()
-                    click.echo(f"* nid: {note.n.id} (with {len(cards)} cards)")
-                    for card in note.n.cards():
-                        click.echo(f"  * cid: {card.id}")
-                click.confirm(
-                    "Press any key to continue.", prompt_suffix="", show_default=False
-                )
+                console.print(f"Added {len(notes)} notes")
+                console.wait_for_keypress()
                 continue
 
-            if action == "Delete" and click.confirm(
+            if action == "Delete" and console.confirm(
                 "Are you sure you want to delete the note?"
             ):
                 self.delete()
@@ -500,7 +452,7 @@ class Note:
                 continue
 
             if action == "Toggle pprint":
-                _pprint = not _pprint
+                print_raw_fields = not print_raw_fields
                 continue
 
             if action == "Clear flags":
@@ -530,41 +482,190 @@ class Note:
                 continue
 
             if action == "Save and stop":
-                click.echo("Stopped")
+                console.print("Stopped")
                 return False
 
             if action == "Abort":
-                if self.a.modified:
-                    if not click.confirm(
-                        "Abort: Changes will be lost. Continue [y/n]?",
-                        show_default=False,
-                    ):
-                        continue
-                    self.a.modified = False
-                raise click.Abort()
+                console.print("[red]Abort now implies [bold]Save and stop!")
+                console.print("This is because Anki always saves database changes!")
+                raise Abort()
 
 
-def _get_imgs_from_html(field_html: str) -> list[Path]:
-    """Gather image filenames from <img> tags in field html.
+@dataclass
+class NoteData:
+    """Dataclass to contain data for a single note"""
 
-    Note: The returned paths are relative to the Anki media directory.
+    model: str
+    tags: str
+    fields: dict[str, str]
+    markdown: bool = True
+    deck: Optional[str] = None
+
+    def add_to_collection(self, anki: Anki) -> Note:
+        """Add note to collection
+
+        Returns: The new note
+        """
+        model = anki.set_model(self.model)
+        model_field_names: list[str] = [field["name"] for field in model["flds"]]
+        if len(model_field_names) != len(self.fields):
+            console.print(f"Error: Not enough fields for model {self.model}!")
+            anki.modified = False
+            raise Abort()
+
+        field_names = [x.replace(" (markdown)", "") for x in self.fields.keys()]
+        for x, y in zip(model_field_names, field_names):
+            if x != y:
+                console.print("Warning: Inconsistent field names " f"({x} != {y})")
+
+        notetype = anki.col.models.current(for_deck=False)
+        new_note = anki.col.new_note(notetype)
+
+        note_type = new_note.note_type()
+        if self.deck is not None and note_type is not None:
+            note_type["did"] = anki.deck_name_to_id[self.deck]  # type: ignore[has-type]
+
+        new_note.fields = [
+            convert_text_to_field(f, use_markdown=self.markdown)
+            for f in self.fields.values()
+        ]
+
+        for tag in self.tags.strip().split():
+            new_note.add_tag(tag)
+
+        if not new_note.dupeOrEmpty():
+            anki.col.addNote(new_note)
+            anki.modified = True
+        else:
+            field_name, field_value = list(self.fields.items())[0]
+            console.print("[red]Dupe detected, new_note was not added!")
+            console.print(f"First field: {field_name}")
+            console.print(f"First value: {field_value}")
+
+        return Note(anki, new_note)
+
+
+def markdown_file_to_notes(filename: str) -> list[NoteData]:
+    """Parse note data from a Markdown file"""
+    try:
+        notes = [
+            NoteData(
+                model=x["model"],
+                tags=x["tags"],
+                fields=x["fields"],
+                markdown=x["markdown"],
+                deck=x["deck"],
+            )
+            for x in _parse_markdown_file(filename)
+        ]
+    except KeyError as e:
+        console.print(f"Error {e.__class__} when parsing {filename}!")
+        console.print("This may typically be due to bad Markdown formatting.")
+        raise Abort() from e
+
+    return notes
+
+
+def _parse_markdown_file(filename: str) -> list[dict[str, Any]]:
+    """Parse the content of a Markdown file
+
+    This must adhere to the specification of {add_from_file} from cli.py!
     """
-    soup = BeautifulSoup(field_html, "html.parser")
-    return [Path(x["src"]) for x in soup.find_all("img")]
+    defaults: dict[str, Any] = {
+        "model": "Basic",
+        "markdown": True,
+        "tags": "",
+        "deck": None,
+    }
+    with open(filename, "r", encoding="utf8") as f:
+        for line in f:
+            match = re.match(r"#+\s*.*", line)
+            if match:
+                break
 
+            match = re.match(r"(\w+): (.*)", line)
+            if match:
+                k, v = match.groups()
+                k = k.lower()
+                v = v.strip()
+                if k in ("tag", "tags"):
+                    defaults["tags"] = v.replace(",", "")
+                elif k in ("markdown", "md"):
+                    defaults["markdown"] = v in ("true", "yes")
+                else:
+                    defaults[k] = v
 
-def _get_imgs_from_html_latex(
-    field_html: str, note_type: NotetypeDict, anki: Anki
-) -> list[Path]:
-    """Gather the generated LaTeX image filenames from field html.
+    notes: list[dict[str, Any]] = []
+    current_note: dict[str, Any] = {}
+    current_field: Optional[str] = None
+    is_in_codeblock = False
+    with open(filename, "r", encoding="utf8") as f:
+        for line in f:
+            if is_in_codeblock:
+                if current_field is not None:
+                    current_note["fields"][current_field] += line
+                match = re.match(r"```\s*$", line)
+                if match:
+                    is_in_codeblock = False
+                continue
 
-    Note: The returned paths are relative to the Anki media directory.
-    """
-    from anki import latex
+            match = re.match(r"```\w*\s*$", line)
+            if match:
+                is_in_codeblock = True
+                if current_field is not None:
+                    current_note["fields"][current_field] += line
+                continue
 
-    # pylint: disable=protected-access
-    proto = anki.col._backend.extract_latex(
-        text=field_html, svg=note_type.get("latexsvg", False), expand_clozes=False
-    )
-    out = latex.ExtractedLatexOutput.from_proto(proto)
-    return [Path(ltx.filename) for ltx in out.latex]
+            if current_note and current_field is None:
+                match = re.match(r"(\w+): (.*)", line)
+                if match:
+                    k, v = match.groups()
+                    k = k.lower()
+                    v = v.strip()
+                    if k in ("tag", "tags"):
+                        current_note["tags"] = v.replace(",", "")
+                    elif k in ("markdown", "md"):
+                        current_note["markdown"] = v in ("true", "yes")
+                    else:
+                        current_note[k] = v
+
+            match = re.match(r"(#+)\s*(.*)", line)
+            if not match:
+                if current_field is not None:
+                    current_note["fields"][current_field] += line
+                continue
+
+            level, title = match.groups()
+
+            if len(level) == 1:
+                if current_note and current_field is not None:
+                    current_note["fields"][current_field] = current_note["fields"][
+                        current_field
+                    ].strip()
+                    notes.append(current_note)
+
+                current_note = {"title": title, "fields": {}, **defaults}
+                current_field = None
+                continue
+
+            if len(level) == 2:
+                if current_field is not None:
+                    current_note["fields"][current_field] = current_note["fields"][
+                        current_field
+                    ].strip()
+
+                if title in current_note["fields"]:
+                    console.print(f"Error when parsing {filename}!")
+                    raise Abort()
+
+                current_field = title
+                current_note["fields"][current_field] = ""
+
+    # Add remaining note to list
+    if current_note and current_field is not None:
+        current_note["fields"][current_field] = current_note["fields"][
+            current_field
+        ].strip()
+        notes.append(current_note)
+
+    return notes
