@@ -186,9 +186,9 @@ def check_media() -> None:
 def info() -> None:
     """Print some basic statistics."""
     if cfg_file.exists():
-        click.echo(f"Config file:             {cfg_file}")
         for key in cfg.keys():
             click.echo(f"Config loaded:           {key}")
+        click.echo(f"Config file:             {cfg_file}")
     else:
         click.echo("Config file:             Not found")
 
@@ -333,7 +333,7 @@ def review(query: str, check_markdown_consistency: bool, cmc_range: int) -> None
             notes += [
                 n
                 for n in a.find_notes(f"rated:{cmc_range}")
-                if not n.consistent_markdown()
+                if not n.has_consistent_markdown()
             ]
 
         number_of_notes = len(notes)

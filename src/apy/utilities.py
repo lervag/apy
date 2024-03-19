@@ -81,6 +81,6 @@ def choose(items: list[chooseType], text: str = "Choose from list:") -> chooseTy
 @contextmanager
 def suppress_stdout() -> Generator[TextIOWrapper, Any, Any]:
     """A context manager that redirects stdout to devnull"""
-    with open(os.devnull, "w") as fnull:
+    with open(os.devnull, "w", encoding="utf8") as fnull:
         with redirect_stdout(fnull) as out:
             yield out

@@ -40,7 +40,7 @@ class Note:
             self.model_name = note_type["name"]
         else:
             self.model_name = "__invalid-note__"
-        self.fields = [x for x, _ in self.n.items()]
+        self.field_names = list(self.n.keys())
         self.suspended = any(c.queue == -1 for c in self.n.cards())
 
     def __repr__(self) -> str:
@@ -96,6 +96,7 @@ class Note:
 
     def print(self, pprint: bool = True) -> None:
         """Print to screen (similar to __repr__ but with colors)"""
+        # pylint: disable=import-outside-toplevel
         from anki import latex
 
         lines = [click.style(f"# Note ({self.n.id})", fg="green")]
@@ -235,7 +236,7 @@ class Note:
         """Delete the note"""
         self.a.delete_notes(self.n.id)
 
-    def consistent_markdown(self) -> bool:
+    def has_consistent_markdown(self) -> bool:
         """Check if markdown fields are consistent with html values"""
         for html in [h for h in self.n.values() if is_generated_html(h)]:
             if html != markdown_to_html(html_to_markdown(html)):
@@ -255,7 +256,7 @@ class Note:
         if not click.confirm("\nContinue?"):
             return False
 
-        models = sorted(self.a.model_names)  # type: ignore[has-type]
+        models = sorted(self.a.model_names) # type: ignore[has-type]
         while True:
             click.clear()
             click.echo("Please choose new model:")
@@ -312,9 +313,8 @@ class Note:
     def toggle_markdown(self, index: int | None = None) -> None:
         """Toggle markdown on a field"""
         if index is None:
-            fields = self.fields
-            field = choose(fields, "Toggle markdown for field:")
-            index = fields.index(field)
+            field = choose(self.field_names, "Toggle markdown for field:")
+            index = self.field_names.index(field)
 
         field_value = self.n.fields[index]
 
@@ -375,20 +375,6 @@ class Note:
 
         self.set_deck(newdeck)
 
-    def get_field(self, index_or_name: str | int) -> str:
-        """Return field with given index or name"""
-        if isinstance(index_or_name, str):
-            index = self.fields.index(index_or_name)
-        else:
-            index = index_or_name
-
-        reply = self.n.fields[index]
-
-        if is_generated_html(reply):
-            reply = html_to_markdown(reply)
-
-        return reply  # type: ignore[no-any-return]
-
     def get_tag_string(self) -> str:
         """Get tag string"""
         return ", ".join(self.n.tags)
@@ -409,6 +395,7 @@ class Note:
         The "remove_actions" argument can be used to remove a default action
         from the action menu.
         """
+
         actions = {
             "c": "Continue",
             "e": "Edit",

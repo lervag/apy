@@ -7,6 +7,7 @@ import pickle
 import re
 import sqlite3
 import tempfile
+import time
 from types import TracebackType
 from typing import Any, Generator, Optional, Sequence, TYPE_CHECKING, Type
 
@@ -107,6 +108,7 @@ class Anki:
 
     def _init_load_collection(self) -> None:
         """Load the Anki collection"""
+        # pylint: disable=import-outside-toplevel
         from anki.collection import Collection
         from anki.errors import DBError
 
@@ -129,6 +131,7 @@ class Anki:
     @staticmethod
     def _init_load_config() -> None:
         """Load custom configuration"""
+        # pylint: disable=import-outside-toplevel
         from anki import latex
 
         # Update LaTeX commands
@@ -191,20 +194,13 @@ class Anki:
             try:
                 while True:
                     resp = self.col.media_sync_status()
-                    if not resp.active:
-                        p = resp.progress
-                        click.echo(
-                            f"\rSyncing media ...       ({p.added}, {p.removed}, {p.checked})",
-                            nl=False,
-                        )
-                        break
                     if p := resp.progress:
                         click.echo(
                             f"\rSyncing media ...       ({p.added}, {p.removed}, {p.checked})",
                             nl=False,
                         )
-
-                    import time
+                    if not resp.active:
+                        break
 
                     time.sleep(0.01)
             except Exception as e:
@@ -216,6 +212,7 @@ class Anki:
 
     def check_media(self) -> None:
         """Check media (will rebuild missing LaTeX files)"""
+        # pylint: disable=import-outside-toplevel
         from anki.notes import NoteId
 
         with cd(self.col.media.dir()):
@@ -268,6 +265,7 @@ class Anki:
 
     def get_model(self, model_name: str) -> Optional[NotetypeDict]:
         """Get model from model name"""
+        # pylint: disable=import-outside-toplevel
         from anki.models import NotetypeId
 
         model_id = self.model_name_to_id.get(model_name)
@@ -429,8 +427,6 @@ class Anki:
             if model_name is None or model_name.lower() == "ask":
                 model_name = choose(sorted(self.model_names), "Choose model:")
 
-            model = self.set_model(model_name)
-
             if deck_name is None:
                 deck_name = self.col.decks.current()["name"]
             elif deck_name.lower() == "ask":
@@ -448,6 +444,7 @@ class Anki:
 
             input_strings += ["\n# Note\n"]
 
+            model = self.set_model(model_name)
             input_strings += [
                 x
                 for y in [[f'## {field["name"]}', ""] for field in model["flds"]]
@@ -473,7 +470,8 @@ class Anki:
         self, filename: str, tags: str = "", deck: Optional[str] = None
     ) -> list[Note]:
         """Add new notes to collection from Markdown file"""
-        return self.add_notes_from_list(markdown_file_to_notes(filename), tags, deck)
+        notes = markdown_file_to_notes(filename)
+        return self.add_notes_from_list(notes, tags, deck)
 
     def add_notes_from_list(
         self,
