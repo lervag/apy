@@ -1,4 +1,5 @@
 """Test batch editing"""
+
 import pytest
 
 from common import testDir, AnkiSimple

@@ -1,4 +1,5 @@
 """Test model features"""
+
 from common import AnkiSimple
 
 

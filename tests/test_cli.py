@@ -1,4 +1,5 @@
 """Test the CLI"""
+
 import tempfile
 import shutil
 

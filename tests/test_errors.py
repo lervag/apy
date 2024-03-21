@@ -1,4 +1,5 @@
 """Test errors and warnings"""
+
 import pytest
 from click import Abort
 

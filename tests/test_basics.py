@@ -1,4 +1,5 @@
 """Test some basic features"""
+
 import pytest
 
 from common import testDir, AnkiEmpty, AnkiSimple

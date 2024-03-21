@@ -1,4 +1,5 @@
 """A script to interact with the Anki database"""
+
 import os
 from pathlib import Path
 import sys
