@@ -74,10 +74,3 @@ if "default" not in cfg["presets"]:
         "model": "Basic",
         "tags": [],
     }
-
-
-# Set terminal width for output
-try:
-    cfg["width"] = os.get_terminal_size()[0] - 3
-except OSError:
-    cfg["width"] = 120

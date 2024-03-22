@@ -8,8 +8,9 @@ from tempfile import NamedTemporaryFile
 from types import TracebackType
 from typing import Any, Generator, Optional, TypeVar
 
-import click
 import readchar
+
+from apy.console import console
 
 
 class cd:
@@ -57,10 +58,10 @@ chooseType = TypeVar("chooseType")
 
 def choose(items: list[chooseType], text: str = "Choose from list:") -> chooseType:
     """Choose from list of items"""
-    click.echo(text)
+    console.print(text)
     for i, element in enumerate(items):
-        click.echo(f"{i+1}: {element}")
-    click.echo("> ", nl=False)
+        console.print(f"{i+1}: {element}")
+    console.print("> ", end="")
 
     while True:
         choice = readchar.readchar()
@@ -72,7 +73,7 @@ def choose(items: list[chooseType], text: str = "Choose from list:") -> chooseTy
 
         try:
             reply = items[index - 1]
-            click.echo(index)
+            console.print(index)
             return reply
         except IndexError:
             continue

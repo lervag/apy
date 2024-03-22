@@ -4,24 +4,20 @@ from __future__ import annotations
 import os
 from pathlib import Path
 import pickle
-import re
 import sqlite3
 import tempfile
 import time
 from types import TracebackType
 from typing import Any, Generator, Optional, Sequence, TYPE_CHECKING, Type
 
-from bs4 import BeautifulSoup
-import click
+from click import Abort
+from rich.progress import Progress, SpinnerColumn, TextColumn
+from rich.text import Text
 
 from apy.config import cfg
-from apy.convert import (
-    html_to_screen,
-    markdown_file_to_notes,
-    markdown_to_html,
-    plain_to_html,
-)
-from apy.note import Note
+from apy.console import console
+from apy.fields import prepare_field_for_cli_oneline
+from apy.note import Note, NoteData, markdown_file_to_notes
 from apy.utilities import cd, choose, editor, suppress_stdout
 
 if TYPE_CHECKING:
@@ -51,6 +47,8 @@ class Anki:
         self._init_load_collection()
         self._init_load_config()
 
+        self.today: int = self.col.sched.today
+
         self.model_name_to_id: dict[str, int] = {
             m["name"]: m["id"] for m in self.col.models.all()
         }
@@ -69,16 +67,16 @@ class Anki:
                 self._collection_db_path = str(Path(collection_db_path).absolute())
                 return
 
-            click.echo("Base path is not properly set!")
-            raise click.Abort()
+            console.print("Base path is not properly set!")
+            raise Abort()
 
         base_path = Path(base_path_str)
         db_path = base_path / "prefs21.db"
 
         if not db_path.exists():
-            click.echo("Invalid base path!")
-            click.echo(f"path = {base_path.absolute()}")
-            raise click.Abort()
+            console.print("Invalid base path!")
+            console.print(f"path = {base_path.absolute()}")
+            raise Abort()
 
         # Load metadata and profiles from database
         conn = sqlite3.connect(db_path)
@@ -116,14 +114,15 @@ class Anki:
         save_cwd = os.getcwd()
 
         try:
-            self.col = Collection(self._collection_db_path)
+            with suppress_stdout():
+                self.col = Collection(self._collection_db_path)
         except AssertionError as error:
-            click.echo("Path to database is not valid!")
-            click.echo(f"path = {self._collection_db_path}")
-            raise click.Abort() from error
+            console.print("Path to database is not valid!")
+            console.print(f"path = {self._collection_db_path}")
+            raise Abort() from error
         except DBError as error:
-            click.echo("Database is NA/locked!")
-            raise click.Abort() from error
+            console.print("Database is NA/locked!")
+            raise Abort() from error
 
         # Restore CWD (because Anki changes it)
         os.chdir(save_cwd)
@@ -151,15 +150,15 @@ class Anki:
         exc_tb: Optional[TracebackType],
     ) -> None:
         if self.modified:
-            click.echo("Database was modified.")
+            console.print("Database was modified.")
             if self._profile is not None and self._profile["syncKey"]:
-                click.secho("Remember to sync!", fg="blue")
-            self.col.close()
-        elif self.col.db:
-            self.col.close(False)
+                console.print("[blue]Remember to sync!")
+
+        self.col.close()
 
     def sync(self) -> None:
         """Sync collection to AnkiWeb"""
+        # pylint: disable=import-outside-toplevel
         from anki.sync import SyncAuth
 
         if self._profile is None:
@@ -180,35 +179,52 @@ class Anki:
         if auth is None:
             return
 
-        # Perform main sync
-        click.echo("Syncing deck ... ", nl=False)
-        with suppress_stdout():
-            self.col.sync_collection(auth, True)
-        click.echo("done!")
+        with Progress(
+            TextColumn(
+                "Syncing {task.fields[name]} [green]…[/green] {task.description}"
+            ),
+            SpinnerColumn(spinner_name="point", finished_text=""),
+            console=console,
+        ) as progress:
+            t1 = progress.add_task("", total=None, name="deck")
+            t2 = progress.add_task("", total=None, name="media")
 
-        # Perform media sync
-        with cd(self.col.media.dir()):
-            click.echo("Syncing media ... ", nl=False)
-            self.col.sync_media(auth)
+            # Perform main sync
+            with suppress_stdout():
+                self.col.sync_collection(auth, True)
+            progress.update(t1, total=1, completed=1, description="[green]done!")
 
-            try:
-                while True:
-                    resp = self.col.media_sync_status()
-                    if p := resp.progress:
-                        click.echo(
-                            f"\rSyncing media ...       ({p.added}, {p.removed}, {p.checked})",
-                            nl=False,
+            # Perform media sync
+            with cd(self.col.media.dir()):
+                status_str = ""
+                self.col.sync_media(auth)
+                try:
+                    while True:
+                        time.sleep(0.01)
+                        status = self.col.media_sync_status()
+                        if p := status.progress:
+                            status_str = f"{p.added}, {p.removed}, {p.checked}".lower()
+                            progress.update(t2, description=f"[blue]({status_str})")
+                        if not status.active:
+                            break
+
+                except Exception as error:
+                    if "sync cancelled" in str(error):
+                        progress.update(
+                            t2,
+                            total=1,
+                            completed=1,
+                            description="[yellow]cancelled!",
                         )
-                    if not resp.active:
-                        break
+                        return
+                    raise Abort() from error
 
-                    time.sleep(0.01)
-            except Exception as e:
-                if "sync cancelled" in str(e):
-                    return
-                raise
-
-            click.echo("\rSyncing media ... done! ")
+                progress.update(
+                    t2,
+                    total=1,
+                    completed=1,
+                    description=f"[blue]({status_str}) [green]done!",
+                )
 
     def check_media(self) -> None:
         """Check media (will rebuild missing LaTeX files)"""
@@ -216,31 +232,41 @@ class Anki:
         from anki.notes import NoteId
 
         with cd(self.col.media.dir()):
-            click.echo("Checking media DB ... ", nl=False)
-            output = self.col.media.check()
-            click.echo("done!")
+            with Progress(
+                TextColumn("{task.description}"),
+                SpinnerColumn(spinner_name="point", finished_text=""),
+                console=console,
+            ) as progress:
+                t1 = progress.add_task("Checking media DB [green]… ", total=None)
+                output = self.col.media.check()
+                progress.update(
+                    t1,
+                    total=1,
+                    completed=1,
+                    description="Checking media DB [green]… done!",
+                )
 
             if len(output.missing) + len(output.unused) == 0:
-                click.secho("No unused or missing files found.", fg="white")
+                console.print("[white]No unused or missing files found.")
                 return
 
             for file in output.missing:
-                click.secho(f"Missing: {file}", fg="red")
+                console.print(f"[red]Missing: {file}")
 
-            if len(output.missing) > 0 and click.confirm("Render missing LaTeX?"):
+            if len(output.missing) > 0 and console.confirm("Render missing LaTeX?"):
                 out = self.col.media.render_all_latex()
                 if out is not None:
                     nid = NoteId(out[0])
-                    click.secho(f"Error processing node: {nid}", fg="red")
+                    console.print(f"[red]Error processing note: {nid}")
 
-                    if click.confirm("Review note?"):
+                    if console.confirm("Review note?"):
                         note = Note(self, self.col.get_note(nid))
                         note.review()
 
             for file in output.unused:
-                click.secho(f"Unused: {file}", fg="red")
+                console.print(f"[red]Unused: {file}")
 
-            if len(output.unused) > 0 and click.confirm("Delete unused media?"):
+            if len(output.unused) > 0 and console.confirm("Delete unused media?"):
                 for file in output.unused:
                     if os.path.isfile(file):
                         os.remove(file)
@@ -282,8 +308,8 @@ class Anki:
 
         model = self.get_model(model_name)
         if model is None:
-            click.secho(f'Model "{model_name}" was not recognized!')
-            raise click.Abort()
+            console.print(f'Model "{model_name}" was not recognized!')
+            raise Abort()
 
         self.col.models.set_current(model)
         return model
@@ -292,9 +318,9 @@ class Anki:
         """Rename a model"""
         model = self.get_model(old_model_name)
         if not model:
-            click.echo("Can't rename model!")
-            click.echo(f"No such model: {old_model_name}")
-            raise click.Abort()
+            console.print("Can't rename model!")
+            console.print(f"No such model: {old_model_name}")
+            raise Abort()
 
         # Change the name
         model["name"] = new_model_name
@@ -316,7 +342,7 @@ class Anki:
         for (t1, n1), (t2, n2) in zip(
             sorted(tags, key=lambda x: x[0]), sorted(tags, key=lambda x: x[1])
         ):
-            click.echo(f"{t1:{width}s}{n1:4d}{filler}{t2:{width}s}{n2:4d}")
+            console.print(f"{t1:{width}s}{n1:4d}{filler}{t2:{width}s}{n2:4d}")
 
     def change_tags(self, query: str, tags: str, add: bool = True) -> None:
         """Add/Remove tags from notes that match query"""
@@ -332,7 +358,7 @@ class Anki:
         """Edit the CSS part of a given model."""
         model = self.get_model(model_name)
         if not model:
-            click.echo(f"Could not find model: {model_name}!")
+            console.print(f"Could not find model: {model_name}!")
             return
 
         with tempfile.NamedTemporaryFile(
@@ -343,7 +369,7 @@ class Anki:
 
             retcode = editor(tf.name)
             if retcode != 0:
-                click.echo(f"Editor return with exit code {retcode}!")
+                console.print(f"Editor return with exit code {retcode}!")
                 return
 
             with open(tf.name, "r", encoding="utf8") as f:
@@ -357,54 +383,42 @@ class Anki:
     def list_notes(self, query: str, verbose: bool = False) -> None:
         """List notes that match a query"""
         for note in self.find_notes(query):
-            first_field = html_to_screen(note.n.values()[0])
-            first_field = first_field.replace("\n", " ")
-            first_field = re.sub(r"\s\s\s+", " ", first_field)
-            first_field = first_field[: cfg["width"] - 14] + click.style("", reset=True)
-
-            first = "Q: "
             if note.suspended:
-                first = click.style(first, fg="red")
+                style = "red"
             elif "marked" in note.n.tags:
-                first = click.style(first, fg="yellow")
+                style = "yellow"
+            else:
+                style = "white"
 
-            click.echo(f"{first}{first_field}")
+            first_field = prepare_field_for_cli_oneline(note.n.values()[0])
+
+            out = Text("Q: ", style=style)
+            out.append(first_field)
+
+            console.print(out.fit(console.width))
             if verbose:
-                click.echo(f"model: {note.model_name}\n")
+                console.print(f"model: {note.model_name}\n")
 
     def list_cards(self, query: str, verbose: bool = False) -> None:
         """List cards that match a query"""
+
+        def _styled(key: str, value: Any) -> Text:
+            """Simple convenience printer."""
+            return Text(f"[yellow]{key}:[/yellow] {value}")
+
         for cid in self.find_cards(query):
             c = self.col.get_card(cid)
-            question = re.sub(
-                r"\s\s+",
-                " ",
-                BeautifulSoup(html_to_screen(c.question()), features="html5lib")
-                .get_text()
-                .replace("\n", " ")
-                .strip(),
-            )
-            answer = re.sub(
-                r"\s\s+",
-                " ",
-                BeautifulSoup(html_to_screen(c.answer()), features="html5lib")
-                .get_text()
-                .replace("\n", " ")
-                .strip(),
-            )
+            question = prepare_field_for_cli_oneline(c.question())
+            answer = prepare_field_for_cli_oneline(c.answer())
 
-            def _styled(key: str, value: Any) -> str:
-                """Simple convenience printer."""
-                return click.style(key + ": ", fg="yellow") + str(value)
-
-            cardtype = int(c.type)
-            card_type = ["new", "learning", "review", "relearning"][cardtype]
-
-            click.echo(_styled("Q", question[: cfg["width"]]))
+            console.print(_styled("Q", question).fit(console.width))
             if verbose:
-                click.echo(_styled("A", answer[: cfg["width"]]))
+                console.print(_styled("A", answer).fit(console.width))
 
-                click.echo(
+                cardtype = int(c.type)
+                card_type = ["new", "learning", "review", "relearning"][cardtype]
+
+                console.print(
                     f"{_styled('model', c.note_type()['name'])} "
                     f"{_styled('type', card_type)} "
                     f"{_styled('ease', c.factor/10)}% "
@@ -422,7 +436,7 @@ class Anki:
     ) -> list[Note]:
         """Add new notes to collection with editor"""
         if template:
-            input_string = template.get_template()
+            input_string = str(template)
         else:
             if model_name is None or model_name.lower() == "ask":
                 model_name = choose(sorted(self.model_names), "Choose model:")
@@ -461,7 +475,7 @@ class Anki:
             retcode = editor(tf.name)
 
             if retcode != 0:
-                click.echo(f"Editor return with exit code {retcode}!")
+                console.print(f"Editor return with exit code {retcode}!")
                 return []
 
             return self.add_notes_from_file(tf.name)
@@ -475,84 +489,39 @@ class Anki:
 
     def add_notes_from_list(
         self,
-        parsed_notes: list[dict[str, Any]],
+        parsed_notes: list[NoteData],
         tags: str = "",
         deck: Optional[str] = None,
     ) -> list[Note]:
         """Add new notes to collection from note list (from parsed file)"""
         notes = []
         for note in parsed_notes:
-            model_name = note["model"]
-            model = self.set_model(model_name)
-            model_field_names = [field["name"] for field in model["flds"]]
-
-            field_names = note["fields"].keys()
-            field_values = note["fields"].values()
-
-            if len(field_names) != len(model_field_names):
-                click.echo(f"Error: Not enough fields for model {model_name}!")
-                self.modified = False
-                raise click.Abort()
-
-            for x, y in zip(model_field_names, field_names):
-                if x != y:
-                    click.echo("Warning: Inconsistent field names " f"({x} != {y})")
-
-            notes.append(
-                self._add_note(
-                    field_values,
-                    f"{tags} {note['tags']}",
-                    note["markdown"],
-                    note.get("deck", deck),
-                )
-            )
+            if note.deck is None:
+                note.deck = deck
+            note.tags = f"{tags} {note.tags}"
+            notes.append(note.add_to_collection(self))
 
         return notes
 
     def add_notes_single(
         self,
-        fields: list[str],
+        field_values: list[str],
         markdown: bool,
         tags: str = "",
-        model: Optional[str] = None,
+        model_name_in: Optional[str] = None,
         deck: Optional[str] = None,
     ) -> Note:
         """Add new note to collection from args"""
-        if model is not None:
-            self.set_model(model)
-
-        return self._add_note(fields, tags, markdown, deck)
-
-    def _add_note(
-        self,
-        fields: list[str],
-        tags_str: str,
-        markdown: bool = True,
-        deck: Optional[str] = None,
-    ) -> Note:
-        """Add new note to collection"""
-        notetype = self.col.models.current(for_deck=False)
-        note = self.col.new_note(notetype)
-        note_type = note.note_type()
-
-        if deck is not None and note_type is not None:
-            note_type["did"] = self.deck_name_to_id[deck]
-
-        if markdown:
-            note.fields = [markdown_to_html(x) for x in fields]
+        model_name: str
+        if model_name_in:
+            model = self.set_model(model_name_in)
+            model_name = model_name_in
         else:
-            note.fields = [plain_to_html(x) for x in fields]
+            model = self.col.models.current(for_deck=False)
+            model_name = model["name"]
 
-        tags = tags_str.strip().split()
-        for tag in tags:
-            note.add_tag(tag)
+        field_names: list[str] = [field["name"] for field in model["flds"]]
+        fields = dict(zip(field_names, field_values))
 
-        if not note.dupeOrEmpty():
-            self.col.addNote(note)
-            self.modified = True
-        else:
-            click.secho("Dupe detected, note was not added!", fg="red")
-            click.echo("Question:")
-            click.echo(list(fields)[0])
-
-        return Note(self, note)
+        new_note = NoteData(model_name, tags, fields, markdown, deck)
+        return new_note.add_to_collection(self)
