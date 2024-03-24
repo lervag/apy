@@ -47,7 +47,8 @@ class Anki:
         self._init_load_collection()
         self._init_load_config()
 
-        self.today: int = self.col.sched.today
+        with suppress_stdout():
+            self.today: int = self.col.sched.today
 
         self.model_name_to_id: dict[str, int] = {
             m["name"]: m["id"] for m in self.col.models.all()
@@ -114,8 +115,7 @@ class Anki:
         save_cwd = os.getcwd()
 
         try:
-            with suppress_stdout():
-                self.col = Collection(self._collection_db_path)
+            self.col = Collection(self._collection_db_path)
         except AssertionError as error:
             console.print("Path to database is not valid!")
             console.print(f"path = {self._collection_db_path}")
