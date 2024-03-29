@@ -401,30 +401,35 @@ class Anki:
 
     def list_cards(self, query: str, verbose: bool = False) -> None:
         """List cards that match a query"""
-
-        def _styled(key: str, value: Any) -> Text:
-            """Simple convenience printer."""
-            return Text(f"[yellow]{key}:[/yellow] {value}")
-
         for cid in self.find_cards(query):
             c = self.col.get_card(cid)
-            question = prepare_field_for_cli_oneline(c.question())
-            answer = prepare_field_for_cli_oneline(c.answer())
 
-            console.print(_styled("Q", question).fit(console.width))
+            question = Text("Q: ")
+            question.stylize("yellow", 0, 2)
+            question.append_text(
+                Text.from_markup(prepare_field_for_cli_oneline(c.question()))
+            )
+            console.print(question.fit(console.width))
+
             if verbose:
-                console.print(_styled("A", answer).fit(console.width))
+                answer = Text("A: ")
+                answer.stylize("yellow", 0, 2)
+                answer.append_text(
+                    Text.from_markup(prepare_field_for_cli_oneline(c.answer()))
+                )
+                console.print(answer.fit(console.width))
 
                 cardtype = int(c.type)
                 card_type = ["new", "learning", "review", "relearning"][cardtype]
 
+                style = "green"
                 console.print(
-                    f"{_styled('model', c.note_type()['name'])} "
-                    f"{_styled('type', card_type)} "
-                    f"{_styled('ease', c.factor/10)}% "
-                    f"{_styled('lapses', c.lapses)}\n"
-                    f"{_styled('cid', cid)} "
-                    f"{_styled('due', c.due)}\n"
+                    Text.assemble(("model: ", style), c.note_type()['name']),
+                    Text.assemble(("due: ", style), str(c.due)),
+                    Text.assemble(("type: ", style), card_type),
+                    Text.assemble(("ease: ", style), str(c.factor/10)),
+                    Text.assemble(("lapses: ", style), str(c.lapses)),
+                    "\n"
                 )
 
     def add_notes_with_editor(

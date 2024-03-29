@@ -92,6 +92,10 @@ def prepare_field_for_cli_oneline(field: str) -> str:
 
 def convert_field_to_text(field: str) -> str:
     """Extract text from field HTML"""
+    # Remove the style block, which can be present if field is taken directly from
+    # a note card via card.question() or card.answer().
+    field = re.sub(r"\<style\>.*\<\/style\>", "", field, flags=re.S)
+
     if check_if_generated_from_markdown(field):
         return _convert_field_to_markdown(field, check_consistency=True)
 
