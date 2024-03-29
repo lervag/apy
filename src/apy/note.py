@@ -13,8 +13,9 @@ from typing import Any, Optional, TYPE_CHECKING
 from click import Abort
 import readchar
 from rich.columns import Columns
-from rich.text import Text
 from rich.markdown import Markdown
+from rich.table import Table
+from rich.text import Text
 
 from apy.config import cfg
 from apy.console import console, consolePlain
@@ -73,45 +74,42 @@ class Note:
 
         return "\n".join(lines)
 
-    def pprint(self, print_raw: bool = False) -> None:
+    def pprint(self, print_raw: bool = False, list_cards: bool = False) -> None:
         """Print to screen"""
         # pylint: disable=import-outside-toplevel
         from anki import latex
-
-        created = strftime("%F %H:%M", localtime(self.n.id / 1000))
-        modified = strftime("%F %H:%M", localtime(self.n.mod))
-        next_due = min(c.due for c in self.n.cards()) - self.a.today
-        types = ", ".join(
-            {
-                ["new", "learning", "review", "relearning"][c.type]
-                for c in self.n.cards()
-            }
-        )
 
         header = f"[green]# Note (nid: {self.n.id})[/green]"
         if self.suspended:
             header += " [red](suspended)[/red]"
 
+        created = strftime("%F %H:%M", localtime(self.n.id / 1000))
+        modified = strftime("%F %H:%M", localtime(self.n.mod))
         columned = [
             f"[yellow]model:[/yellow] {self.model_name} ({len(self.n.cards())} cards)",
-            f"[yellow]card type:[/yellow] {types}",
+            f"[yellow]tags:[/yellow] {self.get_tag_string()}",
             f"[yellow]created:[/yellow] {created}",
             f"[yellow]modified:[/yellow] {modified}",
-            f"[yellow]next due:[/yellow] {next_due} days",
-            f"[yellow]tags:[/yellow] {self.get_tag_string()}",
         ]
         if self.a.n_decks > 1:
             columned += ["[yellow]deck:[/yellow] " + self.get_deck()]
 
-        flagged = [_flag_to_text(c.flags, str(c.template()["name"]))
-                 for c in self.n.cards() if c.flags > 0]
-        if flagged:
-            columned += [f"[yellow]flagged:[/yellow] {', '.join(flagged)}"]
+        if not list_cards:
+            flagged = [
+                _flag_to_text(c.flags, str(c.template()["name"]))
+                for c in self.n.cards()
+                if c.flags > 0
+            ]
+            if flagged:
+                columned += [f"[yellow]flagged:[/yellow] {', '.join(flagged)}"]
 
         consolePlain.print(header)
         consolePlain.print(Columns(columned, width=37))
-        console.print()
 
+        if list_cards:
+            self.print_cards()
+
+        console.print()
         imgs: list[Path] = []
         for name, field in self.n.items():
             is_markdown = check_if_generated_from_markdown(field)
@@ -140,6 +138,32 @@ class Note:
             for line in imgs:
                 console.print("- " + str(line))
             console.print("")
+
+    def print_cards(self) -> None:
+        """Print list of cards to screen"""
+        table = Table(
+            show_edge=False,
+            padding=(0, 3, 0, 0),
+            highlight=True,
+            box=None,
+            header_style=None,
+        )
+        table.add_column("Card name", header_style="yellow", no_wrap=True)
+        table.add_column("Due", justify="right", header_style="white")
+        table.add_column("Interval", justify="right", header_style="white")
+        table.add_column("Reps", justify="right", header_style="white")
+        table.add_column("Lapses", justify="right", header_style="white")
+        table.add_column("Factor", justify="right", header_style="white")
+        for card in sorted(self.n.cards(), key=lambda x: x.factor):
+            table.add_row(
+                "- " + str(card.template()["name"]) + _flag_to_text(card.flags),
+                _due(card.type, card.due, self.a.today),
+                str(card.ivl),
+                str(card.reps),
+                str(card.lapses),
+                str(card.factor / 10.0),
+            )
+        console.print(table)
 
     def show_images(self) -> None:
         """Show in the fields"""
@@ -377,7 +401,8 @@ class Note:
             "D": "Change deck",
             "N": "Change model",
             "s": "Save and stop",
-            "x": "Abort",
+            "v": "Show cards",
+            "x": "Save and stop",
         }
 
         if remove_actions:
@@ -393,7 +418,11 @@ class Note:
                 note_number_string = f" {i+1}"
 
         menu = Columns(
-            [f"[blue]{key}[/blue]: {value}" for key, value in actions.items()],
+            [
+                f"[blue]{key}[/blue]: {value}"
+                for key, value in actions.items()
+                if key != "x"
+            ],
             padding=(0, 2),
             title=Text(
                 f"Reviewing note{note_number_string}",
@@ -404,12 +433,13 @@ class Note:
 
         print_raw_fields = False
         refresh = True
+        show_cards = cfg["review_show_cards"]
         while True:
             if refresh:
                 console.clear()
                 console.print(menu)
                 console.print("")
-                self.pprint(print_raw_fields)
+                self.pprint(print_raw_fields, list_cards=show_cards)
 
             refresh = True
             choice = readchar.readchar()
@@ -485,10 +515,9 @@ class Note:
                 console.print("Stopped")
                 return False
 
-            if action == "Abort":
-                console.print("[red]Abort now implies [bold]Save and stop!")
-                console.print("This is because Anki always saves database changes!")
-                raise Abort()
+            if action == "Show cards":
+                show_cards = not show_cards
+                continue
 
 
 @dataclass
@@ -670,14 +699,28 @@ def _parse_markdown_file(filename: str) -> list[dict[str, Any]]:
 
     return notes
 
+
 def _flag_to_text(flag: int, text: str = "  ") -> str:
     if flag == 1:
         return f"[red]{text}[/red]"
-    elif flag == 2:
+
+    if flag == 2:
         return f"[orange]{text}[/orange]"
-    elif flag == 3:
+
+    if flag == 3:
         return f"[green]{text}[/green]"
-    elif flag == 4:
+
+    if flag == 4:
         return f"[blue]{text}[/blue]"
 
     return ""
+
+
+def _due(card_type: int, due: int, today: int) -> str:
+    if card_type < 2:
+        return "0"
+
+    if card_type == 2:
+        return str(due - today)
+
+    return "?"

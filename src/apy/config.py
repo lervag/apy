@@ -51,6 +51,7 @@ CFG_DEFAULT_VALUES: dict[str, Any] = {
     "presets": {},
     "profile_name": None,
     "query": "tag:marked OR -flag:0",
+    "review_show_cards": False,
 }
 
 # Ensure that cfg has required keys

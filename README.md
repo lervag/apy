@@ -113,6 +113,8 @@ currently recognized:
   add-single`.
 - `profile_name`: Specify which profile to load by default.
 - `query`: Specify default query for `apy list`, `apy review` and `apy tag`.
+- `review_show_cards`: Whether to show list of cards by default during note
+  review
 
 An example configuration:
 
@@ -133,7 +135,8 @@ An example configuration:
     ["lualatex", "-interaction=nonstopmode", "tmp.tex"],
     ["pdfcrop", "tmp.pdf", "tmp.pdf"],
     ["pdf2svg", "tmp.pdf", "tmp.svg"]
-  ]
+  ],
+  "review_show_cards": true
 }
 ```
 
