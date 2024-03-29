@@ -105,7 +105,7 @@ class Note:
 
         flags = [str(c.template()["name"]) for c in self.n.cards() if c.flags > 0]
         if flags:
-            flag_str = ", ".join(["[magenta]x[/magenta]" for x in flags])
+            flag_str = ", ".join([f"[magenta]{f}[/magenta]" for f in flags])
             columned += [f"[yellow]flagged:[/yellow] {flag_str}"]
 
         consolePlain.print(header)
