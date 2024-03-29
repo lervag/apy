@@ -103,10 +103,10 @@ class Note:
         if self.a.n_decks > 1:
             columned += ["[yellow]deck:[/yellow] " + self.get_deck()]
 
-        flags = [str(c.template()["name"]) for c in self.n.cards() if c.flags > 0]
-        if flags:
-            flag_str = ", ".join([f"[magenta]{f}[/magenta]" for f in flags])
-            columned += [f"[yellow]flagged:[/yellow] {flag_str}"]
+        flagged = [_flag_to_text(c.flags, str(c.template()["name"]))
+                 for c in self.n.cards() if c.flags > 0]
+        if flagged:
+            columned += [f"[yellow]flagged:[/yellow] {', '.join(flagged)}"]
 
         consolePlain.print(header)
         consolePlain.print(Columns(columned, width=37))
@@ -669,3 +669,15 @@ def _parse_markdown_file(filename: str) -> list[dict[str, Any]]:
         notes.append(current_note)
 
     return notes
+
+def _flag_to_text(flag: int, text: str = "  ") -> str:
+    if flag == 1:
+        return f"[red]{text}[/red]"
+    elif flag == 2:
+        return f"[orange]{text}[/orange]"
+    elif flag == 3:
+        return f"[green]{text}[/green]"
+    elif flag == 4:
+        return f"[blue]{text}[/blue]"
+
+    return ""
