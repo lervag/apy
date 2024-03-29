@@ -11,6 +11,7 @@ from types import TracebackType
 from typing import Any, Generator, Optional, Sequence, TYPE_CHECKING, Type
 
 from click import Abort
+from rich.markdown import Markdown
 from rich.progress import Progress, SpinnerColumn, TextColumn
 from rich.text import Text
 
@@ -380,7 +381,7 @@ class Anki:
             self.col.models.save(model, templates=True)
             self.modified = True
 
-    def list_notes(self, query: str, verbose: bool = False) -> None:
+    def list_notes(self, query: str) -> None:
         """List notes that match a query"""
         for note in self.find_notes(query):
             if note.suspended:
@@ -390,14 +391,13 @@ class Anki:
             else:
                 style = "white"
 
-            first_field = prepare_field_for_cli_oneline(note.n.values()[0])
+            question = Text("Q: ")
+            question.stylize(style, 0, 2)
+            question.append_text(
+                Text.from_markup(prepare_field_for_cli_oneline(note.n.values()[0]))
+            )
 
-            out = Text("Q: ", style=style)
-            out.append(first_field)
-
-            console.print(out.fit(console.width))
-            if verbose:
-                console.print(f"model: {note.model_name}\n")
+            console.print(question.fit(console.width))
 
     def list_cards(self, query: str, verbose: bool = False) -> None:
         """List cards that match a query"""

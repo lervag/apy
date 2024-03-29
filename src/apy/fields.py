@@ -75,6 +75,16 @@ def prepare_field_for_cli_raw(field: str) -> str:
 def prepare_field_for_cli_oneline(field: str) -> str:
     """Prepare field html for printing to screen on one line"""
     text = prepare_field_for_cli(field)
+
+    regex_replaces = [
+        [r"\*\*(.*?)\*\*", r"[bold]\1[/bold]"],
+        [r"_(.*?)_", r"[italic]\1[/italic]"],
+        [r"`(.*?)`", r"[magenta]\1[/magenta]"],
+    ]
+
+    for pattern, repl in regex_replaces:
+        text = re.sub(pattern, repl, text, flags=re.S)
+
     text = text.replace("\n", " ")
     text = re.sub(r"\s\s\s+", " ", text)
     return text
