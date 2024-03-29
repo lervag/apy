@@ -11,7 +11,6 @@ from types import TracebackType
 from typing import Any, Generator, Optional, Sequence, TYPE_CHECKING, Type
 
 from click import Abort
-from rich.markdown import Markdown
 from rich.progress import Progress, SpinnerColumn, TextColumn
 from rich.text import Text
 
@@ -424,12 +423,12 @@ class Anki:
 
                 style = "green"
                 console.print(
-                    Text.assemble(("model: ", style), c.note_type()['name']),
+                    Text.assemble(("model: ", style), c.note_type()["name"]),
                     Text.assemble(("due: ", style), str(c.due)),
                     Text.assemble(("type: ", style), card_type),
-                    Text.assemble(("ease: ", style), str(c.factor/10)),
+                    Text.assemble(("ease: ", style), str(c.factor / 10)),
                     Text.assemble(("lapses: ", style), str(c.lapses)),
-                    "\n"
+                    "\n",
                 )
 
     def add_notes_with_editor(
