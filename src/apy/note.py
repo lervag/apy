@@ -326,15 +326,27 @@ class Note:
                 c.flush()
                 self.a.modified = True
 
-    def show_cards(self) -> None:
-        """Show cards for note"""
-        for i, c in enumerate(self.n.cards()):
-            number = f'{str(i) + ".":>3s}'
-            name = c.template()["name"]
-            if c.flags > 0:
-                name = f"[red]{name}[/red]"
-            console.print(f"  [white]{number}[/white] {name}")
+    def reset_progress(self) -> None:
+        """Reset progress for a card"""
+        card_list = {c.template()["name"]: c for c in self.n.cards()}
+        if len(card_list) <= 1:
+            card_name = next(iter(card_list))
+        else:
+            card_name = choose(list(card_list.keys()), "Select card to reset:")
 
+        card = card_list[card_name]
+        console.print("\n[magenta]Resetting progress for card:")
+        cards.print_question(card)
+        cards.print_answer(card)
+        cards.print_stats(card)
+        if not console.confirm("[red bold]Are you sure?"):
+            return
+
+        self.a.col.sched.schedule_cards_as_new(
+            [card.id], restore_position=True, reset_counts=True
+        )
+        self.a.modified = True
+        console.print(f"[magenta]The progress was reset.")
         console.wait_for_keypress()
 
     def get_deck(self) -> str:
@@ -396,7 +408,7 @@ class Note:
             "z": "Toggle suspend",
             "p": "Toggle pprint",
             "F": "Clear flags",
-            "C": "Show card names",
+            "R": "Reset progress",
             "f": "Show images",
             "E": "Edit CSS",
             "D": "Change deck",
@@ -490,8 +502,8 @@ class Note:
                 self.clear_flags()
                 continue
 
-            if action == "Show card names":
-                self.show_cards()
+            if action == "Reset progress":
+                self.reset_progress()
                 continue
 
             if action == "Show images":
