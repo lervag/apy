@@ -1,7 +1,7 @@
 """Package for interfacing and manipulating Anki decks"""
 
-import os
 from importlib.metadata import version
+import os
 
 __version__ = version("apy")
 

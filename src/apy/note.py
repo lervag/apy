@@ -17,6 +17,7 @@ from rich.markdown import Markdown
 from rich.table import Table
 from rich.text import Text
 
+from apy import cards
 from apy.config import cfg
 from apy.console import console, consolePlain
 from apy.fields import (
@@ -96,7 +97,7 @@ class Note:
 
         if not list_cards:
             flagged = [
-                _flag_to_text(c.flags, str(c.template()["name"]))
+                cards.get_flag(c, str(c.template()["name"]))
                 for c in self.n.cards()
                 if c.flags > 0
             ]
@@ -156,8 +157,8 @@ class Note:
         table.add_column("Factor", justify="right", header_style="white")
         for card in sorted(self.n.cards(), key=lambda x: x.factor):
             table.add_row(
-                "- " + str(card.template()["name"]) + _flag_to_text(card.flags),
-                _due(card.type, card.due, self.a.today),
+                "- " + str(card.template()["name"]) + cards.get_flag(card),
+                cards.get_due_days(card, self.a.today),
                 str(card.ivl),
                 str(card.reps),
                 str(card.lapses),
@@ -698,29 +699,3 @@ def _parse_markdown_file(filename: str) -> list[dict[str, Any]]:
         notes.append(current_note)
 
     return notes
-
-
-def _flag_to_text(flag: int, text: str = "  ") -> str:
-    if flag == 1:
-        return f"[red]{text}[/red]"
-
-    if flag == 2:
-        return f"[orange]{text}[/orange]"
-
-    if flag == 3:
-        return f"[green]{text}[/green]"
-
-    if flag == 4:
-        return f"[blue]{text}[/blue]"
-
-    return ""
-
-
-def _due(card_type: int, due: int, today: int) -> str:
-    if card_type < 2:
-        return "0"
-
-    if card_type == 2:
-        return str(due - today)
-
-    return "?"

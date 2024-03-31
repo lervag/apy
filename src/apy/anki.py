@@ -14,6 +14,7 @@ from click import Abort
 from rich.progress import Progress, SpinnerColumn, TextColumn
 from rich.text import Text
 
+from apy import cards
 from apy.config import cfg
 from apy.console import console
 from apy.fields import prepare_field_for_cli_oneline
@@ -383,53 +384,17 @@ class Anki:
     def list_notes(self, query: str) -> None:
         """List notes that match a query"""
         for note in self.find_notes(query):
-            if note.suspended:
-                style = "red"
-            elif "marked" in note.n.tags:
-                style = "yellow"
-            else:
-                style = "white"
-
-            question = Text("Q: ")
-            question.stylize(style, 0, 2)
-            question.append_text(
-                Text.from_markup(prepare_field_for_cli_oneline(note.n.values()[0]))
-            )
-
-            console.print(question.fit(console.width))
+            cards.print_question(note.n.cards()[0])
 
     def list_cards(self, query: str, verbose: bool = False) -> None:
         """List cards that match a query"""
         for cid in self.find_cards(query):
-            c = self.col.get_card(cid)
-
-            question = Text("Q: ")
-            question.stylize("yellow", 0, 2)
-            question.append_text(
-                Text.from_markup(prepare_field_for_cli_oneline(c.question()))
-            )
-            console.print(question.fit(console.width))
+            card = self.col.get_card(cid)
+            cards.print_question(card)
 
             if verbose:
-                answer = Text("A: ")
-                answer.stylize("yellow", 0, 2)
-                answer.append_text(
-                    Text.from_markup(prepare_field_for_cli_oneline(c.answer()))
-                )
-                console.print(answer.fit(console.width))
-
-                cardtype = int(c.type)
-                card_type = ["new", "learning", "review", "relearning"][cardtype]
-
-                style = "green"
-                console.print(
-                    Text.assemble(("model: ", style), c.note_type()["name"]),
-                    Text.assemble(("due: ", style), str(c.due)),
-                    Text.assemble(("type: ", style), card_type),
-                    Text.assemble(("ease: ", style), str(c.factor / 10)),
-                    Text.assemble(("lapses: ", style), str(c.lapses)),
-                    "\n",
-                )
+                cards.print_answer(card)
+                cards.print_stats(card)
 
     def add_notes_with_editor(
         self,

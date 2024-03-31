@@ -29,9 +29,17 @@ def prepare_field_for_cli(field: str, use_markdown: bool = False) -> str:
     text = convert_field_to_text(field)
 
     regex_replaces = [
-        [r"\[latex\]\s*(.*)\[/latex\]", r"```tex\n\1\n```"],
-        [r"\<div\>\s*(.*)\s*\</div\>", r"\n\1"],
+        [r"\[latex\]\s*(.*?)\[/latex\]", r"```tex\n\1\n```"],
+        [r"\<div\>\s*(.*?)\s*\</div\>", r"\n\1"],
     ]
+    if not use_markdown:
+        regex_replaces += [
+            [r"<b>(.*?)</b>", r"[bold]\1[/bold]"],
+            [r"<i>(.*?)</i>", r"[italic]\1[/italic]"],
+            [r"\*\*(.*?)\*\*", r"[bold]\1[/bold]"],
+            [r"_(.*?)_", r"[italic]\1[/italic]"],
+            [r"`(.*?)`", r"[magenta]\1[/magenta]"],
+        ]
 
     literal_replaces: list[list[str]]
     if use_markdown:
@@ -75,15 +83,6 @@ def prepare_field_for_cli_raw(field: str) -> str:
 def prepare_field_for_cli_oneline(field: str) -> str:
     """Prepare field html for printing to screen on one line"""
     text = prepare_field_for_cli(field)
-
-    regex_replaces = [
-        [r"\*\*(.*?)\*\*", r"[bold]\1[/bold]"],
-        [r"_(.*?)_", r"[italic]\1[/italic]"],
-        [r"`(.*?)`", r"[magenta]\1[/magenta]"],
-    ]
-
-    for pattern, repl in regex_replaces:
-        text = re.sub(pattern, repl, text, flags=re.S)
 
     text = text.replace("\n", " ")
     text = re.sub(r"\s\s\s+", " ", text)
