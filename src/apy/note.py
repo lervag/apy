@@ -346,7 +346,7 @@ class Note:
             [card.id], restore_position=True, reset_counts=True
         )
         self.a.modified = True
-        console.print(f"[magenta]The progress was reset.")
+        console.print("[magenta]The progress was reset.")
         console.wait_for_keypress()
 
     def get_deck(self) -> str:

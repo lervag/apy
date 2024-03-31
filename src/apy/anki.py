@@ -12,12 +12,10 @@ from typing import Any, Generator, Optional, Sequence, TYPE_CHECKING, Type
 
 from click import Abort
 from rich.progress import Progress, SpinnerColumn, TextColumn
-from rich.text import Text
 
 from apy import cards
 from apy.config import cfg
 from apy.console import console
-from apy.fields import prepare_field_for_cli_oneline
 from apy.note import Note, NoteData, markdown_file_to_notes
 from apy.utilities import cd, choose, editor, suppress_stdout
 

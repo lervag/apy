@@ -21,14 +21,14 @@ def print_question(card: Card) -> None:
     )
     console.print(question.fit(console.width))
 
+
 def print_answer(card: Card) -> None:
     """Print the card answer"""
     answer = Text("A: ")
     answer.stylize("yellow", 0, 2)
-    answer.append_text(
-        Text.from_markup(prepare_field_for_cli_oneline(card.answer()))
-    )
+    answer.append_text(Text.from_markup(prepare_field_for_cli_oneline(card.answer())))
     console.print(answer.fit(console.width))
+
 
 def print_stats(card: Card) -> None:
     """Print the card statistics"""
