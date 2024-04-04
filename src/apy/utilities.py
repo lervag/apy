@@ -61,22 +61,9 @@ def choose(items: list[chooseType], text: str = "Choose from list:") -> chooseTy
     console.print(text)
     for i, element in enumerate(items):
         console.print(f"{i+1}: {element}")
-    console.print("> ", end="")
 
-    while True:
-        choice = readchar.readchar()
-
-        try:
-            index = int(choice)
-        except ValueError:
-            continue
-
-        try:
-            reply = items[index - 1]
-            console.print(index)
-            return reply
-        except IndexError:
-            continue
+    index = _read_number_between(1, len(items)) - 1
+    return items[index]
 
 
 @contextmanager
@@ -85,3 +72,36 @@ def suppress_stdout() -> Generator[TextIOWrapper, Any, Any]:
     with open(os.devnull, "w", encoding="utf8") as fnull:
         with redirect_stdout(fnull) as out:
             yield out
+
+
+def _read_number_between(min: int, max: int) -> int:
+    """Read number from user input between min and max (inclusive)"""
+    console.print("> ", end="")
+    while True:
+        choice_str = ""
+        choice_int = 0
+        choice_digits = 0
+        max_digits = len(str(max))
+
+        while choice_digits < max_digits:
+            if choice_digits > 0 and int(choice_str + "0") > max:
+                break
+
+            input = readchar.readchar()
+            try:
+                _ = int(input)
+            except ValueError:
+                continue
+
+            next_int = int(choice_str + input)
+            if next_int > 0:
+                console.print(input, end="")
+                choice_str += input
+                choice_int = next_int
+                choice_digits += 1
+
+        if choice_int >= min and choice_int <= max:
+            console.print("")
+            return choice_int
+        else:
+            console.print("\nPlease type number between {min} and {max}!\n> ", end="")
