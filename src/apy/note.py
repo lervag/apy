@@ -222,7 +222,7 @@ class Note:
         for i, text in enumerate(note.fields.values()):
             self.n.fields[i] = convert_text_to_field(text, use_markdown=note.markdown)
 
-        self.n.flush()
+        self.a.col.update_note(self.n)
         self.a.modified = True
         if self.n.dupeOrEmpty():
             console.print("The updated note is now a dupe!")
