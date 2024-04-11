@@ -6,7 +6,6 @@ Anki. It does not require Anki to be running at the same time.
 
 ### Important
 
-* `apy` is **WORK IN PROGRESS**, and there may still be some major changes.
 * This script and its author(s) are not affiliated/associated with the main
   Anki project in any way.
 * Use this software entirely at your own risk. Frequent backups are encouraged.
@@ -26,7 +25,7 @@ Anki. It does not require Anki to be running at the same time.
 `apy` can be installed in the "usual" way with `pip`:
 
 ```bash
-pip install git+https://github.com/lervag/apy
+pip install apyanki
 ```
 
 **However**, note that installing Python packages outside [virtual
@@ -49,7 +48,7 @@ sudo apt install pipx
 Then, install `apy` with:
 
 ```bash
-pipx install git+https://github.com/lervag/apy
+pipx install apyanki
 ```
 
 ### Requirements
@@ -161,28 +160,8 @@ fpath=($HOME/.local/zsh-functions $fpath)
 
 ## Changelog
 
-This is just a simple changelog. See the commit history and issue threads for
-details. The main purpose of the changelog is to show which versions of `apy` are
-compatible with which versions of Anki.
-
-PS! In future updates this changelog will be removed in favor of the [release
-history on GitHub](https://github.com/lervag/apy/releases).
-
-| Version | Version note                                |
-|:-------:| ------------------------------------------- |
-| `HEAD`  | Development branch (works with Anki 23.12)  |
-| 0.12    | Compatible with Anki 23.12                  |
-| 0.11    | Compatible with Anki 2.1.66                 |
-| 0.10    | Compatible with Anki 2.1.64                 |
-| 0.9     | Compatible with Anki 2.1.49                 |
-| 0.8     | Compatible with Anki 2.1.35--2.1.44         |
-| 0.7     | Several improvements                        |
-| 0.6     | Presets, choose profile, add-single         |
-| 0.5     | Minor improvements                          |
-| 0.4     | Minor improvements                          |
-| 0.3     | Compatible with Anki 2.1.26                 |
-| 0.2     | Compatible with Anki 2.1.23                 |
-| 0.1     | Compatible with Anki 2.1.13                 |
+See the [release history on GitHub](https://github.com/lervag/apy/releases).
+For details, feel free to inspect the commity history.
 
 ## Relevant resources
 
