@@ -13,11 +13,11 @@ from typing import Any, Generator, Optional, Sequence, TYPE_CHECKING, Type
 from click import Abort
 from rich.progress import Progress, SpinnerColumn, TextColumn
 
-from apy import cards
-from apy.config import cfg
-from apy.console import console
-from apy.note import Note, NoteData, markdown_file_to_notes
-from apy.utilities import cd, choose, editor, suppress_stdout
+from apyanki import cards
+from apyanki.config import cfg
+from apyanki.console import console
+from apyanki.note import Note, NoteData, markdown_file_to_notes
+from apyanki.utilities import cd, choose, editor, suppress_stdout
 
 if TYPE_CHECKING:
     from anki.notes import NoteId

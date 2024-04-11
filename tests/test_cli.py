@@ -6,7 +6,7 @@ import shutil
 import pytest
 from click.testing import CliRunner
 
-from apy.cli import main
+from apyanki.cli import main
 
 test_data_dir = "tests/data/"
 test_collection_dir = test_data_dir + "test_base/"

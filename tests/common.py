@@ -5,7 +5,7 @@ import os
 import tempfile
 import shutil
 
-from apy.anki import Anki
+from apyanki.anki import Anki
 
 testDir = os.path.dirname(__file__)
 

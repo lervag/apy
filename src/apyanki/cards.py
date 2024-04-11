@@ -5,8 +5,8 @@ from typing import TYPE_CHECKING
 
 from rich.text import Text
 
-from apy.console import console
-from apy.fields import prepare_field_for_cli_oneline
+from apyanki.console import console
+from apyanki.fields import prepare_field_for_cli_oneline
 
 if TYPE_CHECKING:
     from anki.cards import Card

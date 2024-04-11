@@ -17,10 +17,10 @@ from rich.markdown import Markdown
 from rich.table import Table
 from rich.text import Text
 
-from apy import cards
-from apy.config import cfg
-from apy.console import console, consolePlain
-from apy.fields import (
+from apyanki import cards
+from apyanki.config import cfg
+from apyanki.console import console, consolePlain
+from apyanki.fields import (
     check_if_generated_from_markdown,
     check_if_inconsistent_markdown,
     convert_field_to_text,
@@ -31,10 +31,10 @@ from apy.fields import (
     prepare_field_for_cli_raw,
     toggle_field_to_markdown,
 )
-from apy.utilities import cd, choose, editor
+from apyanki.utilities import cd, choose, editor
 
 if TYPE_CHECKING:
-    from apy.anki import Anki
+    from apyanki.anki import Anki
     from anki.notes import Note as ANote
 
 

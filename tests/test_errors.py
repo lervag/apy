@@ -3,13 +3,13 @@
 import pytest
 from click import Abort
 
-from apy.anki import Anki
+from apyanki.anki import Anki
 
 
 def test_basepath_is_none():
     """Blah"""
     with pytest.raises(Abort):
-        Anki(base=None)
+        Anki(base_path=None)
 
     with pytest.raises(Abort):
-        Anki(base="/non/existing/path")
+        Anki(base_path="/non/existing/path")

@@ -1,9 +1,19 @@
 [tool.poetry]
-name = "apy"
+name = "apyanki"
 version = "0.14.0"
 description = "CLI script for interacting with local Anki collection"
 authors = ["Karl Yngve Lervåg <karl.yngve@lervag.net>"]
 readme = "README.md"
+classifiers = [
+    "Programming Language :: Python :: 3",
+    "License :: OSI Approved :: MIT License",
+    "Operating System :: OS Independent",
+    "Environment :: Console",
+]
+
+[project.urls]
+Homepage = "https://github.com/lervag/apy"
+Issues = "https://github.com/lervag/apy/issues"
 
 [tool.poetry.dependencies]
 python = "^3.9"
@@ -17,7 +27,7 @@ html5lib = "^1.1"
 rich = "^13.7.1"
 
 [tool.poetry.scripts]
-apy = "apy.cli:main"
+apy = "apyanki.cli:main"
 
 [tool.poetry.group.dev.dependencies]
 pytest = "^7.3.1"

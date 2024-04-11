@@ -18,7 +18,7 @@ from markdownify import markdownify as to_md
 
 if TYPE_CHECKING:
     from anki.models import NotetypeDict
-    from apy.anki import Anki
+    from apyanki.anki import Anki
 
 
 warnings.filterwarnings("ignore", category=MarkupResemblesLocatorWarning)

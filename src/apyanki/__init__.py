@@ -3,7 +3,7 @@
 from importlib.metadata import version
 import os
 
-__version__ = version("apy")
+__version__ = version("apyanki")
 
 
 # Reduce rust verbosity, unless already explicitly increased. Anki by default

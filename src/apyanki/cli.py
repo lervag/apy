@@ -7,11 +7,11 @@ from typing import Any, Optional
 
 import click
 
-from apy import __version__
-from apy.anki import Anki
-from apy.config import cfg, cfg_file
-from apy.console import console
-from apy.note import Note
+from apyanki import __version__
+from apyanki.anki import Anki
+from apyanki.config import cfg, cfg_file
+from apyanki.console import console
+from apyanki.note import Note
 
 CONTEXT_SETTINGS = {"help_option_names": ["-h", "--help"]}
 

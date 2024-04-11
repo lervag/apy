@@ -10,7 +10,7 @@ from typing import Any, Generator, Optional, TypeVar
 
 import readchar
 
-from apy.console import console
+from apyanki.console import console
 
 
 class cd:
@@ -74,34 +74,34 @@ def suppress_stdout() -> Generator[TextIOWrapper, Any, Any]:
             yield out
 
 
-def _read_number_between(min: int, max: int) -> int:
-    """Read number from user input between min and max (inclusive)"""
+def _read_number_between(first: int, last: int) -> int:
+    """Read number from user input between first and last (inclusive)"""
     console.print("> ", end="")
     while True:
         choice_str = ""
         choice_int = 0
         choice_digits = 0
-        max_digits = len(str(max))
+        max_digits = len(str(last))
 
         while choice_digits < max_digits:
-            if choice_digits > 0 and int(choice_str + "0") > max:
+            if choice_digits > 0 and int(choice_str + "0") > last:
                 break
 
-            input = readchar.readchar()
+            char = readchar.readchar()
             try:
-                _ = int(input)
+                _ = int(char)
             except ValueError:
                 continue
 
-            next_int = int(choice_str + input)
+            next_int = int(choice_str + char)
             if next_int > 0:
-                console.print(input, end="")
-                choice_str += input
+                console.print(char, end="")
+                choice_str += char
                 choice_int = next_int
                 choice_digits += 1
 
-        if choice_int >= min and choice_int <= max:
+        if first <= choice_int <= last:
             console.print("")
             return choice_int
-        else:
-            console.print("\nPlease type number between {min} and {max}!\n> ", end="")
+
+        console.print(f"\nPlease type number between {first} and {last}!\n> ", end="")
