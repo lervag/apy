@@ -10,10 +10,10 @@ classifiers = [
     "Operating System :: OS Independent",
     "Environment :: Console",
 ]
-
-[project.urls]
 homepage = "https://github.com/lervag/apy"
-issues = "https://github.com/lervag/apy/issues"
+
+[tool.poetry.urls]
+"Bug Tracker" = "https://github.com/lervag/apy/issues"
 
 [tool.poetry.dependencies]
 python = "^3.9"
