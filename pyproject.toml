@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "apyanki"
-version = "0.15.0"
+version = "0.15.1"
 description = "CLI script for interacting with local Anki collection"
 authors = ["Karl Yngve Lervåg <karl.yngve@lervag.net>"]
 readme = "README.md"
@@ -12,8 +12,8 @@ classifiers = [
 ]
 
 [project.urls]
-Homepage = "https://github.com/lervag/apy"
-Issues = "https://github.com/lervag/apy/issues"
+homepage = "https://github.com/lervag/apy"
+issues = "https://github.com/lervag/apy/issues"
 
 [tool.poetry.dependencies]
 python = "^3.9"
