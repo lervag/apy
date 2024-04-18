@@ -12,6 +12,7 @@ from typing import Any, Generator, Optional, Sequence, TYPE_CHECKING, Type
 
 from click import Abort
 from rich.progress import Progress, SpinnerColumn, TextColumn
+from rich.table import Table
 
 from apyanki import cards
 from apyanki.config import cfg
@@ -334,14 +335,15 @@ class Anki:
 
     def list_tags(self) -> None:
         """List all tags"""
-        tags = [(t, len(self.col.find_notes(f"tag:{t}"))) for t in self.col.tags.all()]
-        width = len(max(tags, key=lambda x: len(x[0]))[0]) + 2
-        filler = " " * (cfg["width"] - 2 * width - 8)
+        table = Table(show_edge=False, box=None, header_style="bold white")
+        table.add_column("tag", style="cyan")
+        table.add_column("notes", style="magenta", justify="right")
 
-        for (t1, n1), (t2, n2) in zip(
-            sorted(tags, key=lambda x: x[0]), sorted(tags, key=lambda x: x[1])
-        ):
-            console.print(f"{t1:{width}s}{n1:4d}{filler}{t2:{width}s}{n2:4d}")
+        tags = [(t, len(self.col.find_notes(f"tag:{t}"))) for t in self.col.tags.all()]
+        for tag, n in sorted(tags, key=lambda x: x[0]):
+            table.add_row(tag, str(n))
+
+        console.print(table)
 
     def change_tags(self, query: str, tags: str, add: bool = True) -> None:
         """Add/Remove tags from notes that match query"""
