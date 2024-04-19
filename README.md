@@ -105,6 +105,9 @@ currently recognized:
   '-d']`.
 - `markdown_models`: Specify a list of models for which `apy` will use
   a markdown converter.
+- `markdown_pygments_style`: Specify the code highlight scheme to use for
+  fenced code blocks in Markdown notes. See the [Pygments
+  documentation](https://pygments.org/docs/styles/) for more details.
 - `pngCommands`/`svgCommands`: Set LaTeX commands to generate PNG/SVG files.
   This is inspired by the [Edit LaTeX build
   process](https://ankiweb.net/shared/info/937148547) addon to Anki.

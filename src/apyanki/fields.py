@@ -16,6 +16,8 @@ from markdown.extensions.fenced_code import FencedCodeExtension
 from markdown.extensions.footnotes import FootnoteExtension
 from markdownify import markdownify as to_md
 
+from apyanki.config import cfg
+
 if TYPE_CHECKING:
     from anki.models import NotetypeDict
     from apyanki.anki import Anki
@@ -243,7 +245,7 @@ def _convert_markdown_to_field(text: str) -> str:
             CodeHiliteExtension(
                 noclasses=True,
                 linenums=False,
-                pygments_style="friendly",
+                pygments_style=cfg["markdown_pygments_style"],
                 guess_lang=False,
             ),
             DefListExtension(),

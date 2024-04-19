@@ -48,6 +48,7 @@ CFG_DEFAULT_VALUES: dict[str, Any] = {
     },
     "img_viewers_default": ["feh"],
     "markdown_models": ["Basic"],
+    "markdown_pygments_style": "friendly",
     "presets": {},
     "profile_name": None,
     "query": "tag:marked OR -flag:0",
