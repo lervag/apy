@@ -18,7 +18,7 @@ from apyanki import cards
 from apyanki.config import cfg
 from apyanki.console import console
 from apyanki.note import Note, NoteData, markdown_file_to_notes
-from apyanki.utilities import cd, choose, editor, suppress_stdout
+from apyanki.utilities import cd, choose, edit_file, suppress_stdout
 
 if TYPE_CHECKING:
     from anki.notes import NoteId
@@ -368,7 +368,7 @@ class Anki:
             tf.write(model["css"])
             tf.flush()
 
-            retcode = editor(tf.name)
+            retcode = edit_file(tf.name)
             if retcode != 0:
                 console.print(f"Editor return with exit code {retcode}!")
                 return
@@ -441,7 +441,7 @@ class Anki:
         ) as tf:
             tf.write(input_string)
             tf.flush()
-            retcode = editor(tf.name)
+            retcode = edit_file(tf.name)
 
             if retcode != 0:
                 console.print(f"Editor return with exit code {retcode}!")

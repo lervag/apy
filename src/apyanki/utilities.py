@@ -33,9 +33,10 @@ class cd:
         os.chdir(self.savedPath)
 
 
-def editor(filepath: str) -> int:
-    """Use EDITOR to edit file at given path"""
-    return call([os.environ.get("EDITOR", "vim"), filepath])
+def edit_file(filepath: str) -> int:
+    """Use $VISUAL or $EDITOR to edit file at given path"""
+    editor = os.environ.get("VISUAL", os.environ.get("EDITOR", "vim"))
+    return call([editor, filepath])
 
 
 def edit_text(input_text: str, prefix: str = "") -> str:
@@ -46,7 +47,7 @@ def edit_text(input_text: str, prefix: str = "") -> str:
     with NamedTemporaryFile(mode="w+", prefix=prefix, suffix=".md") as tf:
         tf.write(input_text)
         tf.flush()
-        editor(tf.name)
+        edit_file(tf.name)
         tf.seek(0)
         edited_message = tf.read().strip()
 

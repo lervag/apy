@@ -31,7 +31,7 @@ from apyanki.fields import (
     prepare_field_for_cli_raw,
     toggle_field_to_markdown,
 )
-from apyanki.utilities import cd, choose, editor
+from apyanki.utilities import cd, choose, edit_file
 
 if TYPE_CHECKING:
     from apyanki.anki import Anki
@@ -192,7 +192,7 @@ class Note:
             tf.write(str(self))
             tf.flush()
 
-            retcode = editor(tf.name)
+            retcode = edit_file(tf.name)
             if retcode != 0:
                 console.print(f"[red]Editor return with exit code {retcode}![/red]")
                 return
