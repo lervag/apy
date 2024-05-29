@@ -236,7 +236,7 @@ class Note:
         """Check if markdown fields are consistent with html values"""
         return any(check_if_inconsistent_markdown(f) for f in self.n.values())
 
-    def change_model(self) -> bool:
+    def change_model(self) -> Optional[Note]:
         """Change the note type"""
         console.clear()
         console.print("[red]Warning![/red]")
@@ -246,7 +246,7 @@ class Note:
             "progress is lost!"
         )
         if not console.confirm("\nContinue?"):
-            return False
+            return None
 
         models = sorted(self.a.model_names)  # type: ignore[has-type]
         while True:
@@ -267,9 +267,9 @@ class Note:
             break
 
         fields: dict[str, str] = {}
-        first_field: str = model["flds"][0]
-        for field_name in model["flds"]:
-            fields[field_name] = ""
+        first_field: str = model["flds"][0]["name"]
+        for field in model["flds"]:
+            fields[field["name"]] = ""
 
         for old_field_name, old_field in self.n.items():
             fields[first_field] += f"### {old_field_name}\n{old_field}\n"
@@ -285,7 +285,7 @@ class Note:
         new_note.edit()
         self.a.delete_notes(self.n.id)
 
-        return True
+        return new_note
 
     def toggle_marked(self) -> None:
         """Toggle marked tag for note"""
@@ -520,8 +520,9 @@ class Note:
                 continue
 
             if action == "Change model":
-                if self.change_model():
-                    return True
+                new_note = self.change_model()
+                if new_note is not None:
+                    return new_note.review(i, number_of_notes)
                 continue
 
             if action == "Save and stop":
