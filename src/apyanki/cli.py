@@ -36,11 +36,11 @@ def main(ctx: Any, base_path: str, profile_name: str, version: bool) -> None:
     editor with a non-zero exit code. In Vim, one can do this with the `:cquit`
     command.
 
-    One may specify a different editor with the EDITOR environment variable.
+    One may specify a different editor with the VISUAL or EDITOR environment variable.
     For example, to use emacs one can add this to one's `~/.bashrc` (or similar)
     file:
 
-        export EDITOR=emacs
+        export VISUAL=emacs
 
     Note: Use `apy subcmd --help` to get detailed help for a given subcommand.
     """
