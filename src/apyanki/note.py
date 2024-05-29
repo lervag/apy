@@ -254,7 +254,7 @@ class Note:
             console.print("Please choose new model:")
             for n, m in enumerate(models):
                 console.print(f"  {n+1}: {m}")
-            index: int = console.prompt_int(">>> ", prompt_suffix="") - 1
+            index: int = console.prompt_int(">>> ", suffix="") - 1
             try:
                 new_model = models[index]
                 self.a.set_model(new_model)
