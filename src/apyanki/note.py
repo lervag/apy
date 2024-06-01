@@ -271,8 +271,12 @@ class Note:
         for field in model["flds"]:
             fields[field["name"]] = ""
 
+        fields[first_field] = f"Created from Note {self.n.id}\n\n"
         for old_field_name, old_field in self.n.items():
             fields[first_field] += f"### {old_field_name}\n{old_field}\n"
+
+        if model["name"] == "Cloze":
+            fields[first_field] += "\nCloze card needs clozes: {{c1::content}}"
 
         note_data = NoteData(
             model["name"],
@@ -580,7 +584,7 @@ class NoteData:
         for tag in self.tags.strip().split():
             new_note.add_tag(tag)
 
-        if not new_note.dupeOrEmpty():
+        if not new_note.duplicate_or_empty():
             anki.col.addNote(new_note)
             anki.modified = True
         else:
