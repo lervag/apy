@@ -8,7 +8,7 @@ import re
 from subprocess import DEVNULL, Popen
 import tempfile
 from time import localtime, strftime
-from typing import Any, Optional, TYPE_CHECKING
+from typing import Any, Literal, Optional, TYPE_CHECKING
 
 from click import Abort
 import readchar
@@ -386,7 +386,7 @@ class Note:
         i: Optional[int] = None,
         number_of_notes: Optional[int] = None,
         remove_actions: Optional[list[str]] = None,
-    ) -> bool:
+    ) -> Literal["stop", "continue", "rewind"]:
         """Interactive review of the note
 
         This method is used by the review command.
@@ -400,13 +400,14 @@ class Note:
 
         actions = {
             "c": "Continue",
+            "p": "Go back",
             "e": "Edit",
             "a": "Add new",
             "d": "Delete",
             "m": "Toggle markdown",
             "*": "Toggle marked",
             "z": "Toggle suspend",
-            "p": "Toggle pprint",
+            "P": "Toggle pprint",
             "F": "Clear flags",
             "R": "Reset progress",
             "f": "Show images",
@@ -459,7 +460,10 @@ class Note:
             action = actions.get(choice)
 
             if action == "Continue":
-                return True
+                return "continue"
+
+            if action == "Go back":
+                return "rewind"
 
             if action == "Edit":
                 self.edit()
@@ -480,7 +484,7 @@ class Note:
                 "Are you sure you want to delete the note?"
             ):
                 self.delete()
-                return True
+                return "continue"
 
             if action == "Toggle markdown":
                 self.toggle_markdown()
@@ -527,7 +531,7 @@ class Note:
 
             if action == "Save and stop":
                 console.print("Stopped")
-                return False
+                return "stop"
 
             if action == "Show cards":
                 show_cards = not show_cards

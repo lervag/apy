@@ -383,10 +383,19 @@ def review(query: str, check_markdown_consistency: bool, cmc_range: int) -> None
                 if not n.has_consistent_markdown()
             ]
 
+        i = 0
         number_of_notes = len(notes)
-        for i, note in enumerate(notes):
-            if not note.review(i, number_of_notes):
+        while i < number_of_notes:
+            note = notes[i]
+            status = note.review(i, number_of_notes)
+
+            if status == "stop":
                 break
+
+            if status == "rewind":
+                i = max(i - 1, 0)
+            else:
+                i += 1
 
 
 @main.command()
