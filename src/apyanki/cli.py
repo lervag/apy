@@ -143,11 +143,12 @@ def add_from_file(file: Path, tags: str, deck: str) -> None:
     pairs specify default values for all the following notes. The following keys are
     accepted:
 
+    \b
     * model:    The note model (required)
     * tags:     The note model (optional)
     * deck:     Which deck the note should be added to (optional)
-    * markdown: Set to "false" or "no" if apy should not use a markdown converter while
-                converting the input note to an Anki note. (optional)
+    * markdown: Set to "false" or "no" if apy should not use a markdown converter
+                while converting the input note to an Anki note. (optional)
 
     Here is the example Markdown input:
 
