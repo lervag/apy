@@ -238,8 +238,9 @@ def info() -> None:
         console.print("Config file:       Not found")
 
     with Anki(**cfg) as a:
+        scheduler = 3 if a.col.v3_scheduler() else a.col.sched_ver()
         console.print(f"Collection path:   {a.col.path}")
-        console.print(f"Scheduler version: {a.col.sched_ver()}")
+        console.print(f"Scheduler version: {scheduler}")
 
         if a.col.decks.count() > 1:
             console.print("Decks:")
