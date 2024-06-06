@@ -87,7 +87,7 @@ def prepare_field_for_cli_oneline(field: str) -> str:
     text = prepare_field_for_cli(field)
 
     text = text.replace("\n", " ")
-    text = re.sub(r"\s\s\s+", " ", text)
+    text = re.sub(r"\s\s+", " ", text)
     return text
 
 
