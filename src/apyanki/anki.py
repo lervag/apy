@@ -13,6 +13,7 @@ from typing import Any, Generator, Optional, Sequence, TYPE_CHECKING, Type
 from click import Abort
 from rich.progress import Progress, SpinnerColumn, TextColumn
 from rich.table import Table
+from rich.text import Text
 
 from apyanki import cards
 from apyanki.config import cfg
@@ -382,15 +383,65 @@ class Anki:
         for note in self.find_notes(query):
             cards.print_question(note.n.cards()[0])
 
-    def list_cards(self, query: str, verbose: bool = False) -> None:
+    def list_cards(self, query: str, opts_display: dict[str, bool]) -> None:
         """List cards that match a query"""
+        width = console.width - 1
+        if opts_display.get("show_cid", False):
+            width -= 15
+        if opts_display.get("show_due", False):
+            width -= 6
+        if opts_display.get("show_type", False):
+            width -= 9
+        if opts_display.get("show_ease", False):
+            width -= 5
+        if opts_display.get("show_lapses", False):
+            width -= 5
+        if opts_display.get("show_model", False):
+            width -= 25
+        if opts_display.get("show_answer", False):
+            width //= 2
+            width -= 1
+
+        table = Table(box=None, header_style="bold white")
+        table.add_column("question")
+        if opts_display.get("show_answer", False):
+            table.add_column("answer")
+        if opts_display.get("show_cid", False):
+            table.add_column("cid", min_width=13)
+        if opts_display.get("show_due", False):
+            table.add_column("due", min_width=4)
+        if opts_display.get("show_type", False):
+            table.add_column("type", min_width=8)
+        if opts_display.get("show_ease", False):
+            table.add_column("ease", min_width=3)
+        if opts_display.get("show_lapses", False):
+            table.add_column("lapses", min_width=3)
+        if opts_display.get("show_model", False):
+            table.add_column("model", min_width=10)
+
         for cid in self.col.find_cards(query):
             card = self.col.get_card(cid)
-            cards.print_question(card)
+            row: list[str | Text] = [
+                cards.card_field_to_text(card.question(), max_width=width)
+            ]
+            if opts_display.get("show_answer", False):
+                row += [cards.card_field_to_text(card.answer(), max_width=width)]
+            if opts_display.get("show_cid", False):
+                row += [str(card.id)]
+            if opts_display.get("show_due", False):
+                row += [str(card.due)]
+            if opts_display.get("show_type", False):
+                card_type = ["new", "learning", "review", "relearning"][int(card.type)]
+                row += [card_type]
+            if opts_display.get("show_ease", False):
+                row += [str(int(card.factor / 10))]
+            if opts_display.get("show_lapses", False):
+                row += [str(card.lapses)]
+            if opts_display.get("show_model", False):
+                row += [card.note_type()["name"]]
+            table.add_row(*row)
 
-            if verbose:
-                cards.print_answer(card)
-                cards.print_stats(card)
+        console.print(table)
 
     def add_notes_with_editor(
         self,

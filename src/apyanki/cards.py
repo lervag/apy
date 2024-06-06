@@ -12,13 +12,18 @@ if TYPE_CHECKING:
     from anki.cards import Card
 
 
+def card_field_to_text(field: str, max_width: int = 0) -> Text:
+    prepared_field = prepare_field_for_cli_oneline(field)
+    if max_width > 0:
+        prepared_field = prepared_field[0:max_width]
+    return Text.from_markup(prepared_field)
+
+
 def print_question(card: Card) -> None:
     """Print the card question"""
     question = Text("Q: ")
     question.stylize("yellow", 0, 2)
-    question.append_text(
-        Text.from_markup(prepare_field_for_cli_oneline(card.question()))
-    )
+    question.append_text(card_field_to_text(card.question()))
     console.print(question.fit(console.width))
 
 
@@ -26,7 +31,7 @@ def print_answer(card: Card) -> None:
     """Print the card answer"""
     answer = Text("A: ")
     answer.stylize("yellow", 0, 2)
-    answer.append_text(Text.from_markup(prepare_field_for_cli_oneline(card.answer())))
+    answer.append_text(card_field_to_text(card.answer()))
     console.print(answer.fit(console.width))
 
 

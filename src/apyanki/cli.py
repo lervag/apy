@@ -338,8 +338,23 @@ def rename(old_name: str, new_name: str) -> None:
 
 @main.command("list")
 @click.argument("query", required=False, nargs=-1)
-@click.option("-v", "--verbose", is_flag=True, help="Be verbose, show more info")
-def list_cards(query: str, verbose: bool) -> None:
+@click.option("-a", "--show-answer", is_flag=True, help="Display answer")
+@click.option("-m", "--show-model", is_flag=True, help="Display model")
+@click.option("-c", "--show-cid", is_flag=True, help="Display card ids")
+@click.option("-d", "--show-due", is_flag=True, help="Display card due time in days")
+@click.option("-t", "--show-type", is_flag=True, help="Display card type")
+@click.option("-e", "--show-ease", is_flag=True, help="Display card ease")
+@click.option("-l", "--show-lapses", is_flag=True, help="Display card number of lapses")
+def list_cards(
+    query: str,
+    show_answer: bool,
+    show_model: bool,
+    show_due: bool,
+    show_type: bool,
+    show_ease: bool,
+    show_lapses: bool,
+    show_cid: bool,
+) -> None:
     """List cards that match QUERY.
 
     The default QUERY is "tag:marked OR -flag:0". This default can be
@@ -356,7 +371,18 @@ def list_cards(query: str, verbose: bool) -> None:
         query = cfg["query"]
 
     with Anki(**cfg) as a:
-        a.list_cards(query, verbose)
+        a.list_cards(
+            query,
+            {
+                "show_answer": show_answer,
+                "show_model": show_model,
+                "show_cid": show_cid,
+                "show_due": show_due,
+                "show_type": show_type,
+                "show_ease": show_ease,
+                "show_lapses": show_lapses,
+            },
+        )
 
 
 @main.command()
