@@ -248,17 +248,23 @@ def info() -> None:
                 console.print(f"  - {name}")
 
         sum_notes = a.col.note_count()
-        sum_cards = a.col.card_count()
-        sum_due = len(a.col.find_notes("is:due"))
         sum_marked = len(a.col.find_notes("tag:marked"))
-        sum_flagged = len(a.col.find_notes("-flag:0"))
-        sum_new = len(a.col.find_notes("is:new"))
-        sum_susp = len(a.col.find_notes("is:suspended"))
+        sum_cards = a.col.card_count()
+        sum_due = len(a.col.find_cards("is:due"))
+        sum_new = len(a.col.find_cards("is:new"))
+        sum_flagged = len(a.col.find_cards("-flag:0"))
+        sum_susp = len(a.col.find_cards("is:suspended"))
 
         console.print(
-            f"\n{'Model':24s} {'notes':>7s} {'cards':>7s} "
-            f"{'due':>7s} {'new':>7s} {'susp.':>7s} "
-            f"{'marked':>7s} {'flagged':>7s}"
+            "\n"
+            f"{'Model':24s} "
+            f"{'notes':>7s} "
+            f"{'marked':>7s} "
+            f"{'cards':>7s} "
+            f"{'due':>7s} "
+            f"{'new':>7s} "
+            f"{'flagged':>7s}"
+            f"{'susp.':>7s} "
         )
         console.rule()
         models = sorted(a.model_names)
@@ -266,23 +272,34 @@ def info() -> None:
             nnotes = len(set(a.col.find_notes(f'"note:{m}"')))
             if nnotes == 0:
                 continue
-            ncards = len(a.find_cards(f'"note:{m}"'))
-            ndue = len(a.find_cards(f'"note:{m}" is:due'))
-            nmarked = len(a.find_cards(f'"note:{m}" tag:marked'))
-            nflagged = len(a.find_cards(f'"note:{m}" -flag:0'))
-            nnew = len(a.find_cards(f'"note:{m}" is:new'))
-            nsusp = len(a.find_cards(f'"note:{m}" is:suspended'))
+            nmarked = len(a.col.find_notes(f'"note:{m}" tag:marked'))
+            ncards = len(a.col.find_cards(f'"note:{m}"'))
+            ndue = len(a.col.find_cards(f'"note:{m}" is:due'))
+            nnew = len(a.col.find_cards(f'"note:{m}" is:new'))
+            nflagged = len(a.col.find_cards(f'"note:{m}" -flag:0'))
+            nsusp = len(a.col.find_cards(f'"note:{m}" is:suspended'))
+
             name = m[:24]
             console.print(
-                f"{name:24s} {nnotes:7d} {ncards:7d} "
-                f"{ndue:7d} {nnew:7d} {nsusp:7d} "
-                f"{nmarked:7d} {nflagged:7d}"
+                f"{name:24s} "
+                f"{nnotes:7d} "
+                f"{nmarked:7d} "
+                f"{ncards:7d} "
+                f"{ndue:7d} "
+                f"{nnew:7d} "
+                f"{nflagged:7d}"
+                f"{nsusp:7d} "
             )
         console.rule()
         console.print(
-            f"{'Sum':24s} {sum_notes:7d} {sum_cards:7d} "
-            f"{sum_due:7d} {sum_new:7d} {sum_susp:7d} "
-            f"{sum_marked:7d} {sum_flagged:7d}"
+            f"{'Sum':24s} "
+            f"{sum_notes:7d} "
+            f"{sum_marked:7d} "
+            f"{sum_cards:7d} "
+            f"{sum_due:7d} "
+            f"{sum_new:7d} "
+            f"{sum_flagged:7d}"
+            f"{sum_susp:7d} "
         )
         console.rule()
 
@@ -471,7 +488,7 @@ def reposition(position: int, query: str) -> None:
     query = " ".join(query)
 
     with Anki(**cfg) as a:
-        cids = list(a.find_cards(query))
+        cids = list(a.col.find_cards(query))
         if not cids:
             console.print(f"No matching cards for query: {query}!")
             raise click.Abort()
