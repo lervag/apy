@@ -271,9 +271,10 @@ class Note:
         for field in model["flds"]:
             fields[field["name"]] = ""
 
-        fields[first_field] = f"Created from Note {self.n.id}\n\n"
+        fields[first_field] = f"Created from Note {self.n.id}\n"
         for old_field_name, old_field in self.n.items():
-            fields[first_field] += f"### {old_field_name}\n{old_field}\n"
+            text = convert_field_to_text(old_field)
+            fields[first_field] += f"\n### {old_field_name}\n{text}\n"
 
         if model["name"] == "Cloze":
             fields[first_field] += "\nCloze card needs clozes: {{c1::content}}"
