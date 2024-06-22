@@ -397,29 +397,29 @@ class Anki:
         if opts_display.get("show_due", False):
             width -= 6
         if opts_display.get("show_type", False):
-            width -= 7
+            width -= 9
         if opts_display.get("show_ease", False):
-            width -= 7
+            width -= 5
         if opts_display.get("show_lapses", False):
             width -= 5
         if opts_display.get("show_model", False):
-            width -= 12
+            width -= 25
         if opts_display.get("show_answer", False):
             width //= 2
             width -= 1
 
         table = Table(box=None, header_style="bold white")
-        table.add_column("question", no_wrap=no_wrap, max_width=width)
+        table.add_column("question")
         if opts_display.get("show_answer", False):
-            table.add_column("answer", no_wrap=no_wrap, max_width=width)
+            table.add_column("answer")
         if opts_display.get("show_cid", False):
             table.add_column("cid", min_width=13)
         if opts_display.get("show_due", False):
             table.add_column("due", min_width=4)
         if opts_display.get("show_type", False):
-            table.add_column("type", min_width=5)
+            table.add_column("type", min_width=8)
         if opts_display.get("show_ease", False):
-            table.add_column("ease", min_width=5)
+            table.add_column("ease", min_width=3)
         if opts_display.get("show_lapses", False):
             table.add_column("lapses", min_width=3)
         if opts_display.get("show_model", False):
@@ -427,9 +427,11 @@ class Anki:
 
         for cid in self.find_cards(query):
             card = self.col.get_card(cid)
-            row: list[str | Text] = [cards.card_field_to_text(card.question())]
+            row: list[str | Text] = [
+                cards.card_field_to_text(card.question(), max_width=width)
+            ]
             if opts_display.get("show_answer", False):
-                row += [cards.card_field_to_text(card.answer())]
+                row += [cards.card_field_to_text(card.answer(), max_width=width)]
             if opts_display.get("show_cid", False):
                 row += [str(card.id)]
             if opts_display.get("show_due", False):
@@ -438,7 +440,7 @@ class Anki:
                 card_type = ["new", "learning", "review", "relearning"][int(card.type)]
                 row += [card_type]
             if opts_display.get("show_ease", False):
-                row += [str(card.factor / 10)]
+                row += [str(int(card.factor / 10))]
             if opts_display.get("show_lapses", False):
                 row += [str(card.lapses)]
             if opts_display.get("show_model", False):

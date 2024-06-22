@@ -12,8 +12,11 @@ if TYPE_CHECKING:
     from anki.cards import Card
 
 
-def card_field_to_text(field: str) -> Text:
-    return Text.from_markup(prepare_field_for_cli_oneline(field))
+def card_field_to_text(field: str, max_width: int = 0) -> Text:
+    prepared_field = prepare_field_for_cli_oneline(field)
+    if max_width > 0:
+        prepared_field = prepared_field[0:max_width]
+    return Text.from_markup(prepared_field)
 
 
 def print_question(card: Card) -> None:
