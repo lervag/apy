@@ -272,10 +272,6 @@ class Anki:
                     if os.path.isfile(file):
                         os.remove(file)
 
-    def find_cards(self, query: str) -> Sequence[CardId]:
-        """Find card ids in Collection that match query"""
-        return self.col.find_cards(query)
-
     def find_notes(self, query: str) -> Generator[Note, None, None]:
         """Find notes in Collection and return Note objects"""
         return (
@@ -425,7 +421,7 @@ class Anki:
         if opts_display.get("show_model", False):
             table.add_column("model", min_width=10)
 
-        for cid in self.find_cards(query):
+        for cid in self.col.find_cards(query):
             card = self.col.get_card(cid)
             row: list[str | Text] = [cards.card_field_to_text(card.question())]
             if opts_display.get("show_answer", False):
