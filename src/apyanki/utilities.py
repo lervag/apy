@@ -89,6 +89,9 @@ def _read_number_between(first: int, last: int) -> int:
                 break
 
             char = readchar.readchar()
+            if char == "\n":
+                break
+
             try:
                 _ = int(char)
             except ValueError:
