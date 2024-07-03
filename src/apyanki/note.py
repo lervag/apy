@@ -284,6 +284,7 @@ class Note:
             " ".join(self.n.tags),
             fields,
             any(check_if_generated_from_markdown(f) for f in self.n.values()),
+            deck = self.get_deck()
         )
 
         new_note = note_data.add_to_collection(self.a)
