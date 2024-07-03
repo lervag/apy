@@ -8,7 +8,7 @@ import sqlite3
 import tempfile
 import time
 from types import TracebackType
-from typing import Any, Generator, Optional, Sequence, TYPE_CHECKING, Type
+from typing import Any, Generator, Optional, TYPE_CHECKING, Type
 
 from click import Abort
 from rich.progress import Progress, SpinnerColumn, TextColumn
@@ -24,7 +24,6 @@ from apyanki.utilities import cd, choose, edit_file, suppress_stdout
 if TYPE_CHECKING:
     from anki.notes import NoteId
     from anki.models import NotetypeDict
-    from anki.cards import CardId
 
 
 class Anki:

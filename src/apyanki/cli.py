@@ -473,7 +473,7 @@ def tag(query: str, add_tags: str, remove_tags: str) -> None:
         query = cfg["query"]
 
     with Anki(**cfg) as a:
-        if add_tags is None and remove_tags is None:
+        if add_tags == "" and remove_tags == "":
             a.list_tags()
             return
 
