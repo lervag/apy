@@ -2,16 +2,16 @@
 
 [[package]]
 name = "anki"
-version = "23.12.1"
+version = "24.6"
 description = ""
 optional = false
 python-versions = ">=3.9"
 files = [
-    {file = "anki-23.12.1-cp39-abi3-macosx_10_13_x86_64.whl", hash = "sha256:f3d48291b7ce60b72bf9cfbec4dc990d0a9a29f30c5412cc6d30833fe550a652"},
-    {file = "anki-23.12.1-cp39-abi3-macosx_11_0_arm64.whl", hash = "sha256:59ca12994956777b65efc7e4ea9235d01532b7fa1537173d46e28eb7eba552cd"},
-    {file = "anki-23.12.1-cp39-abi3-manylinux_2_28_x86_64.whl", hash = "sha256:d9676c1595c28d335ef5dc1e60e5eb624f4f1e948a5344dde43374bfd8a98b29"},
-    {file = "anki-23.12.1-cp39-abi3-manylinux_2_31_aarch64.whl", hash = "sha256:08e807327090ae40a0e5eb331ff60ac9af8f58faa3b46835420ee84a4191c553"},
-    {file = "anki-23.12.1-cp39-abi3-win_amd64.whl", hash = "sha256:af5e34a94baed0883e1df9de636ec690cfb741eaddfbb788d97db44f4218e074"},
+    {file = "anki-24.06-cp39-abi3-macosx_10_13_x86_64.whl", hash = "sha256:1f7a6d957a3efd72f45ff671cab8c9d7b7071731a59b50a4a181e18e22273252"},
+    {file = "anki-24.06-cp39-abi3-macosx_11_0_arm64.whl", hash = "sha256:afb2789b5da1a0e8096d801ef8abd92313ce2c46afcf1073861cd7758e5925f9"},
+    {file = "anki-24.06-cp39-abi3-manylinux_2_28_x86_64.whl", hash = "sha256:a3846b017ea62d86c3271dbc6b36f3a0d9fd98c064d21d93ea62758018df96c5"},
+    {file = "anki-24.06-cp39-abi3-manylinux_2_31_aarch64.whl", hash = "sha256:e9fe669cad4ce8b0856b84d2905f3e2d0363550c95618b881d3f5689a9c9c0f1"},
+    {file = "anki-24.06-cp39-abi3-win_amd64.whl", hash = "sha256:2398789302311e7106d069b43003dcfbfd0c71282ca3fd87957d5d8ff54e2614"},
 ]
 
 [package.dependencies]
@@ -943,4 +943,4 @@ test = ["big-O", "importlib-resources", "jaraco.functools", "jaraco.itertools", 
 [metadata]
 lock-version = "2.0"
 python-versions = "^3.9"
-content-hash = "06796d4e57ed5abe1676072a36a70d7280ae900ba4581417ff5983317abc47b4"
+content-hash = "c47faad65f4db1009b7f0ef41f7209d41df8124df21ac5619aa4a47a2664fb94"
