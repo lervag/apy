@@ -12,6 +12,7 @@ from apyanki.anki import Anki
 from apyanki.config import cfg, cfg_file
 from apyanki.console import console
 from apyanki.note import Note
+from apyanki.utilities import suppress_stdout
 
 CONTEXT_SETTINGS = {"help_option_names": ["-h", "--help"]}
 
@@ -527,6 +528,38 @@ def reposition(position: int, query: str) -> None:
 
         a.col.sched.reposition_new_cards(cids, position, 1, False, True)
         a.modified = True
+
+
+@main.command()
+@click.argument(
+    "target-file", type=click.Path(exists=False, resolve_path=True, path_type=Path)
+)
+@click.option(
+    "-m", "--include-media", is_flag=True, help="Include media files in backup."
+)
+@click.option(
+    "-l",
+    "--legacy",
+    is_flag=True,
+    help="Support older Anki versions (slower/larger files)",
+)
+def backup(target_file: Path, include_media: bool, legacy: bool) -> None:
+    """Backup Anki database to specified target file."""
+    with Anki(**cfg) as a:
+        target_filename = str(target_file)
+
+        if not target_filename.endswith(".colpkg"):
+            console.print("[yellow]Warning: Target should have .colpkg extension!")
+            raise click.Abort()
+
+        if target_file.exists():
+            console.print("[yellow]Warning: Target file already exists!")
+            console.print(f"[yellow]  {target_file}")
+            if not console.confirm("Do you want to overwrite it?"):
+                raise click.Abort()
+
+        with suppress_stdout():
+            a.col.export_collection_package(target_filename, include_media, legacy)
 
 
 if __name__ == "__main__":
