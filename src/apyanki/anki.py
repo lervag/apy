@@ -329,7 +329,7 @@ class Anki:
         self.col.models.update_dict(model)
         self.modified = True
 
-    def list_tags(self, sort_by_count=False) -> None:
+    def list_tags(self, sort_by_count: bool = False) -> None:
         """List all tags"""
         table = Table(show_edge=False, box=None, header_style="bold white")
         table.add_column("tag", style="cyan")
