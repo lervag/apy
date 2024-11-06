@@ -329,14 +329,19 @@ class Anki:
         self.col.models.update_dict(model)
         self.modified = True
 
-    def list_tags(self) -> None:
+    def list_tags(self, sort_by_count=False) -> None:
         """List all tags"""
         table = Table(show_edge=False, box=None, header_style="bold white")
         table.add_column("tag", style="cyan")
         table.add_column("notes", style="magenta", justify="right")
 
+        if sort_by_count:
+            sorter = lambda x: x[1]
+        else:
+            sorter = lambda x: x[0]
+
         tags = [(t, len(self.col.find_notes(f"tag:{t}"))) for t in self.col.tags.all()]
-        for tag, n in sorted(tags, key=lambda x: x[0]):
+        for tag, n in sorted(tags, key=sorter):
             table.add_row(tag, str(n))
 
         console.print(table)

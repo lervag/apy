@@ -454,10 +454,15 @@ def sync() -> None:
 @click.argument("query", required=False, nargs=-1)
 @click.option("-a", "--add-tags", help="Add specified tags to matched notes.")
 @click.option("-r", "--remove-tags", help="Remove specified tags from matched notes.")
-def tag(query: str, add_tags: str, remove_tags: str) -> None:
-    """Add/Remove tags to/from notes that match QUERY.
+@click.option(
+    "-c", "--sort-by-count", is_flag=True, help="When listing tags, sort by note count"
+)
+def tag(
+    query: str, add_tags: Optional[str], remove_tags: Optional[str], sort_by_count: bool
+) -> None:
+    """List all tags or add/remove tags from notes that match the query.
 
-    The default QUERY is "tag:marked OR -flag:0". This default can be
+    The default query is "tag:marked OR -flag:0". This default can be
     customized in the config file `~/.config/apy/apy.json`, e.g. with
 
     \b
@@ -466,7 +471,21 @@ def tag(query: str, add_tags: str, remove_tags: str) -> None:
     }
 
     If neither of the options --add-tags or --remove-tags are supplied, then
-    this command simply lists all tags.
+    the command simply lists all tags used in the collection.
+
+    Examples:
+
+    \b
+      # List all tags
+      apy tag
+
+    \b
+      # List all tags but sort by the note count
+      apy tag -c
+
+    \b
+      # Remove tag "bar" from all notes that match "foo"
+      apy tag "foo" --remove-tags bar
     """
     if query:
         query = " ".join(query)
@@ -474,8 +493,10 @@ def tag(query: str, add_tags: str, remove_tags: str) -> None:
         query = cfg["query"]
 
     with Anki(**cfg) as a:
-        if add_tags == "" and remove_tags == "":
-            a.list_tags()
+        if (add_tags is None or add_tags == "") and (
+            remove_tags is None or remove_tags == ""
+        ):
+            a.list_tags(sort_by_count)
             return
 
         n_notes = len(list(a.find_notes(query)))
