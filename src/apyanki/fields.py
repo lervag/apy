@@ -261,9 +261,9 @@ def _convert_markdown_to_field(text: str, latexMode: Optional[str] = None) -> st
         text += subs[-1]
 
         # inline
-        subs: list[str] = text.split("$")
+        subs = text.split("$")
         text = ""
-        open: bool = False
+        open = False
 
         for sub in subs[:-1]:
             if open:
