@@ -222,6 +222,7 @@ def _convert_markdown_to_field(text: str) -> str:
     ).decode()
 
     # For convenience: Escape some common LaTeX constructs
+
     text = text.replace(r"\\", r"\\\\")
     text = text.replace(r"\{", r"\\{")
     text = text.replace(r"\}", r"\\}")
@@ -231,10 +232,53 @@ def _convert_markdown_to_field(text: str) -> str:
     text = text.replace("\xc2\xa0", " ").replace("\xa0", " ")
 
     # For convenience: Fix mathjax escaping
-    text = text.replace(r"\[", r"\\[")
-    text = text.replace(r"\]", r"\\]")
-    text = text.replace(r"\(", r"\\(")
-    text = text.replace(r"\)", r"\\)")
+
+    latexTranslateMode = cfg["latexTranslateMode"]
+
+    # default behaviour
+    if latexTranslateMode == "off":
+        text = text.replace(r"\[", r"\\[")
+        text = text.replace(r"\]", r"\\]")
+        text = text.replace(r"\(", r"\\(")
+        text = text.replace(r"\)", r"\\)")
+    elif latexTranslateMode == "mathjax":
+        # blocks
+        subs:list[str] = text.split("$$")
+        text = ""
+        open:bool = False
+
+        for sub in subs[:-1]:
+            if open:
+                text += sub + r'\\]'
+            else:
+                text += sub + r'\\['
+            open = not open
+        text += subs[-1]
+
+        #inline
+        subs:list[str] = text.split("$")
+        text = ""
+        open:bool = False
+
+        for sub in subs[:-1]:
+            if open:
+                text += sub + r'\\)'
+            else:
+                text += sub + r'\\('
+            open = not open
+
+        text += subs[-1]
+
+    elif latexTranslateMode == "latex":
+        text = text.replace(r"[$$]", r"\\[")
+        text = text.replace(r"[/$$]", r"\\]")
+        text = text.replace(r"[$]", r"\\(")
+        text = text.replace(r"[$/]", r"\\)")
+
+
+
+
+
 
     html = markdown.markdown(
         text,
