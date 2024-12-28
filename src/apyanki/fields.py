@@ -246,28 +246,28 @@ def _convert_markdown_to_field(text: str) -> str:
         text = text.replace(r"\)", r"\\)")
     elif latexTranslateMode == "mathjax":
         # blocks
-        subs:list[str] = text.split("$$")
+        subs: list[str] = text.split("$$")
         text = ""
-        open:bool = False
+        open: bool = False
 
         for sub in subs[:-1]:
             if open:
-                text += sub + r'\\]'
+                text += sub + r"\\]"
             else:
-                text += sub + r'\\['
+                text += sub + r"\\["
             open = not open
         text += subs[-1]
 
-        #inline
-        subs:list[str] = text.split("$")
+        # inline
+        subs: list[str] = text.split("$")
         text = ""
-        open:bool = False
+        open: bool = False
 
         for sub in subs[:-1]:
             if open:
-                text += sub + r'\\)'
+                text += sub + r"\\)"
             else:
-                text += sub + r'\\('
+                text += sub + r"\\("
             open = not open
 
         text += subs[-1]
@@ -277,11 +277,6 @@ def _convert_markdown_to_field(text: str) -> str:
         text = text.replace(r"[/$$]", r"\\]")
         text = text.replace(r"[$]", r"\\(")
         text = text.replace(r"[$/]", r"\\)")
-
-
-
-
-
 
     html = markdown.markdown(
         text,
