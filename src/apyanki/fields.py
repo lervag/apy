@@ -114,10 +114,12 @@ def convert_field_to_text(field: str, check_consistency: bool = True) -> str:
     return text.strip()
 
 
-def convert_text_to_field(text: str, use_markdown: bool) -> str:
+def convert_text_to_field(
+    text: str, use_markdown: bool, latexMode: Optional[str] = None
+) -> str:
     """Convert text to Anki field html."""
     if use_markdown:
-        return _convert_markdown_to_field(text)
+        return _convert_markdown_to_field(text, latexMode=latexMode)
 
     # Convert newlines to <br> tags
     text = text.replace("\n", "<br />")
@@ -212,7 +214,7 @@ def _convert_field_to_markdown(field: str, check_consistency: bool = False) -> s
     return text
 
 
-def _convert_markdown_to_field(text: str) -> str:
+def _convert_markdown_to_field(text: str, latexMode: Optional[str] = None) -> str:
     """Convert Markdown to field HTML"""
     # Don't convert if md text is really plain
     if re.match(r"[a-zA-Z0-9æøåÆØÅ ,.?+-]*$", text):
@@ -234,17 +236,17 @@ def _convert_markdown_to_field(text: str) -> str:
     # Fix whitespaces in input
     text = text.replace("\xc2\xa0", " ").replace("\xa0", " ")
 
-    # For convenience: Fix mathjax escaping
-
-    latexTranslateMode = cfg["latexTranslateMode"]
+    # get the correct LatexTranslateMode
+    if not latexMode:
+        latexMode = cfg["latexTranslateMode"]
 
     # default behaviour
-    if latexTranslateMode == "off":
+    if latexMode == "off":
         text = text.replace(r"\[", r"\\[")
         text = text.replace(r"\]", r"\\]")
         text = text.replace(r"\(", r"\\(")
         text = text.replace(r"\)", r"\\)")
-    elif latexTranslateMode == "mathjax":
+    elif latexMode == "mathjax":
         # blocks
         subs: list[str] = text.split("$$")
         text = ""
@@ -272,7 +274,7 @@ def _convert_markdown_to_field(text: str) -> str:
 
         text += subs[-1]
 
-    elif latexTranslateMode == "latex":
+    elif latexMode == "latex":
         text = text.replace(r"[$$]", r"\\[")
         text = text.replace(r"[/$$]", r"\\]")
         text = text.replace(r"[$]", r"\\(")

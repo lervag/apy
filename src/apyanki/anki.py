@@ -530,6 +530,7 @@ class Anki:
         tags: str = "",
         model_name_in: Optional[str] = None,
         deck: Optional[str] = None,
+        latexTranslateMode: Optional[str] = None,
     ) -> Note:
         """Add new note to collection from args"""
         model_name: str
