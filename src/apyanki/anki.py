@@ -662,8 +662,9 @@ class Anki:
         field_values: list[str],
         markdown: bool,
         tags: str = "",
-        model_name_in: str | None = None,
-        deck: str | None = None,
+        model_name_in: Optional[str] = None,
+        deck: Optional[str] = None,
+        latexTranslateMode: Optional[str] = None,
     ) -> Note:
         """Add new note to collection from args"""
         model_name: str
