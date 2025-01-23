@@ -457,8 +457,18 @@ def sync() -> None:
 @click.option(
     "-c", "--sort-by-count", is_flag=True, help="When listing tags, sort by note count"
 )
+@click.option(
+    "-p",
+    "--purge",
+    is_flag=True,
+    help="If specified, then the command will remove all unused tags",
+)
 def tag(
-    query: str, add_tags: Optional[str], remove_tags: Optional[str], sort_by_count: bool
+    query: str,
+    add_tags: Optional[str],
+    remove_tags: Optional[str],
+    sort_by_count: bool,
+    purge: bool,
 ) -> None:
     """List all tags or add/remove tags from notes that match the query.
 
@@ -470,8 +480,8 @@ def tag(
       "query": "tag:marked OR tag:leech"
     }
 
-    If neither of the options --add-tags or --remove-tags are supplied, then
-    the command simply lists all tags used in the collection.
+    If none of the options --add-tags, --remove-tags, or --purge are supplied, then the
+    command simply lists all tags used in the collection.
 
     Examples:
 
@@ -486,6 +496,10 @@ def tag(
     \b
       # Remove tag "bar" from all notes that match "foo"
       apy tag "foo" --remove-tags bar
+
+    \b
+      # Remove all unused tags
+      apy tag --purge
     """
     if query:
         query = " ".join(query)
@@ -493,6 +507,15 @@ def tag(
         query = cfg["query"]
 
     with Anki(**cfg) as a:
+        if purge:
+            changes = a.purge_unused_tags()
+            if changes.count > 0:
+                console.print(f"[yellow]Purged {changes.count} unused tags.")
+            else:
+                console.print(f"No unused tags found.")
+
+            return
+
         if (add_tags is None or add_tags == "") and (
             remove_tags is None or remove_tags == ""
         ):

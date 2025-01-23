@@ -24,6 +24,7 @@ from apyanki.utilities import cd, choose, edit_file, suppress_stdout
 if TYPE_CHECKING:
     from anki.notes import NoteId
     from anki.models import NotetypeDict
+    from anki.collection import OpChangesWithCount
 
 
 class Anki:
@@ -355,6 +356,10 @@ class Anki:
             self.col.tags.bulk_remove(note_ids, tags)
 
         self.modified = True
+
+    def purge_unused_tags(self) -> OpChangesWithCount:
+        """Purge all unused tags"""
+        return self.col.tags.clear_unused_tags()
 
     def edit_model_css(self, model_name: str) -> None:
         """Edit the CSS part of a given model."""
