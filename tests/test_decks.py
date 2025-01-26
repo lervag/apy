@@ -10,9 +10,9 @@ pytestmark = pytest.mark.filterwarnings("ignore")
 def test_decks():
     """Test empty collection"""
     with AnkiSimple() as a:
-        assert a.col.decks.count() == 2
+        assert a.col.decks.count() == 3
+        assert set(a.deck_names) == {"Default", "NewDeck", "Deck with spaces"}
         assert a.col.decks.current()["name"] == "NewDeck"
-        assert set(a.deck_names) == {"Default", "NewDeck"}
 
         notes = a.add_notes_from_file(testDir + "/" + "data/deck.md")
 
@@ -27,4 +27,12 @@ def test_decks():
         notes[1].set_deck("DeckTwo")
         assert notes[1].get_deck() == "DeckTwo"
 
-        assert a.col.decks.count() == 3
+        assert a.col.decks.count() == 4
+
+        a.col.decks.set_current(a.deck_name_to_id["Deck with spaces"])
+        # assert a.col.decks.current()["name"] == "NewDeck"
+        # a.list_cards("", {})
+
+        for cid in a.col.find_cards(""):
+            card = a.col.get_card(cid)
+            print((card.id, card.did))
