@@ -22,20 +22,32 @@ Anki. It does not require Anki to be running at the same time.
 
 ## Install instructions
 
-`apy` can be installed in the "usual" way with `pip`:
+> [!WARNING]
+>
+> Installing Python packages (e.g. with `pip install`) outside [virtual
+> environments](https://docs.python.org/3/library/venv.html) is not recommended,
+> even at the user level! If you do this, then be aware that you may experience
+> issues due to conflicts with other packages/tools installed in the same manner.
+
+There are two recommended ways to install `apy`.
+
+### With uv
+
+[`uv`](https://docs.astral.sh/uv/) is a relatively new python package and
+project manager. It is very fast and it includes features to install and run
+tools in isolated environments.
+
+See [`uv` Getting Started](https://docs.astral.sh/uv/#getting-started) for how
+to install `uv`. When it's available, you can install `apy` with:
 
 ```bash
-pip install apyanki
+uv tool install apyanki
 ```
 
-**However**, note that installing Python packages outside [virtual
-environments](https://docs.python.org/3/library/venv.html) is not recommended,
-even at the user level! If you do this, then be aware that you may experience
-issues due to conflicts with other packages/tools installed in the same manner.
+### With pipx
 
-Instead, the best way to install `apy` for normal usage is with
-[`pipx`](https://pypa.github.io/pipx/). This will ensure `apy` doesn't
-interfere with other Python packages already on your system.
+[`pipx`](https://pipx.pypa.io/stable/) is a simple and useful python tool to
+install and run python applications in isolated environments.
 
 If you don't already have `pipx`, install it with your distribution's package
 manager. For instance, on Ubuntu:
@@ -288,44 +300,24 @@ and developing the `apy` code.
 
 ### Setup
 
-This project uses [Poetry](https://python-poetry.org/) as the build system and
-to manage dependencies.
+This project uses [`uv`](https://docs.astral.sh/uv/) as the build system and
+to manage dependencies. Install `uv` first if you don't have it already.
 
-Install Poetry first if you don't have it already. Fork the repository, then
-clone your fork and install a local development build of the project using
-Poetry.
+Now fork the repository, then clone your fork and install a local development
+build of the project.
 
 ```sh
 # Clone the forked repo
 git clone git@github.com:<username>/apy.git
 cd apy/
-
-# Install the project with Poetry
-poetry install
-```
-
-Poetry will create a virtual environment for you (see
-[here](https://python-poetry.org/docs/configuration/#virtualenvsin-project) for
-where the environment is created). You can either activate this environment
-yourself then issue commands in the usual way, or you can prefix your commands
-with `poetry run`. Example:
-
-```sh
-poetry run apy --version
 ```
 
 ### Tests
 
-To run the tests, activate the virtual environment and run:
+To run the tests, run:
 
 ```sh
-pytest
-```
-
-Alternatively, without activating the environment:
-
-```sh
-poetry run pytest
+uv run pytest
 ```
 
 ### Linting
@@ -333,11 +325,11 @@ poetry run pytest
 To format the code, run:
 
 ```sh
-poetry run black .
+uv run black .
 ```
 
 To type-check the code, run:
 
 ```sh
-poetry run mypy src
+uv run mypy src
 ```

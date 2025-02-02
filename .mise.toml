@@ -1,3 +1,5 @@
 [tools]
-poetry = {version="1.8.2", pyproject='pyproject.toml'}
-python = "3.12.2"
+uv = 'latest'
+
+[env]
+_.python.venv = { path = ".venv" }
