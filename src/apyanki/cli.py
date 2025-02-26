@@ -442,6 +442,63 @@ def review(query: str, check_markdown_consistency: bool, cmc_range: int) -> None
             else:
                 i += 1
 
+@main.command()
+@click.argument("query", nargs=-1, required=True)
+@click.option(
+    "--force-multiple",
+    "-f",
+    is_flag=True,
+    help="Allow editing multiple notes (will edit them one by one)",
+)
+def edit(query: str, force_multiple: bool) -> None:
+    """Edit notes that match QUERY directly.
+
+    This command allows direct editing of notes matching the provided query
+    without navigating through the interactive review interface.
+
+    If the query matches multiple notes, you'll be prompted to confirm
+    unless --force-multiple is specified.
+
+    Examples:
+
+    \b
+    # Edit a note by its card ID
+    apy edit cid:1740342619916
+
+    \b
+    # Edit a note by its note ID
+    apy edit nid:1234567890123
+
+    \b
+    # Edit a note containing specific text
+    apy edit "front:error"
+    """
+    query = " ".join(query)
+
+    with Anki(**cfg) as a:
+        notes = list(a.find_notes(query))
+
+        # Handle no matches
+        if not notes:
+            console.print(f"No notes found matching query: {query}")
+            return
+
+        # Handle multiple matches
+        if len(notes) > 1 and not force_multiple:
+            console.print(f"Query matched {len(notes)} notes.")
+            # for i, note in enumerate(notes[:5]):
+            # maybe we can show the first 5 matches?
+
+            console.print("Use --force-multiple to edit them all, or refine your query.")
+            return
+
+        # Edit each note
+        for i, note in enumerate(notes):
+            if len(notes) > 1:
+                console.print(f"Editing note {i+1} of {len(notes)}")
+
+            # Use the direct edit method (bypassing the review interface)
+            note.edit()
 
 @main.command()
 def sync() -> None:
