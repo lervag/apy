@@ -442,6 +442,7 @@ def review(query: str, check_markdown_consistency: bool, cmc_range: int) -> None
             else:
                 i += 1
 
+
 @main.command()
 @click.argument("query", nargs=-1, required=True)
 @click.option(
@@ -486,19 +487,54 @@ def edit(query: str, force_multiple: bool) -> None:
         # Handle multiple matches
         if len(notes) > 1 and not force_multiple:
             console.print(f"Query matched {len(notes)} notes.")
-            # for i, note in enumerate(notes[:5]):
-            # maybe we can show the first 5 matches?
 
-            console.print("Use --force-multiple to edit them all, or refine your query.")
+            # Show preview of the first 5 matching notes
+            console.print("\nFirst few matching notes:")
+            for i, note in enumerate(notes[:5]):
+                preview_text = note.n.fields[0][:50].replace("\n", " ")
+                if len(preview_text) == 50:
+                    preview_text += "..."
+                console.print(f"{i+1}. nid:{note.n.id} - {preview_text}")
+
+            if len(notes) > 5:
+                console.print(f"...and {len(notes) - 5} more notes")
+
+            console.print(
+                "\nUse --force-multiple to edit them all, or refine your query."
+            )
             return
 
         # Edit each note
+        edited_count = 0
         for i, note in enumerate(notes):
             if len(notes) > 1:
-                console.print(f"Editing note {i+1} of {len(notes)}")
+                console.print(
+                    f"\nEditing note {i+1} of {len(notes)} (nid: {note.n.id})"
+                )
+
+                # Show a brief preview of the note
+                preview_text = note.n.fields[0][:50].replace("\n", " ")
+                if len(preview_text) == 50:
+                    preview_text += "..."
+                console.print(f"Content preview: {preview_text}")
+                console.print(f"Tags: {', '.join(note.n.tags)}")
+
+                if not console.confirm("Edit this note?"):
+                    console.print("Skipping...")
+                    continue
 
             # Use the direct edit method (bypassing the review interface)
             note.edit()
+            edited_count += 1
+
+        # Summary message
+        if edited_count > 0:
+            console.print(
+                f"\n[green]Successfully edited {edited_count} note(s)[/green]"
+            )
+        else:
+            console.print("\n[yellow]No notes were edited[/yellow]")
+
 
 @main.command()
 def sync() -> None:
