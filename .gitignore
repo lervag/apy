@@ -6,3 +6,4 @@ tests/data
 .vimspector.json
 uv.lock
 .python-version
+venv/
