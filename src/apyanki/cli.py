@@ -486,21 +486,19 @@ def edit(query: str, force_multiple: bool) -> None:
 
         # Handle multiple matches
         if len(notes) > 1 and not force_multiple:
-            console.print(f"Query matched {len(notes)} notes.")
+            console.print(f"Query matched {len(notes)} notes. The first five:\n")
 
             # Show preview of the first 5 matching notes
-            console.print("\nFirst few matching notes:")
             for i, note in enumerate(notes[:5]):
                 preview_text = note.n.fields[0][:50].replace("\n", " ")
                 if len(preview_text) == 50:
                     preview_text += "..."
                 console.print(f"{i+1}. nid:{note.n.id} - {preview_text}")
 
-            if len(notes) > 5:
-                console.print(f"...and {len(notes) - 5} more notes")
-
             console.print(
-                "\nUse --force-multiple to edit them all, or refine your query."
+                "\nHints:\n"
+                "* Use 'apy edit --force-multiple' to edit all matches or refine your query so it only matches a single note.\n"
+                "* Use 'apy list QUERY' to view all matches."
             )
             return
 
