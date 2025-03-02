@@ -191,28 +191,92 @@ def add_from_file(file: Path, tags: str, deck: str) -> None:
         _added_notes_postprocessing(a, notes)
 
 
+@main.command("update-from-file")
+@click.argument("file", type=click.Path(exists=True, dir_okay=False))
+@click.option("-t", "--tags", default="", help="Specify default tags for cards.")
+@click.option("-d", "--deck", help="Specify default deck for cards.")
+def update_from_file(file: Path, tags: str, deck: str) -> None:
+    """Update existing notes or add new notes from Markdown file.
+
+    This command will update existing notes if a note ID (nid) or card ID (cid)
+    is provided in the file header, otherwise it will add new notes.
+
+    The syntax is similar to add-from-file, but with two additional keys:
+
+    \b
+    * nid:      The note ID to update (optional)
+    * cid:      The card ID to update (optional, used if nid is not provided)
+
+    If neither nid nor cid is provided, a new note will be created.
+
+    Here is an example Markdown input for updating:
+
+        // example.md
+        model: Basic
+        tags: marked
+        nid: 1619153168151
+
+        # Note 1
+        ## Front
+        Updated question?
+
+        ## Back
+        Updated answer.
+
+        # Note 2
+        cid: 1619153168152
+
+        ## Front
+        Another updated question?
+
+        ## Back
+        Another updated answer.
+
+        # Note 3
+        model: Basic
+
+        ## Front
+        This will be a new note (no ID provided)
+
+        ## Back
+        New note content
+    """
+    with Anki(**cfg) as a:
+        notes = a.update_notes_from_file(str(file), tags, deck)
+        _added_notes_postprocessing(a, notes)
+
+
 def _added_notes_postprocessing(a: Anki, notes: list[Note]) -> None:
-    """Common postprocessing after 'apy add[-from-file]'."""
+    """Common postprocessing after 'apy add[-from-file]' or 'apy update-from-file'."""
     n_notes = len(notes)
     if n_notes == 0:
-        console.print("No notes added")
+        console.print("No notes added or updated")
         return
 
     decks = [a.col.decks.name(c.did) for n in notes for c in n.n.cards()]
-    n_decks = len(decks)
+    n_decks = len(set(decks))
     if n_decks == 0:
-        console.print("No notes added")
+        console.print("No notes added or updated")
         return
+
+    # Check if the command is update or add (based on caller function name)
+    import inspect
+
+    caller_frame = inspect.currentframe().f_back
+    caller_function = caller_frame.f_code.co_name if caller_frame else ""
+    is_update = "update" in caller_function.lower()
+
+    action_word = "Updated/added" if is_update else "Added"
 
     if a.n_decks > 1:
         if n_notes == 1:
-            console.print(f"Added note to deck: {decks[0]}")
+            console.print(f"{action_word} note to deck: {decks[0]}")
         elif n_decks > 1:
-            console.print(f"Added {n_notes} notes to {n_decks} different decks")
+            console.print(f"{action_word} {n_notes} notes to {n_decks} different decks")
         else:
-            console.print(f"Added {n_notes} notes to deck: {decks[0]}")
+            console.print(f"{action_word} {n_notes} notes to deck: {decks[0]}")
     else:
-        console.print(f"Added {n_notes} notes")
+        console.print(f"{action_word} {n_notes} notes")
 
     for note in notes:
         cards = note.n.cards()

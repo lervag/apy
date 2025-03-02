@@ -512,6 +512,29 @@ class Anki:
         notes = markdown_file_to_notes(filename)
         return self.add_notes_from_list(notes, tags, deck)
 
+    def update_notes_from_file(
+        self, filename: str, tags: str = "", deck: Optional[str] = None
+    ) -> list[Note]:
+        """Update existing notes or add new notes from Markdown file
+
+        This function looks for nid: or cid: headers in the file to determine
+        if a note should be updated rather than added.
+        """
+        notes_data = markdown_file_to_notes(filename)
+        updated_notes = []
+
+        for note_data in notes_data:
+            if tags:
+                note_data.tags = f"{tags} {note_data.tags}"
+
+            if deck and not note_data.deck:
+                note_data.deck = deck
+
+            note = note_data.update_or_add_to_collection(self)
+            updated_notes.append(note)
+
+        return updated_notes
+
     def add_notes_from_list(
         self,
         parsed_notes: list[NoteData],

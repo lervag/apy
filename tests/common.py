@@ -4,10 +4,24 @@
 import os
 import tempfile
 import shutil
+import pytest
 
 from apyanki.anki import Anki
 
 testDir = os.path.dirname(__file__)
+
+
+@pytest.fixture
+def collection():
+    """Create a temporary Anki collection for testing."""
+    tmppath = os.path.join(tempfile.gettempdir(), "tempfile_test.anki2")
+    shutil.copy2(testDir + "/data/test_base/Test/collection.anki2", tmppath)
+
+    yield tmppath
+
+    # Clean up after test
+    if os.path.exists(tmppath):
+        os.remove(tmppath)
 
 
 class AnkiTest:
