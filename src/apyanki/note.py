@@ -636,9 +636,13 @@ class NoteData:
                 existing_note = anki.col.get_note(note_id)
                 return self._update_note(anki, existing_note)
             except (ValueError, TypeError):
-                console.print(f"[yellow]Invalid note ID format: {self.nid}. Will create a new note.[/yellow]")
+                console.print(
+                    f"[yellow]Invalid note ID format: {self.nid}. Will create a new note.[/yellow]"
+                )
             except Exception as e:
-                console.print(f"[yellow]Note with ID {self.nid} not found: {e}. Will create a new note.[/yellow]")
+                console.print(
+                    f"[yellow]Note with ID {self.nid} not found: {e}. Will create a new note.[/yellow]"
+                )
 
         if not existing_note and self.cid:
             # Try to find the note by card ID
@@ -649,9 +653,13 @@ class NoteData:
                     existing_note = card.note()
                     return self._update_note(anki, existing_note)
             except (ValueError, TypeError):
-                console.print(f"[yellow]Invalid card ID format: {self.cid}. Will create a new note.[/yellow]")
+                console.print(
+                    f"[yellow]Invalid card ID format: {self.cid}. Will create a new note.[/yellow]"
+                )
             except Exception as e:
-                console.print(f"[yellow]Card with ID {self.cid} not found: {e}. Will create a new note.[/yellow]")
+                console.print(
+                    f"[yellow]Card with ID {self.cid} not found: {e}. Will create a new note.[/yellow]"
+                )
 
         # If no existing note found or ID not provided, add as new
         return self.add_to_collection(anki)
@@ -664,9 +672,13 @@ class NoteData:
         # Verify model match
         note_type = existing_note.note_type()
         if note_type and note_type["name"] != self.model:
-            console.print(f"[yellow]Warning: Model mismatch. File specifies '{self.model}', note has '{note_type['name']}'.[/yellow]")
+            console.print(
+                f"[yellow]Warning: Model mismatch. File specifies '{self.model}', note has '{note_type['name']}'.[/yellow]"
+            )
             if not console.confirm("Continue with update anyway?"):
-                console.print("[yellow]Update canceled. Adding as new note instead.[/yellow]")
+                console.print(
+                    "[yellow]Update canceled. Adding as new note instead.[/yellow]"
+                )
                 return self.add_to_collection(anki)
 
         # Update tags
@@ -797,7 +809,9 @@ def _parse_markdown_file(filename: str) -> list[dict[str, Any]]:
                         # Merge global tags with note-specific tags
                         current_tags = current_note.get("tags", "").strip()
                         if current_tags:
-                            current_note["tags"] = f"{current_tags} {v.replace(',', '')}"
+                            current_note["tags"] = (
+                                f"{current_tags} {v.replace(',', '')}"
+                            )
                         else:
                             current_note["tags"] = v.replace(",", "")
                     elif k in ("markdown", "md"):
