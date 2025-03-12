@@ -137,8 +137,14 @@ def add(tags: str, model_name: str, deck: str) -> None:
 @click.argument("file", type=click.Path(exists=True, dir_okay=False))
 @click.option("-t", "--tags", default="", help="Specify default tags for new cards.")
 @click.option("-d", "--deck", help="Specify default deck for new cards.")
-def add_from_file(file: Path, tags: str, deck: str) -> None:
+@click.option(
+    "-u", "--update-file", is_flag=True, help="Update original file with note IDs."
+)
+def add_from_file(file: Path, tags: str, deck: str, update_file: bool) -> None:
     """Add notes from Markdown file.
+
+    With the --update-file option, the original file will be updated to include
+    note IDs for any new notes added.
 
     The example below should adequately specify the syntax. Any initial "key: value"
     pairs specify default values for all the following notes. The following keys are
@@ -150,6 +156,7 @@ def add_from_file(file: Path, tags: str, deck: str) -> None:
     * deck:     Which deck the note should be added to (optional)
     * markdown: Set to "false" or "no" if apy should not use a markdown converter
                 while converting the input note to an Anki note. (optional)
+    * nid:      The note ID (added automatically with --update-file option)
 
     Here is the example Markdown input:
 
@@ -187,7 +194,7 @@ def add_from_file(file: Path, tags: str, deck: str) -> None:
         FieldThree
     """
     with Anki(**cfg) as a:
-        notes = a.add_notes_from_file(str(file), tags, deck)
+        notes = a.add_notes_from_file(str(file), tags, deck, update_file)
         _added_notes_postprocessing(a, notes)
 
 
@@ -195,11 +202,17 @@ def add_from_file(file: Path, tags: str, deck: str) -> None:
 @click.argument("file", type=click.Path(exists=True, dir_okay=False))
 @click.option("-t", "--tags", default="", help="Specify default tags for cards.")
 @click.option("-d", "--deck", help="Specify default deck for cards.")
-def update_from_file(file: Path, tags: str, deck: str) -> None:
+@click.option(
+    "-u", "--update-file", is_flag=True, help="Update original file with note IDs."
+)
+def update_from_file(file: Path, tags: str, deck: str, update_file: bool) -> None:
     """Update existing notes or add new notes from Markdown file.
 
     This command will update existing notes if a note ID (nid) or card ID (cid)
     is provided in the file header, otherwise it will add new notes.
+
+    With the --update-file option, the original file will be updated to include
+    note IDs for any new notes added.
 
     The syntax is similar to add-from-file, but with two additional keys:
 
@@ -242,7 +255,7 @@ def update_from_file(file: Path, tags: str, deck: str) -> None:
         New note content
     """
     with Anki(**cfg) as a:
-        notes = a.update_notes_from_file(str(file), tags, deck)
+        notes = a.update_notes_from_file(str(file), tags, deck, update_file)
         _added_notes_postprocessing(a, notes)
 
 
@@ -262,8 +275,11 @@ def _added_notes_postprocessing(a: Anki, notes: list[Note]) -> None:
     # Check if the command is update or add (based on caller function name)
     import inspect
 
-    caller_frame = inspect.currentframe().f_back
-    caller_function = caller_frame.f_code.co_name if caller_frame else ""
+    caller_frame = inspect.currentframe()
+    if caller_frame is not None and caller_frame.f_back is not None:
+        caller_function = caller_frame.f_back.f_code.co_name
+    else:
+        caller_function = ""
     is_update = "update" in caller_function.lower()
 
     action_word = "Updated/added" if is_update else "Added"

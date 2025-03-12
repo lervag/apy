@@ -17,6 +17,10 @@ from rich.markdown import Markdown
 from rich.table import Table
 from rich.text import Text
 
+if TYPE_CHECKING:
+    from anki.notes import NoteId
+    from anki.cards import CardId
+
 from apyanki import cards
 from apyanki.config import cfg
 from apyanki.console import console, consolePlain
@@ -190,7 +194,7 @@ class Note:
         with tempfile.NamedTemporaryFile(
             mode="w+", dir=os.getcwd(), prefix="edit_note_", suffix=".md"
         ) as tf:
-            # Make sure the note content includes the note ID
+            # Write the note content (includes note ID from __repr__)
             tf.write(str(self))
             tf.flush()
 
@@ -220,26 +224,20 @@ class Note:
         # Update the current note from the first note in the file
         note = notes[0]
 
-        # Track if any changes were made
-        changes_made = False
-
         # Update tags if changed
         new_tags = note.tags.split()
         if sorted(new_tags) != sorted(self.n.tags):
             self.n.tags = new_tags
-            changes_made = True
 
         # Update deck if changed
         if note.deck is not None and note.deck != self.get_deck():
             self.set_deck(note.deck)
-            changes_made = True
 
         # Update fields if changed
         for i, text in enumerate(note.fields.values()):
             new_field = convert_text_to_field(text, use_markdown=note.markdown)
             if new_field != self.n.fields[i]:
                 self.n.fields[i] = new_field
-                changes_made = True
 
         # Save changes
         self.a.col.update_note(self.n)
@@ -632,7 +630,9 @@ class NoteData:
         if self.nid:
             # Try to find the note by its note ID
             try:
-                note_id = int(self.nid)
+                # Import NoteId here to avoid circular imports at module level
+                from anki.notes import NoteId
+                note_id = NoteId(int(self.nid))
                 existing_note = anki.col.get_note(note_id)
                 return self._update_note(anki, existing_note)
             except (ValueError, TypeError):
@@ -647,7 +647,9 @@ class NoteData:
         if not existing_note and self.cid:
             # Try to find the note by card ID
             try:
-                card_id = int(self.cid)
+                # Import CardId here to avoid circular imports at module level
+                from anki.cards import CardId
+                card_id = CardId(int(self.cid))
                 card = anki.col.get_card(card_id)
                 if card:
                     existing_note = card.note()
@@ -664,7 +666,7 @@ class NoteData:
         # If no existing note found or ID not provided, add as new
         return self.add_to_collection(anki)
 
-    def _update_note(self, anki: Anki, existing_note) -> Note:
+    def _update_note(self, anki: 'Anki', existing_note: Any) -> Note:
         """Update an existing note with new field values
 
         Returns: The updated note
@@ -690,8 +692,9 @@ class NoteData:
                 # Get first card and update its deck
                 cards = existing_note.cards()
                 if cards:
-                    deck_id = anki.deck_name_to_id.get(self.deck)
-                    if deck_id:
+                    # Explicitly cast to int to satisfy mypy
+                    deck_id = anki.deck_name_to_id.get(self.deck, None)  # type: ignore
+                    if deck_id is not None:  # Make sure deck_id exists and is not None
                         card_ids = [c.id for c in cards]
                         anki.col.set_deck(card_ids, deck_id)
             except Exception as e:
@@ -730,8 +733,8 @@ def markdown_file_to_notes(filename: str) -> list[NoteData]:
                 fields=x["fields"],
                 markdown=x["markdown"],
                 deck=x["deck"],
-                nid=x.get("nid"),
-                cid=x.get("cid"),
+                nid=x["nid"],
+                cid=x["cid"],
             )
             for x in _parse_markdown_file(filename)
         ]
@@ -771,9 +774,9 @@ def _parse_markdown_file(filename: str) -> list[dict[str, Any]]:
                     defaults["tags"] = v.replace(",", "")
                 elif k in ("markdown", "md"):
                     defaults["markdown"] = v in ("true", "yes")
-                elif k in ("nid"):
+                elif k == "nid":
                     defaults["nid"] = v
-                elif k in ("cid"):
+                elif k == "cid":
                     defaults["cid"] = v
                 else:
                     defaults[k] = v

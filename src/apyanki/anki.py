@@ -4,6 +4,7 @@ from __future__ import annotations
 import os
 from pathlib import Path
 import pickle
+import re
 import sqlite3
 import tempfile
 import time
@@ -506,22 +507,64 @@ class Anki:
             return self.add_notes_from_file(tf.name)
 
     def add_notes_from_file(
-        self, filename: str, tags: str = "", deck: Optional[str] = None
+        self,
+        filename: str,
+        tags: str = "",
+        deck: Optional[str] = None,
+        update_file: bool = False,
     ) -> list[Note]:
-        """Add new notes to collection from Markdown file"""
-        notes = markdown_file_to_notes(filename)
-        return self.add_notes_from_list(notes, tags, deck)
+        """Add new notes to collection from Markdown file
+
+        Args:
+            filename: Path to the markdown file containing notes
+            tags: Additional tags to add to the notes
+            deck: Default deck for notes without a deck specified
+            update_file: If True, update the original file with note IDs
+
+        Returns:
+            List of notes that were added
+        """
+        with open(filename, "r", encoding="utf-8") as f:
+            original_content = f.read()
+
+        notes_data = markdown_file_to_notes(filename)
+        added_notes = self.add_notes_from_list(notes_data, tags, deck)
+
+        # Update the original file with note IDs if requested
+        if update_file and added_notes:
+            self._update_file_with_note_ids(filename, original_content, added_notes)
+
+        return added_notes
 
     def update_notes_from_file(
-        self, filename: str, tags: str = "", deck: Optional[str] = None
+        self,
+        filename: str,
+        tags: str = "",
+        deck: Optional[str] = None,
+        update_file: bool = False,
     ) -> list[Note]:
         """Update existing notes or add new notes from Markdown file
 
         This function looks for nid: or cid: headers in the file to determine
         if a note should be updated rather than added.
+
+        Args:
+            filename: Path to the markdown file containing notes
+            tags: Additional tags to add to the notes
+            deck: Default deck for notes without a deck specified
+            update_file: If True, update the original file with note IDs
+
+        Returns:
+            List of notes that were updated or added
         """
+        with open(filename, "r", encoding="utf-8") as f:
+            original_content = f.read()
+
         notes_data = markdown_file_to_notes(filename)
         updated_notes = []
+
+        # Track if any notes were added that need IDs
+        needs_update = False
 
         for note_data in notes_data:
             if tags:
@@ -530,10 +573,81 @@ class Anki:
             if deck and not note_data.deck:
                 note_data.deck = deck
 
+            # Check if this note already has an ID
+            had_id = bool(note_data.nid)
+
             note = note_data.update_or_add_to_collection(self)
             updated_notes.append(note)
 
+            # Mark for file update if this was a new note without an ID
+            if not had_id and update_file:
+                needs_update = True
+
+        # Update the original file with note IDs if requested
+        if update_file and needs_update:
+            self._update_file_with_note_ids(filename, original_content, updated_notes)
+
         return updated_notes
+
+    def _update_file_with_note_ids(
+        self, filename: str, content: str, notes: list[Note]
+    ) -> None:
+        """Update the original markdown file with note IDs
+
+        This function adds nid: headers to notes in the file that don't have them.
+
+        Args:
+            filename: Path to the markdown file
+            content: Original content of the file
+            notes: List of notes that were added/updated
+        """
+        # Find all '# Note' or similar headers in the file
+        note_headers = re.finditer(r"^# .*$", content, re.MULTILINE)
+        note_positions = [match.start() for match in note_headers]
+
+        if not note_positions:
+            return  # No notes found in file
+
+        # Add an extra position at the end to simplify boundary handling
+        note_positions.append(len(content))
+
+        # Extract each note's section and check if it needs to be updated
+        updated_content = []
+        for i in range(len(note_positions) - 1):
+            start = note_positions[i]
+            end = note_positions[i + 1]
+
+            # Get the section for this note
+            section = content[start:end]
+
+            # Check if this section already has an nid
+            if re.search(r"^nid:", section, re.MULTILINE):
+                # Already has an ID, keep as is
+                updated_content.append(section)
+            else:
+                # No ID, add the note ID from our updated notes
+                # We need to find where to insert the ID line (after model, tags, etc.)
+                lines = section.split("\n")
+
+                # Find a good position to insert the ID (after model, tags, deck)
+                insert_pos = 1  # Default: after the first line (the title)
+                for j, line in enumerate(lines[1:], 1):
+                    # Look for model:, tags:, deck: lines
+                    if re.match(r"^(model|tag[s]?|deck|markdown|md):", line):
+                        insert_pos = j + 1  # Insert after this line
+
+                # If we have a note ID for this position, insert it
+                if i < len(notes):
+                    note_id = notes[i].n.id
+                    lines.insert(insert_pos, f"nid: {note_id}")
+                    updated_content.append("\n".join(lines))
+                else:
+                    # Couldn't match this section to a note, keep unchanged
+                    updated_content.append(section)
+
+        # Write back the updated content
+        with open(filename, "w", encoding="utf-8") as f:
+            f.write("".join(updated_content))
 
     def add_notes_from_list(
         self,
