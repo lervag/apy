@@ -632,6 +632,7 @@ class NoteData:
             try:
                 # Import NoteId here to avoid circular imports at module level
                 from anki.notes import NoteId
+
                 note_id = NoteId(int(self.nid))
                 existing_note = anki.col.get_note(note_id)
                 return self._update_note(anki, existing_note)
@@ -649,6 +650,7 @@ class NoteData:
             try:
                 # Import CardId here to avoid circular imports at module level
                 from anki.cards import CardId
+
                 card_id = CardId(int(self.cid))
                 card = anki.col.get_card(card_id)
                 if card:
@@ -666,7 +668,7 @@ class NoteData:
         # If no existing note found or ID not provided, add as new
         return self.add_to_collection(anki)
 
-    def _update_note(self, anki: 'Anki', existing_note: Any) -> Note:
+    def _update_note(self, anki: "Anki", existing_note: Any) -> Note:
         """Update an existing note with new field values
 
         Returns: The updated note
