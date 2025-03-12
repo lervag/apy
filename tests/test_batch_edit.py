@@ -29,16 +29,19 @@ def test_add_from_file(collection):
     """Test adding a note from a Markdown file."""
     with open("test.md", "w") as f:
         f.write(
-            """model: Basic
-tags: marked
-
-# Note 1
-## Front
-Question?
-
-## Back
-Answer.
-"""
+            textwrap.dedent(
+                """
+                model: Basic
+                tags: marked
+                
+                # Note 1
+                ## Front
+                Question?
+                
+                ## Back
+                Answer.
+                """
+            )
         )
 
     with Anki(collection_db_path=collection) as a:

@@ -524,17 +524,9 @@ class Anki:
         Returns:
             List of notes that were added
         """
-        with open(filename, "r", encoding="utf-8") as f:
-            original_content = f.read()
-
-        notes_data = markdown_file_to_notes(filename)
-        added_notes = self.add_notes_from_list(notes_data, tags, deck)
-
-        # Update the original file with note IDs if requested
-        if update_file and added_notes:
-            self._update_file_with_note_ids(filename, original_content, added_notes)
-
-        return added_notes
+        # Reuse update_notes_from_file since it handles both adding new notes and updating existing ones
+        # For add_notes_from_file, we're essentially just adding new notes
+        return self.update_notes_from_file(filename, tags, deck, update_file)
 
     def update_notes_from_file(
         self,
