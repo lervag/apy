@@ -47,7 +47,8 @@ _apy() {
   subcmds=( \
     'add:Add notes interactively from terminal' \
     'add-single:Add a single note from command line arguments' \
-    'add-from-file:Add notes from Markdown file For input file' \
+    'add-from-file:Add notes from Markdown file (alias for update-from-file)' \
+    'update-from-file:Update existing or add new notes from Markdown file' \
     'check-media:Check media' \
     'info:Print some basic statistics' \
     'model:Interact with the models' \
@@ -82,10 +83,12 @@ _apy() {
         '::Fields' \
         $opts_help \
         );;
-    add-from-file)
+    add-from-file|update-from-file)
       opts=( \
         '::Markdown input file:_files -g "*.md"' \
         '(-t --tags)'{-t,--tags}'[Specify tags]:tags:' \
+        '(-d --deck)'{-d,--deck}'[Specify deck]:deck:' \
+        '(-u --update-file)'{-u,--update-file}'[Update original file with note IDs]' \
         $opts_help \
         );;
     info)

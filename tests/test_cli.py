@@ -37,13 +37,27 @@ note_files_input = [
 @pytest.mark.parametrize(
     "note_files", [test_data_dir + file for file in note_files_input]
 )
-def test_cli_add_from_file(note_files):
-    """Test 'apy add-from-file' for various note file inputs."""
+def test_cli_update_from_file(note_files):
+    """Test 'apy update-from-file' for various note file inputs."""
     runner = CliRunner()
 
     with tempfile.TemporaryDirectory() as tmpdirname:
         shutil.copytree(test_collection_dir, tmpdirname, dirs_exist_ok=True)
-        result = runner.invoke(main, ["-b", tmpdirname, "add-from-file", note_files])
+        result = runner.invoke(main, ["-b", tmpdirname, "update-from-file", note_files])
+
+        assert result.exit_code == 0
+
+
+def test_cli_add_from_file_alias():
+    """Test that 'apy add-from-file' works as an alias for 'update-from-file'."""
+    runner = CliRunner()
+
+    with tempfile.TemporaryDirectory() as tmpdirname:
+        shutil.copytree(test_collection_dir, tmpdirname, dirs_exist_ok=True)
+        # Should work as an alias to update-from-file
+        result = runner.invoke(
+            main, ["-b", tmpdirname, "add-from-file", test_data_dir + "basic.md"]
+        )
 
         assert result.exit_code == 0
 
