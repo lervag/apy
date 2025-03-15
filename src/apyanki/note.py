@@ -17,6 +17,10 @@ from rich.markdown import Markdown
 from rich.table import Table
 from rich.text import Text
 
+if TYPE_CHECKING:
+    from anki.notes import NoteId
+    from anki.cards import CardId
+
 from apyanki import cards
 from apyanki.config import cfg
 from apyanki.console import console, consolePlain
@@ -58,6 +62,7 @@ class Note:
             "# Note",
             f"model: {self.model_name}",
             f"tags: {self.get_tag_string()}",
+            f"nid: {self.n.id}",
         ]
 
         if self.a.n_decks > 1:
@@ -189,6 +194,7 @@ class Note:
         with tempfile.NamedTemporaryFile(
             mode="w+", dir=os.getcwd(), prefix="edit_note_", suffix=".md"
         ) as tf:
+            # Write the note content (includes note ID from __repr__)
             tf.write(str(self))
             tf.flush()
 
@@ -203,29 +209,43 @@ class Note:
             console.print("[red]Something went wrong when editing note![/red]")
             return
 
+        # Handle additional notes created during editing
         if len(notes) > 1:
             added_notes = self.a.add_notes_from_list(notes[1:])
-            console.print(
-                f"[green]Added {len(added_notes)} new notes while editing.[/green]"
-            )
-            console.wait_for_keypress()
+            if added_notes:
+                console.print(
+                    f"[green]Added {len(added_notes)} new notes while editing.[/green]"
+                )
+                for added_note in added_notes:
+                    cards = added_note.n.cards()
+                    console.print(f"* nid: {added_note.n.id} (with {len(cards)} cards)")
+                console.wait_for_keypress()
 
+        # Update the current note from the first note in the file
         note = notes[0]
 
+        # Update tags if changed
         new_tags = note.tags.split()
-        if new_tags != self.n.tags:
+        if sorted(new_tags) != sorted(self.n.tags):
             self.n.tags = new_tags
 
+        # Update deck if changed
         if note.deck is not None and note.deck != self.get_deck():
             self.set_deck(note.deck)
 
+        # Update fields if changed
         for i, text in enumerate(note.fields.values()):
-            self.n.fields[i] = convert_text_to_field(text, use_markdown=note.markdown)
+            new_field = convert_text_to_field(text, use_markdown=note.markdown)
+            if new_field != self.n.fields[i]:
+                self.n.fields[i] = new_field
 
+        # Save changes
         self.a.col.update_note(self.n)
         self.a.modified = True
+
+        # Check for duplication issues
         if self.n.dupeOrEmpty():
-            console.print("The updated note is now a dupe!")
+            console.print("[red]Warning: The updated note is now a dupe![/red]")
             console.wait_for_keypress()
 
     def delete(self) -> None:
@@ -553,6 +573,8 @@ class NoteData:
     fields: dict[str, str]
     markdown: bool = True
     deck: Optional[str] = None
+    nid: Optional[str] = None
+    cid: Optional[str] = None
 
     def add_to_collection(self, anki: Anki) -> Note:
         """Add note to collection
@@ -597,6 +619,111 @@ class NoteData:
 
         return Note(anki, new_note)
 
+    def update_or_add_to_collection(self, anki: Anki) -> Note:
+        """Update existing note in collection if ID is provided, otherwise add as new
+
+        Returns: The updated or new note
+        """
+        # First try to find the note by nid or cid
+        existing_note = None
+
+        if self.nid:
+            # Try to find the note by its note ID
+            try:
+                # Import NoteId here to avoid circular imports at module level
+                from anki.notes import NoteId
+
+                note_id = NoteId(int(self.nid))
+                existing_note = anki.col.get_note(note_id)
+                return self._update_note(anki, existing_note)
+            except (ValueError, TypeError):
+                console.print(
+                    f"[yellow]Invalid note ID format: {self.nid}. Will create a new note.[/yellow]"
+                )
+            except Exception as e:
+                console.print(
+                    f"[yellow]Note with ID {self.nid} not found: {e}. Will create a new note.[/yellow]"
+                )
+
+        if not existing_note and self.cid:
+            # Try to find the note by card ID
+            try:
+                # Import CardId here to avoid circular imports at module level
+                from anki.cards import CardId
+
+                card_id = CardId(int(self.cid))
+                card = anki.col.get_card(card_id)
+                if card:
+                    existing_note = card.note()
+                    return self._update_note(anki, existing_note)
+            except (ValueError, TypeError):
+                console.print(
+                    f"[yellow]Invalid card ID format: {self.cid}. Will create a new note.[/yellow]"
+                )
+            except Exception as e:
+                console.print(
+                    f"[yellow]Card with ID {self.cid} not found: {e}. Will create a new note.[/yellow]"
+                )
+
+        # If no existing note found or ID not provided, add as new
+        return self.add_to_collection(anki)
+
+    def _update_note(self, anki: "Anki", existing_note: Any) -> Note:
+        """Update an existing note with new field values
+
+        Returns: The updated note
+        """
+        # Verify model match
+        note_type = existing_note.note_type()
+        if note_type and note_type["name"] != self.model:
+            console.print(
+                f"[yellow]Warning: Model mismatch. File specifies '{self.model}', note has '{note_type['name']}'.[/yellow]"
+            )
+            if not console.confirm("Continue with update anyway?"):
+                console.print(
+                    "[yellow]Update canceled. Adding as new note instead.[/yellow]"
+                )
+                return self.add_to_collection(anki)
+
+        # Update tags
+        existing_note.tags = self.tags.strip().split()
+
+        # Update deck if specified
+        if self.deck is not None:
+            try:
+                # Get first card and update its deck
+                cards = existing_note.cards()
+                if cards:
+                    # Explicitly cast to int to satisfy mypy
+                    deck_id = anki.deck_name_to_id.get(self.deck, None)  # type: ignore
+                    if deck_id is not None:  # Make sure deck_id exists and is not None
+                        card_ids = [c.id for c in cards]
+                        anki.col.set_deck(card_ids, deck_id)
+            except Exception as e:
+                console.print(f"[yellow]Failed to update deck: {e}[/yellow]")
+
+        # Update fields
+        field_names = list(existing_note.keys())
+        for i, field_name in enumerate(field_names):
+            # Match field names from the file to the existing note
+            matching_field = None
+            for file_field_name, content in self.fields.items():
+                clean_name = file_field_name.replace(" (markdown)", "")
+                if clean_name.lower() == field_name.lower():
+                    matching_field = content
+                    break
+
+            if matching_field is not None:
+                existing_note.fields[i] = convert_text_to_field(
+                    matching_field, use_markdown=self.markdown
+                )
+
+        # Save the updated note
+        anki.col.update_note(existing_note)
+        anki.modified = True
+
+        return Note(anki, existing_note)
+
 
 def markdown_file_to_notes(filename: str) -> list[NoteData]:
     """Parse note data from a Markdown file"""
@@ -608,6 +735,8 @@ def markdown_file_to_notes(filename: str) -> list[NoteData]:
                 fields=x["fields"],
                 markdown=x["markdown"],
                 deck=x["deck"],
+                nid=x["nid"],
+                cid=x["cid"],
             )
             for x in _parse_markdown_file(filename)
         ]
@@ -629,6 +758,8 @@ def _parse_markdown_file(filename: str) -> list[dict[str, Any]]:
         "markdown": True,
         "tags": "",
         "deck": None,
+        "nid": None,
+        "cid": None,
     }
     with open(filename, "r", encoding="utf8") as f:
         for line in f:
@@ -645,6 +776,10 @@ def _parse_markdown_file(filename: str) -> list[dict[str, Any]]:
                     defaults["tags"] = v.replace(",", "")
                 elif k in ("markdown", "md"):
                     defaults["markdown"] = v in ("true", "yes")
+                elif k == "nid":
+                    defaults["nid"] = v
+                elif k == "cid":
+                    defaults["cid"] = v
                 else:
                     defaults[k] = v
 
@@ -676,7 +811,14 @@ def _parse_markdown_file(filename: str) -> list[dict[str, Any]]:
                     k = k.lower()
                     v = v.strip()
                     if k in ("tag", "tags"):
-                        current_note["tags"] = v.replace(",", "")
+                        # Merge global tags with note-specific tags
+                        current_tags = current_note.get("tags", "").strip()
+                        if current_tags:
+                            current_note["tags"] = (
+                                f"{current_tags} {v.replace(',', '')}"
+                            )
+                        else:
+                            current_note["tags"] = v.replace(",", "")
                     elif k in ("markdown", "md"):
                         current_note["markdown"] = v in ("true", "yes")
                     else:

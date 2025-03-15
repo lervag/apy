@@ -16,6 +16,7 @@ Anki. It does not require Anki to be running at the same time.
 * [Usage](#usage)
 * [Configuration](#configuration)
 * [Zsh completion](#zsh-completion)
+* [fish completion](#fish-completion)
 * [Changelog](#changelog)
 * [Relevant resources](#relevant-resources)
 * [Alternatives](#alternatives)
@@ -171,6 +172,15 @@ Then add the following line to ones `.zshrc` file:
 
 ```sh
 fpath=($HOME/.local/zsh-functions $fpath)
+```
+
+## Fish completion
+
+There is also a fish completion file available. To use it, one may symlink or
+copy it to `~/.config/fish/completions/` directory:
+
+```
+ln -s /path/to/apy/completion/apy.fish ~/.config/fish/completions/
 ```
 
 ## Changelog
