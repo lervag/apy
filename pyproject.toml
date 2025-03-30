@@ -1,6 +1,6 @@
 [project]
 name = "apyanki"
-version = "0.17.0"
+version = "0.17.1"
 description = "CLI script for interacting with local Anki collection"
 authors = [{ name = "Karl Yngve Lervåg", email = "karl.yngve@lervag.net" }]
 requires-python = "~=3.9"
