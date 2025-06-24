@@ -341,5 +341,5 @@ uv run ruff format
 To type-check the code, run:
 
 ```sh
-uv run mypy src
+uv run mypy .
 ```

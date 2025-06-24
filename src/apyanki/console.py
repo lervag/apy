@@ -1,6 +1,6 @@
 """Global console instance for CLI output"""
 
-from typing import Any, Optional
+from typing import Any
 
 import click
 import readchar
@@ -16,16 +16,14 @@ class ApyConsole(Console):
         console.print(
             "[white]Press [italic]any key[/italic] to continue ... [/white]", end=""
         )
-        readchar.readchar()
+        _ = readchar.readchar()
 
     def prompt(self, prompt: str, **kwargs: Any) -> str:
         """Prompt for string."""
         p = Prompt(console=self)
         return p.ask(prompt, **kwargs)
 
-    def prompt_int(
-        self, prompt: str, suffix: Optional[str] = None, **kwargs: Any
-    ) -> int:
+    def prompt_int(self, prompt: str, suffix: str | None = None, **kwargs: Any) -> int:
         """Prompt for integer."""
         result: int
 

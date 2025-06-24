@@ -3,10 +3,10 @@
 import json
 import os
 from pathlib import Path
-from typing import Any, Optional
+from typing import Any
 
 
-def get_base_path() -> Optional[str]:
+def get_base_path() -> str | None:
     """Get base path on current system"""
     # If base_path not defined: Look in environment variables
     if path_as_str := os.environ.get("APY_BASE"):

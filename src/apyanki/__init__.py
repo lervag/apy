@@ -1,7 +1,7 @@
 """Package for interfacing and manipulating Anki decks"""
 
-from importlib.metadata import version
 import os
+from importlib.metadata import version
 
 __version__ = version("apyanki")
 

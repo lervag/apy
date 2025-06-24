@@ -1,15 +1,17 @@
 """An Anki collection wrapper class."""
 
 from __future__ import annotations
+
 import os
-from pathlib import Path
 import pickle
 import re
 import sqlite3
 import tempfile
 import time
+from collections.abc import Generator, KeysView
+from pathlib import Path
 from types import TracebackType
-from typing import Any, Generator, Optional, TYPE_CHECKING, Type
+from typing import TYPE_CHECKING, Any
 
 from click import Abort
 from rich.progress import Progress, SpinnerColumn, TextColumn
@@ -23,9 +25,9 @@ from apyanki.note import Note, NoteData, markdown_file_to_notes
 from apyanki.utilities import cd, choose, edit_file, suppress_stdout
 
 if TYPE_CHECKING:
-    from anki.notes import NoteId
-    from anki.models import NotetypeDict
     from anki.collection import OpChangesWithCount
+    from anki.models import NotetypeDict
+    from anki.notes import NoteId
 
 
 class Anki:
@@ -33,17 +35,17 @@ class Anki:
 
     def __init__(
         self,
-        base_path: Optional[str] = None,
-        collection_db_path: Optional[str] = None,
-        profile_name: Optional[str] = None,
+        base_path: str | None = None,
+        collection_db_path: str | None = None,
+        profile_name: str | None = None,
         **_kwargs: dict[str, Any],
     ):
-        self.modified = False
+        self.modified: bool = False
 
-        self._meta = None
-        self._collection_db_path = ""
-        self._profile_name = profile_name
-        self._profile = None
+        self._meta: Any = None
+        self._collection_db_path: str = ""
+        self._profile_name: str = profile_name or ""
+        self._profile: dict[Any, Any] | None = None
 
         self._init_load_profile(base_path, collection_db_path)
         self._init_load_collection()
@@ -55,14 +57,16 @@ class Anki:
         self.model_name_to_id: dict[str, int] = {
             m["name"]: m["id"] for m in self.col.models.all()
         }
-        self.model_names = list(self.model_name_to_id.keys())
+        self.model_names: list[str] = list(self.model_name_to_id.keys())
 
-        self.deck_name_to_id = {d["name"]: d["id"] for d in self.col.decks.all()}
-        self.deck_names = self.deck_name_to_id.keys()
+        self.deck_name_to_id: dict[str, int] = {
+            d["name"]: d["id"] for d in self.col.decks.all()
+        }
+        self.deck_names: KeysView[str] = self.deck_name_to_id.keys()
         self.n_decks: int = len(self.deck_names)
 
     def _init_load_profile(
-        self, base_path_str: Optional[str], collection_db_path: Optional[str]
+        self, base_path_str: str | None, collection_db_path: str | None
     ) -> None:
         """Load the Anki profile from database"""
         if base_path_str is None:
@@ -97,7 +101,7 @@ class Anki:
 
         profiles_dict = {name: pickle.loads(data) for name, data in profiles}
 
-        if self._profile_name is None:
+        if not self._profile_name:
             self._profile_name = self._meta.get(
                 "last_loaded_profile_name", profiles[0][0]
             )
@@ -116,7 +120,7 @@ class Anki:
         save_cwd = os.getcwd()
 
         try:
-            self.col = Collection(self._collection_db_path)
+            self.col: Collection = Collection(self._collection_db_path)
         except AssertionError as error:
             console.print("Path to database is not valid!")
             console.print(f"path = {self._collection_db_path}")
@@ -145,9 +149,9 @@ class Anki:
 
     def __exit__(
         self,
-        exc_type: Optional[Type[BaseException]],
-        exc_val: Optional[BaseException],
-        exc_tb: Optional[TracebackType],
+        exc_type: type[BaseException] | None,
+        exc_val: BaseException | None,
+        exc_tb: TracebackType | None,
     ) -> None:
         if self.modified:
             console.print("Database was modified.")
@@ -175,9 +179,6 @@ class Anki:
             io_timeout_secs=self._profile.get("networkTimeout") or 30,
         )
 
-        if auth is None:
-            return
-
         with Progress(
             TextColumn(
                 "Syncing {task.fields[name]} [green]…[/green] {task.description}"
@@ -190,7 +191,7 @@ class Anki:
 
             # Perform main sync
             with suppress_stdout():
-                self.col.sync_collection(auth, True)
+                _ = self.col.sync_collection(auth, True)
             progress.update(t1, total=1, completed=1, description="[green]done!")
 
             # Perform media sync
@@ -259,7 +260,7 @@ class Anki:
 
                     if console.confirm("Review note?"):
                         note = Note(self, self.col.get_note(nid))
-                        note.review()
+                        _ = note.review()
 
             for file in output.unused:
                 console.print(f"[red]Unused: {file}")
@@ -280,10 +281,10 @@ class Anki:
         if not isinstance(ids, list):
             ids = [ids]
 
-        self.col.remove_notes(ids)
+        _ = self.col.remove_notes(ids)
         self.modified = True
 
-    def get_model(self, model_name: str) -> Optional[NotetypeDict]:
+    def get_model(self, model_name: str) -> NotetypeDict | None:
         """Get model from model name"""
         from anki.models import NotetypeId
 
@@ -323,7 +324,7 @@ class Anki:
         self.model_names = list(self.model_name_to_id.keys())
 
         # Save changes
-        self.col.models.update_dict(model)
+        _ = self.col.models.update_dict(model)
         self.modified = True
 
     def list_tags(self, sort_by_count: bool = False) -> None:
@@ -334,11 +335,11 @@ class Anki:
 
         if sort_by_count:
 
-            def sorter(x):  # type: ignore[no-untyped-def]
+            def sorter(x: tuple[str, int]) -> str | int:
                 return x[1]
         else:
 
-            def sorter(x):  # type: ignore[no-untyped-def]
+            def sorter(x: tuple[str, int]) -> str | int:
                 return x[0]
 
         tags = [(t, len(self.col.find_notes(f"tag:{t}"))) for t in self.col.tags.all()]
@@ -351,9 +352,9 @@ class Anki:
         """Add/Remove tags from notes that match query"""
         note_ids = self.col.find_notes(query)
         if add:
-            self.col.tags.bulk_add(note_ids, tags)
+            _ = self.col.tags.bulk_add(note_ids, tags)
         else:
-            self.col.tags.bulk_remove(note_ids, tags)
+            _ = self.col.tags.bulk_remove(note_ids, tags)
 
         self.modified = True
 
@@ -371,7 +372,7 @@ class Anki:
         with tempfile.NamedTemporaryFile(
             mode="w+", prefix="_apy_edit_", suffix=".css", delete=False
         ) as tf:
-            tf.write(model["css"])
+            _ = tf.write(model["css"])
             tf.flush()
 
             retcode = edit_file(tf.name)
@@ -455,9 +456,9 @@ class Anki:
     def add_notes_with_editor(
         self,
         tags: str = "",
-        model_name: Optional[str] = None,
-        deck_name: Optional[str] = None,
-        template: Optional[Note] = None,
+        model_name: str | None = None,
+        deck_name: str | None = None,
+        template: Note | None = None,
     ) -> list[Note]:
         """Add new notes to collection with editor"""
         if template:
@@ -495,7 +496,7 @@ class Anki:
         with tempfile.NamedTemporaryFile(
             mode="w+", prefix="apy_note_", suffix=".md", delete=False
         ) as tf:
-            tf.write(input_string)
+            _ = tf.write(input_string)
             tf.flush()
             retcode = edit_file(tf.name)
 
@@ -509,7 +510,7 @@ class Anki:
         self,
         filename: str,
         tags: str = "",
-        deck: Optional[str] = None,
+        deck: str | None = None,
         update_file: bool = False,
     ) -> list[Note]:
         """Add new notes to collection from Markdown file
@@ -531,7 +532,7 @@ class Anki:
         self,
         filename: str,
         tags: str = "",
-        deck: Optional[str] = None,
+        deck: str | None = None,
         update_file: bool = False,
     ) -> list[Note]:
         """Update existing notes or add new notes from Markdown file
@@ -552,7 +553,7 @@ class Anki:
             original_content = f.read()
 
         notes_data = markdown_file_to_notes(filename)
-        updated_notes = []
+        updated_notes: list[Note] = []
 
         # Track if any notes were added that need IDs
         needs_update = False
@@ -603,7 +604,7 @@ class Anki:
         note_positions.append(len(content))
 
         # Extract each note's section and check if it needs to be updated
-        updated_content = []
+        updated_content: list[str] = []
         for i in range(len(note_positions) - 1):
             start = note_positions[i]
             end = note_positions[i + 1]
@@ -638,16 +639,16 @@ class Anki:
 
         # Write back the updated content
         with open(filename, "w", encoding="utf-8") as f:
-            f.write("".join(updated_content))
+            _ = f.write("".join(updated_content))
 
     def add_notes_from_list(
         self,
         parsed_notes: list[NoteData],
         tags: str = "",
-        deck: Optional[str] = None,
+        deck: str | None = None,
     ) -> list[Note]:
         """Add new notes to collection from note list (from parsed file)"""
-        notes = []
+        notes: list[Note] = []
         for note in parsed_notes:
             if note.deck is None:
                 note.deck = deck
@@ -661,8 +662,8 @@ class Anki:
         field_values: list[str],
         markdown: bool,
         tags: str = "",
-        model_name_in: Optional[str] = None,
-        deck: Optional[str] = None,
+        model_name_in: str | None = None,
+        deck: str | None = None,
     ) -> Note:
         """Add new note to collection from args"""
         model_name: str

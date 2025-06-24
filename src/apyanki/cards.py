@@ -1,6 +1,7 @@
 """Utility functions for working with Anki cards"""
 
 from __future__ import annotations
+
 from typing import TYPE_CHECKING
 
 from rich.text import Text
@@ -23,7 +24,7 @@ def print_question(card: Card) -> None:
     """Print the card question"""
     question = Text("Q: ")
     question.stylize("yellow", 0, 2)
-    question.append_text(card_field_to_text(card.question()))
+    _ = question.append_text(card_field_to_text(card.question()))
     console.print(question.fit(console.width))
 
 
@@ -31,7 +32,7 @@ def print_answer(card: Card) -> None:
     """Print the card answer"""
     answer = Text("A: ")
     answer.stylize("yellow", 0, 2)
-    answer.append_text(card_field_to_text(card.answer()))
+    _ = answer.append_text(card_field_to_text(card.answer()))
     console.print(answer.fit(console.width))
 
 

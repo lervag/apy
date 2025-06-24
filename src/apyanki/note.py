@@ -1,22 +1,23 @@
 """Classes and functions for interacting with and creating notes"""
 
 from __future__ import annotations
-from dataclasses import dataclass
-import os
-from pathlib import Path
-import re
-from subprocess import DEVNULL, Popen
-import tempfile
-from time import localtime, strftime
-from typing import Any, Literal, Optional, TYPE_CHECKING
 
-from click import Abort
+import os
+import re
+import tempfile
+from dataclasses import dataclass
+from pathlib import Path
+from subprocess import DEVNULL, Popen
+from time import localtime, strftime
+from typing import TYPE_CHECKING, Any, Literal
+
 import readchar
+from click import Abort
 from rich.columns import Columns
 from rich.markdown import Markdown
 from rich.table import Table
 from rich.text import Text
-
+from typing_extensions import override
 
 from apyanki import cards
 from apyanki.config import cfg
@@ -35,24 +36,26 @@ from apyanki.fields import (
 from apyanki.utilities import cd, choose, edit_file
 
 if TYPE_CHECKING:
-    from apyanki.anki import Anki
     from anki.notes import Note as ANote
+
+    from apyanki.anki import Anki
 
 
 class Note:
     """A Note wrapper class"""
 
     def __init__(self, anki: Anki, note: ANote) -> None:
-        self.a = anki
-        self.n = note
+        self.a: Anki = anki
+        self.n: ANote = note
         note_type = note.note_type()
         if note_type:
-            self.model_name = note_type["name"]
+            self.model_name: str = note_type["name"]
         else:
             self.model_name = "__invalid-note__"
-        self.field_names = list(self.n.keys())
-        self.suspended = any(c.queue == -1 for c in self.n.cards())
+        self.field_names: list[str] = list(self.n.keys())
+        self.suspended: bool = any(c.queue == -1 for c in self.n.cards())
 
+    @override
     def __repr__(self) -> str:
         """Convert note to Markdown format"""
         lines = [
@@ -132,7 +135,7 @@ class Note:
             # Render LaTeX if necessary and fill list of LaTeX images
             note_type = self.n.note_type()
             if note_type:
-                latex.render_latex(field, note_type, self.a.col)
+                _ = latex.render_latex(field, note_type, self.a.col)
                 imgs += img_paths_from_field_latex(field, note_type, self.a)
 
         if imgs:
@@ -183,7 +186,7 @@ class Note:
                 view_cmd = cfg["img_viewers"].get(
                     file.suffix[1:], cfg["img_viewers_default"]
                 )
-                Popen(view_cmd + [file], stdout=DEVNULL, stderr=DEVNULL)
+                _ = Popen(view_cmd + [file], stdout=DEVNULL, stderr=DEVNULL)
 
     def edit(self) -> None:
         """Edit tags and fields of current note"""
@@ -191,7 +194,7 @@ class Note:
             mode="w+", dir=os.getcwd(), prefix="edit_note_", suffix=".md"
         ) as tf:
             # Write the note content (includes note ID from __repr__)
-            tf.write(str(self))
+            _ = tf.write(str(self))
             tf.flush()
 
             retcode = edit_file(tf.name)
@@ -236,7 +239,7 @@ class Note:
                 self.n.fields[i] = new_field
 
         # Save changes
-        self.a.col.update_note(self.n)
+        _ = self.a.col.update_note(self.n)
         self.a.modified = True
 
         # Check for duplication issues
@@ -252,7 +255,7 @@ class Note:
         """Check if markdown fields are consistent with html values"""
         return any(check_if_inconsistent_markdown(f) for f in self.n.values())
 
-    def change_model(self) -> Optional[Note]:
+    def change_model(self) -> Note | None:
         """Change the note type"""
         console.clear()
         console.print("[red]Warning![/red]")
@@ -264,7 +267,7 @@ class Note:
         if not console.confirm("\nContinue?"):
             return None
 
-        models = sorted(self.a.model_names)  # type: ignore[has-type]
+        models = sorted(self.a.model_names)
         while True:
             console.clear()
             console.print("Please choose new model:")
@@ -273,7 +276,7 @@ class Note:
             index: int = console.prompt_int(">>> ", suffix="") - 1
             try:
                 new_model = models[index]
-                self.a.set_model(new_model)
+                _ = self.a.set_model(new_model)
                 model = self.a.get_model(new_model)
                 if not model:
                     continue
@@ -323,9 +326,9 @@ class Note:
         cids = [c.id for c in self.n.cards()]
 
         if self.suspended:
-            self.a.col.sched.unsuspendCards(cids)
+            _ = self.a.col.sched.unsuspendCards(cids)
         else:
-            self.a.col.sched.suspendCards(cids)
+            _ = self.a.col.sched.suspendCards(cids)
 
         self.suspended = not self.suspended
         self.a.modified = True
@@ -364,7 +367,7 @@ class Note:
         if not console.confirm("[red bold]Are you sure?"):
             return
 
-        self.a.col.sched.schedule_cards_as_new(
+        _ = self.a.col.sched.schedule_cards_as_new(
             [card.id], restore_position=True, reset_counts=True
         )
         self.a.modified = True
@@ -381,7 +384,7 @@ class Note:
         cids = [c.id for c in self.n.cards()]
 
         if cids and newdid:
-            self.a.col.set_deck(cids, newdid)
+            _ = self.a.col.set_deck(cids, newdid)
             self.a.modified = True
 
     def set_deck_interactive(self) -> None:
@@ -405,9 +408,9 @@ class Note:
 
     def review(
         self,
-        i: Optional[int] = None,
-        number_of_notes: Optional[int] = None,
-        remove_actions: Optional[list[str]] = None,
+        i: int | None = None,
+        number_of_notes: int | None = None,
+        remove_actions: list[str] | None = None,
     ) -> Literal["stop", "continue", "rewind"]:
         """Interactive review of the note
 
@@ -568,9 +571,9 @@ class NoteData:
     tags: str
     fields: dict[str, str]
     markdown: bool = True
-    deck: Optional[str] = None
-    nid: Optional[str] = None
-    cid: Optional[str] = None
+    deck: str | None = None
+    nid: str | None = None
+    cid: str | None = None
 
     def add_to_collection(self, anki: Anki) -> Note:
         """Add note to collection
@@ -594,7 +597,7 @@ class NoteData:
 
         note_type = new_note.note_type()
         if self.deck is not None and note_type is not None:
-            note_type["did"] = anki.deck_name_to_id[self.deck]  # type: ignore[has-type]
+            note_type["did"] = anki.deck_name_to_id[self.deck]
 
         new_note.fields = [
             convert_text_to_field(f, use_markdown=self.markdown)
@@ -605,7 +608,7 @@ class NoteData:
             new_note.add_tag(tag)
 
         if not new_note.duplicate_or_empty():
-            anki.col.addNote(new_note)
+            _ = anki.col.addNote(new_note)
             anki.modified = True
         else:
             field_name, field_value = list(self.fields.items())[0]
@@ -691,10 +694,10 @@ class NoteData:
                 cards = existing_note.cards()
                 if cards:
                     # Explicitly cast to int to satisfy mypy
-                    deck_id = anki.deck_name_to_id.get(self.deck, None)  # type: ignore
+                    deck_id = anki.deck_name_to_id.get(self.deck, None)
                     if deck_id is not None:  # Make sure deck_id exists and is not None
                         card_ids = [c.id for c in cards]
-                        anki.col.set_deck(card_ids, deck_id)
+                        _ = anki.col.set_deck(card_ids, deck_id)
             except Exception as e:
                 console.print(f"[yellow]Failed to update deck: {e}[/yellow]")
 
@@ -715,7 +718,7 @@ class NoteData:
                 )
 
         # Save the updated note
-        anki.col.update_note(existing_note)
+        _ = anki.col.update_note(existing_note)
         anki.modified = True
 
         return Note(anki, existing_note)
@@ -781,7 +784,7 @@ def _parse_markdown_file(filename: str) -> list[dict[str, Any]]:
 
     notes: list[dict[str, Any]] = []
     current_note: dict[str, Any] = {}
-    current_field: Optional[str] = None
+    current_field: str | None = None
     is_in_codeblock = False
     with open(filename, "r", encoding="utf8") as f:
         for line in f:

@@ -1,9 +1,9 @@
 """A script to interact with the Anki database"""
 
 import os
-from pathlib import Path
 import sys
-from typing import Any, Optional
+from pathlib import Path
+from typing import Any
 
 import click
 
@@ -71,10 +71,10 @@ def main(ctx: Any, base_path: str, profile_name: str, version: bool) -> None:
 def add_single(
     fields: list[str],
     parse_markdown: bool,
-    tags: Optional[str] = None,
-    preset: Optional[str] = None,
-    model_name: Optional[str] = None,
-    deck: Optional[str] = None,
+    tags: str | None = None,
+    preset: str | None = None,
+    model_name: str | None = None,
+    deck: str | None = None,
 ) -> None:
     """Add a single note from command line arguments.
 
@@ -102,7 +102,7 @@ def add_single(
         if not model_name:
             model_name = cfg["presets"][preset]["model"]
 
-        a.add_notes_single(fields, parse_markdown, tags, model_name, deck)
+        _ = a.add_notes_single(fields, parse_markdown, tags, model_name, deck)
 
 
 @main.command()
@@ -593,8 +593,8 @@ def sync() -> None:
 )
 def tag(
     query: str,
-    add_tags: Optional[str],
-    remove_tags: Optional[str],
+    add_tags: str | None,
+    remove_tags: str | None,
     sort_by_count: bool,
     purge: bool,
 ) -> None:
@@ -698,7 +698,7 @@ def reposition(position: int, query: str) -> None:
                 console.print("Can only reposition new cards!")
                 raise click.Abort()
 
-        a.col.sched.reposition_new_cards(cids, position, 1, False, True)
+        _ = a.col.sched.reposition_new_cards(cids, position, 1, False, True)
         a.modified = True
 
 

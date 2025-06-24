@@ -1,12 +1,13 @@
 """Simple utility functions."""
 
+import os
+from collections.abc import Generator
 from contextlib import contextmanager, redirect_stdout
 from io import TextIOWrapper
-import os
 from subprocess import call
 from tempfile import NamedTemporaryFile
 from types import TracebackType
-from typing import Any, Generator, Optional, TypeVar
+from typing import Any, TypeVar
 
 import readchar
 
@@ -17,8 +18,8 @@ class cd:
     """Context manager for changing the current working directory"""
 
     def __init__(self, newPath: str) -> None:
-        self.newPath = os.path.expanduser(newPath)
-        self.savedPath = ""
+        self.newPath: str = os.path.expanduser(newPath)
+        self.savedPath: str = ""
 
     def __enter__(self) -> None:
         self.savedPath = os.getcwd()
@@ -26,9 +27,9 @@ class cd:
 
     def __exit__(
         self,
-        exc_type: Optional[type[BaseException]],
-        exc_val: Optional[BaseException],
-        exc_tb: Optional[TracebackType],
+        exc_type: type[BaseException] | None,
+        exc_val: BaseException | None,
+        exc_tb: TracebackType | None,
     ) -> None:
         os.chdir(self.savedPath)
 
@@ -45,10 +46,10 @@ def edit_text(input_text: str, prefix: str = "") -> str:
         prefix = prefix + "_"
 
     with NamedTemporaryFile(mode="w+", prefix=prefix, suffix=".md") as tf:
-        tf.write(input_text)
+        _ = tf.write(input_text)
         tf.flush()
-        edit_file(tf.name)
-        tf.seek(0)
+        _ = edit_file(tf.name)
+        _ = tf.seek(0)
         edited_message = tf.read().strip()
 
     return edited_message

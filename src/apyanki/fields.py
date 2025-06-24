@@ -1,25 +1,29 @@
 """Functions for manipulating note fields"""
 
 from __future__ import annotations
-import base64
-from pathlib import Path
-import re
-from typing import Optional, TYPE_CHECKING
-import warnings
 
-from bs4 import BeautifulSoup, MarkupResemblesLocatorWarning, Tag
+import base64
+import re
+import warnings
+from pathlib import Path
+from typing import TYPE_CHECKING
+
 import markdown
+from bs4 import BeautifulSoup, MarkupResemblesLocatorWarning, Tag
 from markdown.extensions.abbr import AbbrExtension
 from markdown.extensions.codehilite import CodeHiliteExtension
 from markdown.extensions.def_list import DefListExtension
 from markdown.extensions.fenced_code import FencedCodeExtension
 from markdown.extensions.footnotes import FootnoteExtension
-from markdownify import markdownify as to_md
+from markdownify import (  # pyright: ignore [reportMissingTypeStubs]
+    markdownify as to_md,  # pyright: ignore [reportUnknownVariableType]
+)
 
 from apyanki.config import cfg
 
 if TYPE_CHECKING:
     from anki.models import NotetypeDict
+
     from apyanki.anki import Anki
 
 
@@ -74,7 +78,6 @@ def prepare_field_for_cli_raw(field: str) -> str:
         and (second := first.next)
         and (third := second.next)
         and isinstance(third, Tag)
-        and isinstance(third.contents, list)
     ):
         content = [
             e.prettify() if isinstance(e, Tag) else str(e) for e in third.contents
@@ -136,11 +139,7 @@ def check_if_generated_from_markdown(field: str) -> bool:
     """Check if text is a generated HTML"""
     tag = _get_first_tag(BeautifulSoup(field, "html.parser"))
 
-    return (
-        tag is not None
-        and tag.attrs is not None
-        and "data-original-markdown" in tag.attrs
-    )
+    return tag is not None and "data-original-markdown" in tag.attrs
 
 
 def check_if_inconsistent_markdown(field: str) -> bool:
@@ -168,7 +167,7 @@ def img_paths_from_field_latex(html: str, ntd: NotetypeDict, anki: Anki) -> list
     """
     from anki import latex
 
-    proto = anki.col._backend.extract_latex(
+    proto = anki.col._backend.extract_latex(  # pyright: ignore [reportPrivateUsage]
         text=html, svg=ntd.get("latexsvg", False), expand_clozes=False
     )
     out = latex.ExtractedLatexOutput.from_proto(proto)
@@ -285,7 +284,7 @@ def _clean_html(text: str) -> str:
     return text.strip()
 
 
-def _get_first_tag(tree: BeautifulSoup) -> Optional[Tag]:
+def _get_first_tag(tree: BeautifulSoup) -> Tag | None:
     """Get first tag among children of tree"""
     for child in tree.children:
         if isinstance(child, Tag):

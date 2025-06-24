@@ -28,7 +28,7 @@ jobs:
         run: uv run ruff format --check
 
       - name: Run mypy
-        run: uv run mypy src
+        run: uv run mypy .
 
   test:
     needs: lint
