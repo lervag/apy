@@ -66,7 +66,7 @@ pipx install apyanki
 
 ### Requirements
 
-`apy` should work for Python 3.9 and later.
+`apy` should work for Python 3.10 and later.
 
 Technically, `apy` does **not** depend on any existing Anki installation, since
 it pulls in a copy of the non-GUI components of Anki as a separate dependency.
