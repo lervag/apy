@@ -530,7 +530,7 @@ def edit(query: str, force_multiple: bool) -> None:
                 preview_text = note.n.fields[0][:50].replace("\n", " ")
                 if len(preview_text) == 50:
                     preview_text += "..."
-                console.print(f"{i+1}. nid:{note.n.id} - {preview_text}")
+                console.print(f"{i + 1}. nid:{note.n.id} - {preview_text}")
 
             console.print(
                 "\nHints:\n"
@@ -544,7 +544,7 @@ def edit(query: str, force_multiple: bool) -> None:
         for i, note in enumerate(notes):
             if len(notes) > 1:
                 console.print(
-                    f"\nEditing note {i+1} of {len(notes)} (nid: {note.n.id})"
+                    f"\nEditing note {i + 1} of {len(notes)} (nid: {note.n.id})"
                 )
 
                 # Show a brief preview of the note
@@ -640,7 +640,7 @@ def tag(
             if changes.count > 0:
                 console.print(f"[yellow]Purged {changes.count} unused tags.")
             else:
-                console.print(f"No unused tags found.")
+                console.print("No unused tags found.")
 
             return
 

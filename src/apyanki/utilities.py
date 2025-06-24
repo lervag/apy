@@ -61,7 +61,7 @@ def choose(items: list[chooseType], text: str = "Choose from list:") -> chooseTy
     """Choose from list of items"""
     console.print(text)
     for i, element in enumerate(items):
-        console.print(f"{i+1}: {element}")
+        console.print(f"{i + 1}: {element}")
 
     index = _read_number_between(1, len(items)) - 1
     return items[index]

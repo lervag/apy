@@ -333,9 +333,13 @@ class Anki:
         table.add_column("notes", style="magenta", justify="right")
 
         if sort_by_count:
-            sorter = lambda x: x[1]
+
+            def sorter(x):  # type: ignore[no-untyped-def]
+                return x[1]
         else:
-            sorter = lambda x: x[0]
+
+            def sorter(x):  # type: ignore[no-untyped-def]
+                return x[0]
 
         tags = [(t, len(self.col.find_notes(f"tag:{t}"))) for t in self.col.tags.all()]
         for tag, n in sorted(tags, key=sorter):
@@ -482,7 +486,7 @@ class Anki:
             model = self.set_model(model_name)
             input_strings += [
                 x
-                for y in [[f'## {field["name"]}', ""] for field in model["flds"]]
+                for y in [[f"## {field['name']}", ""] for field in model["flds"]]
                 for x in y
             ]
 

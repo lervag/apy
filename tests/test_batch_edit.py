@@ -1,4 +1,5 @@
 """Test batch editing"""
+# ruff: noqa: F401, F811
 
 import os
 import pytest
@@ -33,11 +34,11 @@ def test_add_from_file(collection):
                 """
                 model: Basic
                 tags: marked
-                
+
                 # Note 1
                 ## Front
                 Question?
-                
+
                 ## Back
                 Answer.
                 """

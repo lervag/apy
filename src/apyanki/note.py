@@ -17,9 +17,6 @@ from rich.markdown import Markdown
 from rich.table import Table
 from rich.text import Text
 
-if TYPE_CHECKING:
-    from anki.notes import NoteId
-    from anki.cards import CardId
 
 from apyanki import cards
 from apyanki.config import cfg
@@ -272,7 +269,7 @@ class Note:
             console.clear()
             console.print("Please choose new model:")
             for n, m in enumerate(models):
-                console.print(f"  {n+1}: {m}")
+                console.print(f"  {n + 1}: {m}")
             index: int = console.prompt_int(">>> ", suffix="") - 1
             try:
                 new_model = models[index]
@@ -452,9 +449,9 @@ class Note:
         note_number_string = ""
         if i is not None:
             if number_of_notes:
-                note_number_string = f" {i+1} of {number_of_notes}"
+                note_number_string = f" {i + 1} of {number_of_notes}"
             else:
-                note_number_string = f" {i+1}"
+                note_number_string = f" {i + 1}"
 
         menu = Columns(
             [
@@ -590,7 +587,7 @@ class NoteData:
         field_names = [x.replace(" (markdown)", "") for x in self.fields.keys()]
         for x, y in zip(model_field_names, field_names):
             if x != y:
-                console.print("Warning: Inconsistent field names " f"({x} != {y})")
+                console.print(f"Warning: Inconsistent field names ({x} != {y})")
 
         notetype = anki.col.models.current(for_deck=False)
         new_note = anki.col.new_note(notetype)
