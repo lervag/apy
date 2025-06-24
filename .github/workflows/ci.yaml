@@ -24,8 +24,8 @@ jobs:
       - name: Install the project
         run: uv sync --all-extras --dev
 
-      - name: Run black
-        run: uv run black --check .
+      - name: Run ruff
+        run: uv run ruff format --check
 
       - name: Run mypy
         run: uv run mypy src

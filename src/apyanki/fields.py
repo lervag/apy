@@ -166,10 +166,8 @@ def img_paths_from_field_latex(html: str, ntd: NotetypeDict, anki: Anki) -> list
 
     Note: The returned paths are relative to the Anki media directory.
     """
-    # pylint: disable=import-outside-toplevel
     from anki import latex
 
-    # pylint: disable=protected-access
     proto = anki.col._backend.extract_latex(
         text=html, svg=ntd.get("latexsvg", False), expand_clozes=False
     )

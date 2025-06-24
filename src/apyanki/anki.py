@@ -109,7 +109,6 @@ class Anki:
 
     def _init_load_collection(self) -> None:
         """Load the Anki collection"""
-        # pylint: disable=import-outside-toplevel
         from anki.collection import Collection
         from anki.errors import DBError
 
@@ -132,7 +131,6 @@ class Anki:
     @staticmethod
     def _init_load_config() -> None:
         """Load custom configuration"""
-        # pylint: disable=import-outside-toplevel
         from anki import latex
 
         # Update LaTeX commands
@@ -160,7 +158,6 @@ class Anki:
 
     def sync(self) -> None:
         """Sync collection to AnkiWeb"""
-        # pylint: disable=import-outside-toplevel
         from anki.sync import SyncAuth
 
         if self._profile is None:
@@ -230,7 +227,6 @@ class Anki:
 
     def check_media(self) -> None:
         """Check media (will rebuild missing LaTeX files)"""
-        # pylint: disable=import-outside-toplevel
         from anki.notes import NoteId
 
         with cd(self.col.media.dir()):
@@ -289,7 +285,6 @@ class Anki:
 
     def get_model(self, model_name: str) -> Optional[NotetypeDict]:
         """Get model from model name"""
-        # pylint: disable=import-outside-toplevel
         from anki.models import NotetypeId
 
         model_id = self.model_name_to_id.get(model_name)

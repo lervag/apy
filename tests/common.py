@@ -1,6 +1,5 @@
 """Implement some basic test fixtures"""
 
-# pylint: disable=too-few-public-methods
 import os
 import tempfile
 import shutil

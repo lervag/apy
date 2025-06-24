@@ -335,7 +335,7 @@ uv run pytest
 To format the code, run:
 
 ```sh
-uv run black .
+uv run ruff format
 ```
 
 To type-check the code, run:

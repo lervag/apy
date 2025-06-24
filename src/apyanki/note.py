@@ -82,7 +82,6 @@ class Note:
 
     def pprint(self, print_raw: bool = False, list_cards: bool = False) -> None:
         """Print to screen"""
-        # pylint: disable=import-outside-toplevel
         from anki import latex
 
         header = f"[green]# Note (nid: {self.n.id})[/green]"
