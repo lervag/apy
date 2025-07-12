@@ -1,15 +1,17 @@
 """Simple utility functions."""
 
 import os
+import shutil
 from collections.abc import Generator
 from contextlib import contextmanager, redirect_stdout
 from io import TextIOWrapper
-from subprocess import call
+from subprocess import PIPE, Popen, call
 from tempfile import NamedTemporaryFile
 from types import TracebackType
 from typing import Any, TypeVar
 
 import readchar
+from click import Abort
 
 from apyanki.console import console
 
@@ -59,6 +61,43 @@ chooseType = TypeVar("chooseType")
 
 
 def choose(items: list[chooseType], text: str = "Choose from list:") -> chooseType:
+    """Choose from list of items"""
+    if shutil.which("fzf"):
+        return choose_with_fzf(items, text)
+    return choose_from_list(items, text)
+
+
+def choose_with_fzf(
+    items: list[chooseType], text: str = "Choose from list:"
+) -> chooseType:
+    """Choose from list of items with fzf"""
+    fzf_input = "\n".join(map(str, items)).encode("utf-8")
+
+    fzf_process = Popen(
+        ["fzf", "--prompt", f"{text}> "],
+        stdin=PIPE,
+        stdout=PIPE,
+        stderr=PIPE,
+    )
+    stdout, _ = fzf_process.communicate(input=fzf_input)
+
+    if fzf_process.returncode != 0:
+        raise Abort()
+
+    selected_item_str = stdout.decode("utf-8").strip()
+
+    # Find the selected item in the original list to preserve its type
+    for item in items:
+        if str(item) == selected_item_str:
+            return item
+
+    # This should not be reached if fzf returns a valid selection
+    raise Abort()
+
+
+def choose_from_list(
+    items: list[chooseType], text: str = "Choose from list:"
+) -> chooseType:
     """Choose from list of items"""
     console.print(text)
     for i, element in enumerate(items):
