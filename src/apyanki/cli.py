@@ -43,6 +43,7 @@ def main(ctx: Any, base_path: str, profile_name: str, version: bool) -> None:
 
         export VISUAL=emacs
 
+
     Note: Use `apy subcmd --help` to get detailed help for a given subcommand.
     """
     if version:
