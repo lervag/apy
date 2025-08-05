@@ -117,10 +117,12 @@ def convert_field_to_text(field: str, check_consistency: bool = True) -> str:
     return text.strip()
 
 
-def convert_text_to_field(text: str, use_markdown: bool) -> str:
+def convert_text_to_field(
+    text: str, use_markdown: bool, latexMode: str | None = None
+) -> str:
     """Convert text to Anki field html."""
     if use_markdown:
-        return _convert_markdown_to_field(text)
+        return _convert_markdown_to_field(text, latexMode=latexMode)
 
     # Convert newlines to <br> tags
     text = text.replace("\n", "<br />")
@@ -209,7 +211,7 @@ def _convert_field_to_markdown(field: str, check_consistency: bool = False) -> s
     return text
 
 
-def _convert_markdown_to_field(text: str) -> str:
+def _convert_markdown_to_field(text: str, latexMode: str | None = None) -> str:
     """Convert Markdown to field HTML"""
     # Don't convert if md text is really plain
     if re.match(r"[a-zA-Z0-9æøåÆØÅ ,.?+-]*$", text):
@@ -222,6 +224,7 @@ def _convert_markdown_to_field(text: str) -> str:
     ).decode()
 
     # For convenience: Escape some common LaTeX constructs
+
     text = text.replace(r"\\", r"\\\\")
     text = text.replace(r"\{", r"\\{")
     text = text.replace(r"\}", r"\\}")
@@ -230,11 +233,49 @@ def _convert_markdown_to_field(text: str) -> str:
     # Fix whitespaces in input
     text = text.replace("\xc2\xa0", " ").replace("\xa0", " ")
 
-    # For convenience: Fix mathjax escaping
-    text = text.replace(r"\[", r"\\[")
-    text = text.replace(r"\]", r"\\]")
-    text = text.replace(r"\(", r"\\(")
-    text = text.replace(r"\)", r"\\)")
+    # get the correct LatexTranslateMode
+    if not latexMode:
+        latexMode = cfg["latexTranslateMode"]
+
+    # default behaviour
+    if latexMode == "off":
+        text = text.replace(r"\[", r"\\[")
+        text = text.replace(r"\]", r"\\]")
+        text = text.replace(r"\(", r"\\(")
+        text = text.replace(r"\)", r"\\)")
+    elif latexMode == "mathjax":
+        # blocks
+        subs: list[str] = text.split("$$")
+        text = ""
+        open: bool = False
+
+        for sub in subs[:-1]:
+            if open:
+                text += sub + r"\\]"
+            else:
+                text += sub + r"\\["
+            open = not open
+        text += subs[-1]
+
+        # inline
+        subs = text.split("$")
+        text = ""
+        open = False
+
+        for sub in subs[:-1]:
+            if open:
+                text += sub + r"\\)"
+            else:
+                text += sub + r"\\("
+            open = not open
+
+        text += subs[-1]
+
+    elif latexMode == "latex":
+        text = text.replace(r"[$$]", r"\\[")
+        text = text.replace(r"[/$$]", r"\\]")
+        text = text.replace(r"[$]", r"\\(")
+        text = text.replace(r"[$/]", r"\\)")
 
     html = markdown.markdown(
         text,

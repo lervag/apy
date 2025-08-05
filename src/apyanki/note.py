@@ -574,6 +574,7 @@ class NoteData:
     deck: str | None = None
     nid: str | None = None
     cid: str | None = None
+    latexMode: str | None = None
 
     def add_to_collection(self, anki: Anki) -> Note:
         """Add note to collection
@@ -600,7 +601,9 @@ class NoteData:
             note_type["did"] = anki.deck_name_to_id[self.deck]
 
         new_note.fields = [
-            convert_text_to_field(f, use_markdown=self.markdown)
+            convert_text_to_field(
+                f, use_markdown=self.markdown, latexMode=self.latexMode
+            )
             for f in self.fields.values()
         ]
 
@@ -736,6 +739,7 @@ def markdown_file_to_notes(filename: str) -> list[NoteData]:
                 deck=x["deck"],
                 nid=x["nid"],
                 cid=x["cid"],
+                latexMode=x["latexTranslateMode"],
             )
             for x in _parse_markdown_file(filename)
         ]
@@ -752,6 +756,7 @@ def _parse_markdown_file(filename: str) -> list[dict[str, Any]]:
 
     This must adhere to the specification of {add_from_file} from cli.py!
     """
+    print("parsing...")
     defaults: dict[str, Any] = {
         "model": "Basic",
         "markdown": True,
@@ -759,6 +764,7 @@ def _parse_markdown_file(filename: str) -> list[dict[str, Any]]:
         "deck": None,
         "nid": None,
         "cid": None,
+        "latexTranslateMode": None,
     }
     with open(filename, "r", encoding="utf8") as f:
         for line in f:
@@ -771,6 +777,9 @@ def _parse_markdown_file(filename: str) -> list[dict[str, Any]]:
                 k, v = match.groups()
                 k = k.lower()
                 v = v.strip()
+                print(k)
+                print(v)
+                print("\n")
                 if k in ("tag", "tags"):
                     defaults["tags"] = v.replace(",", "")
                 elif k in ("markdown", "md"):
@@ -779,6 +788,12 @@ def _parse_markdown_file(filename: str) -> list[dict[str, Any]]:
                     defaults["nid"] = v
                 elif k == "cid":
                     defaults["cid"] = v
+                elif k in ("latextranslatemode", "latexmode") and v in (
+                    "off",
+                    "mathjax",
+                    "latex",
+                ):
+                    defaults["latexTranslateMode"] = v
                 else:
                     defaults[k] = v
 
