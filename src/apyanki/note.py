@@ -756,7 +756,6 @@ def _parse_markdown_file(filename: str) -> list[dict[str, Any]]:
 
     This must adhere to the specification of {add_from_file} from cli.py!
     """
-    print("parsing...")
     defaults: dict[str, Any] = {
         "model": "Basic",
         "markdown": True,
@@ -777,9 +776,6 @@ def _parse_markdown_file(filename: str) -> list[dict[str, Any]]:
                 k, v = match.groups()
                 k = k.lower()
                 v = v.strip()
-                print(k)
-                print(v)
-                print("\n")
                 if k in ("tag", "tags"):
                     defaults["tags"] = v.replace(",", "")
                 elif k in ("markdown", "md"):
