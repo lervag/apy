@@ -678,5 +678,7 @@ class Anki:
         field_names: list[str] = [field["name"] for field in model["flds"]]
         fields = dict(zip(field_names, field_values))
 
-        new_note = NoteData(model_name, tags, fields, markdown, deck)
+        new_note = NoteData(
+            model_name, tags, fields, markdown, deck, latexMode=latexTranslateMode
+        )
         return new_note.add_to_collection(self)
