@@ -224,7 +224,6 @@ def _convert_markdown_to_field(text: str, latexMode: Optional[str] = None) -> st
     ).decode()
 
     # For convenience: Escape some common LaTeX constructs
-
     text = text.replace(r"\\", r"\\\\")
     text = text.replace(r"\{", r"\\{")
     text = text.replace(r"\}", r"\\}")
