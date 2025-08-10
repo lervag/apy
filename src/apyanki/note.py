@@ -234,7 +234,7 @@ class Note:
 
         # Update fields if changed
         for i, text in enumerate(note.fields.values()):
-            new_field = convert_text_to_field(text, use_markdown=note.markdown)
+            new_field = convert_text_to_field(text, note.markdown)
             if new_field != self.n.fields[i]:
                 self.n.fields[i] = new_field
 
@@ -574,7 +574,6 @@ class NoteData:
     deck: str | None = None
     nid: str | None = None
     cid: str | None = None
-    latex_mode: str | None = None
 
     def add_to_collection(self, anki: Anki) -> Note:
         """Add note to collection
@@ -601,10 +600,7 @@ class NoteData:
             note_type["did"] = anki.deck_name_to_id[self.deck]
 
         new_note.fields = [
-            convert_text_to_field(
-                f, use_markdown=self.markdown, latex_mode=self.latex_mode
-            )
-            for f in self.fields.values()
+            convert_text_to_field(f, self.markdown) for f in self.fields.values()
         ]
 
         for tag in self.tags.strip().split():
@@ -670,7 +666,7 @@ class NoteData:
         # If no existing note found or ID not provided, add as new
         return self.add_to_collection(anki)
 
-    def _update_note(self, anki: "Anki", existing_note: Any) -> Note:
+    def _update_note(self, anki: Anki, existing_note: Any) -> Note:
         """Update an existing note with new field values
 
         Returns: The updated note
@@ -717,7 +713,8 @@ class NoteData:
 
             if matching_field is not None:
                 existing_note.fields[i] = convert_text_to_field(
-                    matching_field, use_markdown=self.markdown
+                    matching_field,
+                    self.markdown,
                 )
 
         # Save the updated note
@@ -739,7 +736,6 @@ def markdown_file_to_notes(filename: str) -> list[NoteData]:
                 deck=x["deck"],
                 nid=x["nid"],
                 cid=x["cid"],
-                latex_mode=x["latex_translate_mode"],
             )
             for x in _parse_markdown_file(filename)
         ]
@@ -763,7 +759,6 @@ def _parse_markdown_file(filename: str) -> list[dict[str, Any]]:
         "deck": None,
         "nid": None,
         "cid": None,
-        "latex_translate_mode": None,
     }
     with open(filename, "r", encoding="utf8") as f:
         for line in f:
@@ -784,12 +779,6 @@ def _parse_markdown_file(filename: str) -> list[dict[str, Any]]:
                     defaults["nid"] = v
                 elif k == "cid":
                     defaults["cid"] = v
-                elif k in ("latextranslatemode", "latexmode") and v in (
-                    "off",
-                    "mathjax",
-                    "latex",
-                ):
-                    defaults["latex_translate_mode"] = v
                 else:
                     defaults[k] = v
 

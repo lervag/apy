@@ -121,6 +121,11 @@ currently recognized:
 - `markdown_pygments_style`: Specify the code highlight scheme to use for
   fenced code blocks in Markdown notes. See the [Pygments
   documentation](https://pygments.org/docs/styles/) for more details.
+- `markdown_latex_mode`: Specify how `$$ ... $$` and `$ ... $` will be
+  interpreted when transforming Markdown into field HTML and vice versa (it
+  works both ways). The following values are recognized:
+  - `mathjax` (default): `$$…$$` → `\[…\]` and `$…$` → `\(…\)`
+  - `latex`: `$$…$$` → `[$$]…[/$$]` and `$…$` → `[$]…[/$]`
 - `pngCommands`/`svgCommands`: Set LaTeX commands to generate PNG/SVG files.
   This is inspired by the [Edit LaTeX build
   process](https://ankiweb.net/shared/info/937148547) addon to Anki.
@@ -130,11 +135,6 @@ currently recognized:
 - `query`: Specify default query for `apy list`, `apy review` and `apy tag`.
 - `review_show_cards`: Whether to show list of cards by default during note
   review
-- `latex_translate_mode`: Specify which characters should be used as latex
-  delimiters. The following values are recognized:
-  - `off`: Default behaviour (block: `\[`, `\]` and inline: `\(`,`\)`)
-  - `mathjax`: common markdown syntax (block: `$$`, `$$` and inline: `$`,`$`)
-  - `latex`: latex behaviour (block: `[$$]` `[/$$]` and inline: `[$]`,`[$/]`)
 
 An example configuration:
 
@@ -157,7 +157,7 @@ An example configuration:
     ["pdf2svg", "tmp.pdf", "tmp.svg"]
   ],
   "review_show_cards": true,
-  "latex_translate_mode": "off"
+  "markdown_latex_mode": "latex"
 }
 ```
 

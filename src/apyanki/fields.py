@@ -115,12 +115,10 @@ def convert_field_to_text(field: str, check_consistency: bool = True) -> str:
     return text.strip()
 
 
-def convert_text_to_field(
-    text: str, use_markdown: bool, latex_mode: str | None = None
-) -> str:
+def convert_text_to_field(text: str, use_markdown: bool) -> str:
     """Convert text to Anki field html."""
     if use_markdown:
-        return _convert_markdown_to_field(text, latex_mode=latex_mode)
+        return _convert_markdown_to_field(text)
 
     # Convert newlines to <br> tags
     text = text.replace("\n", "<br />")
@@ -189,27 +187,25 @@ def _convert_field_to_markdown(field: str, check_consistency: bool = False) -> s
     if isinstance(original_markdown, list):
         original_markdown = "\n".join(original_markdown)
 
-    text = (
-        base64.b64decode(original_markdown.encode())
-        .decode("utf-8")
-        .replace("<br />", "\n")
-    )
+    text = base64.b64decode(original_markdown.encode()).decode().replace("<br />", "\n")
 
     if check_consistency and field != _convert_markdown_to_field(text):
         html_clean = re.sub(r' data-original-markdown="[^"]*"', "", field)
-        text += f"\n\n### Current HTML → Markdown\n{to_md(html_clean)}"
-        text += f"\n### Current HTML\n```html\n{html_clean}\n```"
+        consistency_text = f"\n\n### Current HTML → Markdown\n{to_md(html_clean)}"
+        consistency_text += f"\n### Current HTML\n```html\n{html_clean}\n```"
+    else:
+        consistency_text = ""
 
-    # For convenience: Fix mathjax escaping
-    # converted = converted.replace(r"\[", r"[")
-    # converted = converted.replace(r"\]", r"]")
-    # converted = converted.replace(r"\(", r"(")
-    # converted = converted.replace(r"\)", r")")
+    # Apply latex translation based on specified latex mode
+    if cfg["markdown_latex_mode"] == "latex":
+        text = _latex_to_mdlatex(text)
+    else:
+        text = _mathjax_to_mdlatex(text)
 
-    return text
+    return text + consistency_text
 
 
-def _convert_markdown_to_field(text: str, latex_mode: str | None = None) -> str:
+def _convert_markdown_to_field(text: str) -> str:
     """Convert Markdown to field HTML"""
 
     # Return input text if it only contains allowed characters
@@ -218,9 +214,7 @@ def _convert_markdown_to_field(text: str, latex_mode: str | None = None) -> str:
 
     # Prepare original markdown for restoring
     # Note: convert newlines to <br> to make text readable in the Anki viewer
-    original_encoded = base64.b64encode(
-        text.replace("\n", "<br />").encode("utf-8")
-    ).decode()
+    original_encoded = base64.b64encode(text.replace("\n", "<br />").encode()).decode()
 
     # For convenience: Escape some common LaTeX constructs
     text = text.replace(r"\\", r"\\\\")
@@ -231,47 +225,17 @@ def _convert_markdown_to_field(text: str, latex_mode: str | None = None) -> str:
     # Fix whitespaces in input
     text = text.replace("\xc2\xa0", " ").replace("\xa0", " ")
 
-    # Get correct latex_translate_mode
-    match latex_mode or cfg["latex_translate_mode"]:
-        case "mathjax":
-            # Handle math "blocks"
-            subs: list[str] = text.split("$$")
-            text = ""
-            open: bool = False
+    # For convenience: Fix mathjax escaping
+    text = text.replace(r"\[", r"\\[")
+    text = text.replace(r"\]", r"\\]")
+    text = text.replace(r"\(", r"\\(")
+    text = text.replace(r"\)", r"\\)")
 
-            for sub in subs[:-1]:
-                if open:
-                    text += sub + r"\\]"
-                else:
-                    text += sub + r"\\["
-                open = not open
-            text += subs[-1]
-
-            # Handle inline math
-            subs = text.split("$")
-            text = ""
-            open = False
-
-            for sub in subs[:-1]:
-                if open:
-                    text += sub + r"\\)"
-                else:
-                    text += sub + r"\\("
-                open = not open
-
-            text += subs[-1]
-
-        case "latex":
-            text = text.replace(r"[$$]", r"\\[")
-            text = text.replace(r"[/$$]", r"\\]")
-            text = text.replace(r"[$]", r"\\(")
-            text = text.replace(r"[$/]", r"\\)")
-
-        case "off" | _:
-            text = text.replace(r"\[", r"\\[")
-            text = text.replace(r"\]", r"\\]")
-            text = text.replace(r"\(", r"\\(")
-            text = text.replace(r"\)", r"\\)")
+    # Apply latex translation based on specified latex mode
+    if cfg["markdown_latex_mode"] == "latex":
+        text = _mdlatex_to_latex(text)
+    else:
+        text = _mdlatex_to_mathjax(text)
 
     html = markdown.markdown(
         text,
@@ -298,6 +262,62 @@ def _convert_markdown_to_field(text: str, latex_mode: str | None = None) -> str:
         root["data-original-markdown"] = original_encoded
 
     return str(soup)
+
+
+def _mdlatex_to_latex(text: str) -> str:
+    """Replace $$…$$ and $…$ with [$$]…[/$$] and [$]…[/$]"""
+    pattern = re.compile(
+        r"""
+        (\$\$)(.*?)\$\$   # match $$…$$
+        |                 # or
+        (\$)(.*?)\$       # match $…$
+        """,
+        re.DOTALL | re.VERBOSE,
+    )
+
+    def replacer(match: re.Match[str]) -> str:
+        if match.group(1):
+            return f"[$$]{match.group(2)}[/$$]"
+        elif match.group(3):
+            return f"[$]{match.group(4)}[/$]"
+        return match.group(0)
+
+    return pattern.sub(replacer, text)
+
+
+def _latex_to_mdlatex(text: str) -> str:
+    """Replace [$$]…[/$$] and [$]…[/$] with $$…$$ and $…$"""
+    pattern = re.compile(
+        r"""
+        (\[\$\$\])(.*?)\[/\$\$\]   # match [$$]…[/$$]
+        |                          # or
+        (\[\$\])(.*?)\[/\$\]       # match [$]…[/$]
+        """,
+        re.DOTALL | re.VERBOSE,
+    )
+
+    def replacer(match: re.Match[str]) -> str:
+        if match.group(1):
+            return f"$${match.group(2)}$$"
+        elif match.group(3):
+            return f"${match.group(4)}$"
+        return match.group(0)
+
+    return pattern.sub(replacer, text)
+
+
+def _mdlatex_to_mathjax(text: str) -> str:
+    """Replace $$…$$ and $…$ with \\[…\\] and \\(…\\)"""
+    text = re.sub(r"\$\$(.*?)\$\$", r"\\\\[\1\\\\]", text, flags=re.DOTALL)
+    text = re.sub(r"\$(.*?)\$", r"\\\\(\1\\\\)", text, flags=re.DOTALL)
+    return text
+
+
+def _mathjax_to_mdlatex(text: str) -> str:
+    """Replace \\[…\\] and \\(…\\) with $$…$$ and $…$"""
+    text = re.sub(r"\\\[(.*?)\\\]", r"$$\1$$", text, flags=re.DOTALL)
+    text = re.sub(r"\\\((.*?)\\\)", r"$\1$", text, flags=re.DOTALL)
+    return text
 
 
 def _clean_html(text: str) -> str:

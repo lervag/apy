@@ -49,11 +49,11 @@ CFG_DEFAULT_VALUES: dict[str, Any] = {
     "img_viewers_default": ["feh"],
     "markdown_models": ["Basic"],
     "markdown_pygments_style": "friendly",
+    "markdown_latex_mode": "mathjax",
     "presets": {},
     "profile_name": None,
     "query": "tag:marked OR -flag:0",
     "review_show_cards": False,
-    "latex_translate_mode": "off",
 }
 
 # Ensure that cfg has required keys
