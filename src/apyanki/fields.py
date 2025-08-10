@@ -137,9 +137,9 @@ def toggle_field_to_markdown(field_or_text: str) -> str:
 
 def check_if_generated_from_markdown(field: str) -> bool:
     """Check if text is a generated HTML"""
-    tag = _get_first_tag(BeautifulSoup(field, "html.parser"))
+    tag = BeautifulSoup(field, "html.parser").find()
 
-    return tag is not None and "data-original-markdown" in tag.attrs
+    return isinstance(tag, Tag) and "data-original-markdown" in tag.attrs
 
 
 def check_if_inconsistent_markdown(field: str) -> bool:
@@ -181,8 +181,8 @@ def img_paths_from_field_latex(html: str, ntd: NotetypeDict, anki: Anki) -> list
 
 def _convert_field_to_markdown(field: str, check_consistency: bool = False) -> str:
     """Extract generated markdown text from field HTML"""
-    tag = _get_first_tag(BeautifulSoup(field, "html.parser"))
-    if not tag:
+    tag = BeautifulSoup(field, "html.parser").find()
+    if not isinstance(tag, Tag):
         return field
 
     original_markdown = tag["data-original-markdown"]
@@ -291,20 +291,11 @@ def _convert_markdown_to_field(text: str, latex_mode: str | None = None) -> str:
         output_format="html",
     )
 
-    soup = BeautifulSoup(html, "html.parser")
-
-    # Find html tree root tag
-    tag = _get_first_tag(soup)
-    if not tag:
-        if not html:
-            # Add space to prevent input field from shrinking in UI
-            html = "&nbsp;"
-        soup = BeautifulSoup(f"<div>{html}</div>", "html.parser")
-        tag = _get_first_tag(soup)
-
-    if tag:
-        # Store original_encoded as data-attribute on tree root
-        tag["data-original-markdown"] = original_encoded
+    # Parse HTML and attach original markdown
+    soup = BeautifulSoup(html or "<div>&nbsp;</div>", "html.parser")
+    root = soup.find()
+    if isinstance(root, Tag):
+        root["data-original-markdown"] = original_encoded
 
     return str(soup)
 
@@ -319,12 +310,3 @@ def _clean_html(text: str) -> str:
     text = re.sub(r"\<i\>\s*\<\/i\>", "", text)
     text = re.sub(r"\<div\>\s*\<\/div\>", "", text)
     return text.strip()
-
-
-def _get_first_tag(tree: BeautifulSoup) -> Tag | None:
-    """Get first tag among children of tree"""
-    for child in tree.children:
-        if isinstance(child, Tag):
-            return child
-
-    return None
