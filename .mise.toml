@@ -3,3 +3,11 @@ uv = 'latest'
 
 [env]
 _.python.venv = { path = ".venv" }
+
+[tasks]
+test = """
+uv run pytest
+uv run mypy .
+uv run ruff format --check
+"""
+
