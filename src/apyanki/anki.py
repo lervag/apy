@@ -393,8 +393,8 @@ class Anki:
         for note in self.find_notes(query):
             cards.print_question(note.n.cards()[0])
 
-    def list_cards(self, query: str, opts_display: dict[str, bool]) -> None:
-        """List cards that match a query"""
+    def list_cards_as_table(self, query: str, opts_display: dict[str, bool]) -> None:
+        """List cards that match a query in tabular format"""
         width = console.width - 1
         if opts_display.get("show_cid", False):
             width -= 15

@@ -374,7 +374,7 @@ def rename(old_name: str, new_name: str) -> None:
         a.rename_model(old_name, new_name)
 
 
-@main.command("list")
+@main.command("list-cards-table")
 @click.argument("query", required=False, nargs=-1)
 @click.option("-a", "--show-answer", is_flag=True, help="Display answer")
 @click.option("-m", "--show-model", is_flag=True, help="Display model")
@@ -383,7 +383,7 @@ def rename(old_name: str, new_name: str) -> None:
 @click.option("-t", "--show-type", is_flag=True, help="Display card type")
 @click.option("-e", "--show-ease", is_flag=True, help="Display card ease")
 @click.option("-l", "--show-lapses", is_flag=True, help="Display card number of lapses")
-def list_cards(
+def list_cards_table(
     query: str,
     show_answer: bool,
     show_model: bool,
@@ -393,7 +393,7 @@ def list_cards(
     show_lapses: bool,
     show_cid: bool,
 ) -> None:
-    """List cards that match QUERY.
+    """List cards that match QUERY in a tabular format.
 
     The default QUERY is "tag:marked OR -flag:0". This default can be
     customized in the config file `~/.config/apy/apy.json`, e.g. with
@@ -409,7 +409,7 @@ def list_cards(
         query = cfg["query"]
 
     with Anki(**cfg) as a:
-        a.list_cards(
+        a.list_cards_as_table(
             query,
             {
                 "show_answer": show_answer,
