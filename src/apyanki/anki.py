@@ -662,9 +662,9 @@ class Anki:
         field_values: list[str],
         markdown: bool,
         tags: str = "",
-        model_name_in: Optional[str] = None,
-        deck: Optional[str] = None,
-        latexTranslateMode: Optional[str] = None,
+        model_name_in: str | None = None,
+        deck: str | None = None,
+        latex_translate_mode: str | None = None,
     ) -> Note:
         """Add new note to collection from args"""
         model_name: str
@@ -679,6 +679,6 @@ class Anki:
         fields = dict(zip(field_names, field_values))
 
         new_note = NoteData(
-            model_name, tags, fields, markdown, deck, latexMode=latexTranslateMode
+            model_name, tags, fields, markdown, deck, latex_mode=latex_translate_mode
         )
         return new_note.add_to_collection(self)

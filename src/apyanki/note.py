@@ -572,9 +572,9 @@ class NoteData:
     fields: dict[str, str]
     markdown: bool = True
     deck: str | None = None
-    latexMode: Optional[str] = None
     nid: str | None = None
     cid: str | None = None
+    latex_mode: str | None = None
 
     def add_to_collection(self, anki: Anki) -> Note:
         """Add note to collection
@@ -602,7 +602,7 @@ class NoteData:
 
         new_note.fields = [
             convert_text_to_field(
-                f, use_markdown=self.markdown, latexMode=self.latexMode
+                f, use_markdown=self.markdown, latex_mode=self.latex_mode
             )
             for f in self.fields.values()
         ]
@@ -739,7 +739,7 @@ def markdown_file_to_notes(filename: str) -> list[NoteData]:
                 deck=x["deck"],
                 nid=x["nid"],
                 cid=x["cid"],
-                latexMode=x["latexTranslateMode"],
+                latex_mode=x["latex_translate_mode"],
             )
             for x in _parse_markdown_file(filename)
         ]
@@ -763,7 +763,7 @@ def _parse_markdown_file(filename: str) -> list[dict[str, Any]]:
         "deck": None,
         "nid": None,
         "cid": None,
-        "latexTranslateMode": None,
+        "latex_translate_mode": None,
     }
     with open(filename, "r", encoding="utf8") as f:
         for line in f:
@@ -789,8 +789,7 @@ def _parse_markdown_file(filename: str) -> list[dict[str, Any]]:
                     "mathjax",
                     "latex",
                 ):
-                    print("latexMode!!")
-                    defaults["latexTranslateMode"] = v
+                    defaults["latex_translate_mode"] = v
                 else:
                     defaults[k] = v
 
