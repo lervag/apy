@@ -130,6 +130,11 @@ currently recognized:
 - `query`: Specify default query for `apy list`, `apy review` and `apy tag`.
 - `review_show_cards`: Whether to show list of cards by default during note
   review
+- `latex_translate_mode`: Specify which characters should be used as latex
+  delimiters. The following values are recognized:
+  - `off`: Default behaviour (block: `\[`, `\]` and inline: `\(`,`\)`)
+  - `mathjax`: common markdown syntax (block: `$$`, `$$` and inline: `$`,`$`)
+  - `latex`: latex behaviour (block: `[$$]` `[/$$]` and inline: `[$]`,`[$/]`)
 
 An example configuration:
 
@@ -151,7 +156,8 @@ An example configuration:
     ["pdfcrop", "tmp.pdf", "tmp.pdf"],
     ["pdf2svg", "tmp.pdf", "tmp.svg"]
   ],
-  "review_show_cards": true
+  "review_show_cards": true,
+  "latex_translate_mode": "off"
 }
 ```
 

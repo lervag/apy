@@ -15,9 +15,7 @@ from markdown.extensions.codehilite import CodeHiliteExtension
 from markdown.extensions.def_list import DefListExtension
 from markdown.extensions.fenced_code import FencedCodeExtension
 from markdown.extensions.footnotes import FootnoteExtension
-from markdownify import (  # pyright: ignore [reportMissingTypeStubs]
-    markdownify as to_md,  # pyright: ignore [reportUnknownVariableType]
-)
+from markdownify import markdownify as to_md
 
 from apyanki.config import cfg
 
@@ -117,10 +115,12 @@ def convert_field_to_text(field: str, check_consistency: bool = True) -> str:
     return text.strip()
 
 
-def convert_text_to_field(text: str, use_markdown: bool) -> str:
+def convert_text_to_field(
+    text: str, use_markdown: bool, latex_mode: str | None = None
+) -> str:
     """Convert text to Anki field html."""
     if use_markdown:
-        return _convert_markdown_to_field(text)
+        return _convert_markdown_to_field(text, latex_mode=latex_mode)
 
     # Convert newlines to <br> tags
     text = text.replace("\n", "<br />")
@@ -209,10 +209,11 @@ def _convert_field_to_markdown(field: str, check_consistency: bool = False) -> s
     return text
 
 
-def _convert_markdown_to_field(text: str) -> str:
+def _convert_markdown_to_field(text: str, latex_mode: str | None = None) -> str:
     """Convert Markdown to field HTML"""
-    # Don't convert if md text is really plain
-    if re.match(r"[a-zA-Z0-9æøåÆØÅ ,.?+-]*$", text):
+
+    # Return input text if it only contains allowed characters
+    if re.fullmatch(r"[a-zA-Z0-9æøåÆØÅ ,.?+-]*", text):
         return text
 
     # Prepare original markdown for restoring
@@ -230,11 +231,47 @@ def _convert_markdown_to_field(text: str) -> str:
     # Fix whitespaces in input
     text = text.replace("\xc2\xa0", " ").replace("\xa0", " ")
 
-    # For convenience: Fix mathjax escaping
-    text = text.replace(r"\[", r"\\[")
-    text = text.replace(r"\]", r"\\]")
-    text = text.replace(r"\(", r"\\(")
-    text = text.replace(r"\)", r"\\)")
+    # Get correct latex_translate_mode
+    match latex_mode or cfg["latex_translate_mode"]:
+        case "mathjax":
+            # Handle math "blocks"
+            subs: list[str] = text.split("$$")
+            text = ""
+            open: bool = False
+
+            for sub in subs[:-1]:
+                if open:
+                    text += sub + r"\\]"
+                else:
+                    text += sub + r"\\["
+                open = not open
+            text += subs[-1]
+
+            # Handle inline math
+            subs = text.split("$")
+            text = ""
+            open = False
+
+            for sub in subs[:-1]:
+                if open:
+                    text += sub + r"\\)"
+                else:
+                    text += sub + r"\\("
+                open = not open
+
+            text += subs[-1]
+
+        case "latex":
+            text = text.replace(r"[$$]", r"\\[")
+            text = text.replace(r"[/$$]", r"\\]")
+            text = text.replace(r"[$]", r"\\(")
+            text = text.replace(r"[$/]", r"\\)")
+
+        case "off" | _:
+            text = text.replace(r"\[", r"\\[")
+            text = text.replace(r"\]", r"\\]")
+            text = text.replace(r"\(", r"\\(")
+            text = text.replace(r"\)", r"\\)")
 
     html = markdown.markdown(
         text,
@@ -254,22 +291,22 @@ def _convert_markdown_to_field(text: str) -> str:
         output_format="html",
     )
 
-    html_tree = BeautifulSoup(html, "html.parser")
+    soup = BeautifulSoup(html, "html.parser")
 
     # Find html tree root tag
-    tag = _get_first_tag(html_tree)
+    tag = _get_first_tag(soup)
     if not tag:
         if not html:
             # Add space to prevent input field from shrinking in UI
             html = "&nbsp;"
-        html_tree = BeautifulSoup(f"<div>{html}</div>", "html.parser")
-        tag = _get_first_tag(html_tree)
+        soup = BeautifulSoup(f"<div>{html}</div>", "html.parser")
+        tag = _get_first_tag(soup)
 
     if tag:
         # Store original_encoded as data-attribute on tree root
         tag["data-original-markdown"] = original_encoded
 
-    return str(html_tree)
+    return str(soup)
 
 
 def _clean_html(text: str) -> str:

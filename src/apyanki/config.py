@@ -53,6 +53,7 @@ CFG_DEFAULT_VALUES: dict[str, Any] = {
     "profile_name": None,
     "query": "tag:marked OR -flag:0",
     "review_show_cards": False,
+    "latex_translate_mode": "off",
 }
 
 # Ensure that cfg has required keys
