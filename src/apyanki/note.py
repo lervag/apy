@@ -158,7 +158,7 @@ class Note:
         table.add_column("Interval", justify="right", header_style="white")
         table.add_column("Reps", justify="right", header_style="white")
         table.add_column("Lapses", justify="right", header_style="white")
-        table.add_column("Factor", justify="right", header_style="white")
+        table.add_column("Ease", justify="right", header_style="white")
         for card in sorted(self.n.cards(), key=lambda x: x.factor):
             table.add_row(
                 "- " + str(card.template()["name"]) + cards.get_flag(card),

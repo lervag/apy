@@ -374,6 +374,29 @@ def rename(old_name: str, new_name: str) -> None:
         a.rename_model(old_name, new_name)
 
 
+@main.command("list-cards")
+@click.argument("query", required=False, nargs=-1)
+@click.option("-v", "--verbose", is_flag=True, help="Print details for each card")
+def list_cards(query: str, verbose: bool) -> None:
+    """List cards that match QUERY.
+
+    The default QUERY is "tag:marked OR -flag:0". This default can be
+    customized in the config file `~/.config/apy/apy.json`, e.g. with
+
+    \b
+    {
+      "query": "tag:marked OR tag:leech"
+    }
+    """
+    if query:
+        query = " ".join(query)
+    else:
+        query = cfg["query"]
+
+    with Anki(**cfg) as a:
+        a.list_cards(query, verbose)
+
+
 @main.command("list-cards-table")
 @click.argument("query", required=False, nargs=-1)
 @click.option("-a", "--show-answer", is_flag=True, help="Display answer")

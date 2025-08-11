@@ -6,11 +6,49 @@ from typing import TYPE_CHECKING
 
 from rich.text import Text
 
-from apyanki.console import console
+from apyanki.console import console, consolePlain
+from apyanki.fields import check_if_generated_from_markdown, prepare_field_for_cli
 from apyanki.fields import prepare_field_for_cli_oneline
 
 if TYPE_CHECKING:
     from anki.cards import Card
+
+
+def card_pprint(card: Card, verbose: bool = True) -> None:
+    """Pretty print a card."""
+    flag = get_flag(card)
+    consolePlain.print(f"[green]# Card (cid: {card.id})[/green]{flag}\n")
+
+    if verbose:
+        card_type = ["new", "learning", "review", "relearning"][int(card.type)]
+        columned = [
+            f"[yellow]nid:[/yellow] {card.nid}",
+            f"[yellow]model:[/yellow] {card.note_type()['name']}",
+            f"[yellow]type:[/yellow] {card_type}",
+            f"[yellow]due:[/yellow] {card.due} days",
+            f"[yellow]interval:[/yellow] {card.ivl} days",
+            f"[yellow]repetitions:[/yellow] {card.reps}",
+            f"[yellow]lapses:[/yellow] {card.lapses}",
+            f"[yellow]ease:[/yellow] {int(card.factor / 10)} %",
+            "",
+        ]
+        for line in columned:
+            consolePlain.print(line)
+
+    rendered = card.render_output()
+    for title, field in [
+        ["Front", rendered.question_text],
+        ["Back", rendered.answer_text],
+    ]:
+        is_markdown = check_if_generated_from_markdown(field)
+        if is_markdown:
+            title += " [italic](markdown)[/italic]"
+
+        console.print(f"[blue]## {title}[/blue]\n")
+        prepared = prepare_field_for_cli(field)
+        prepared = prepared.replace("\n\n", "\n")
+        console.print(prepared)
+        console.print()
 
 
 def card_field_to_text(field: str, max_width: int = 0) -> Text:
