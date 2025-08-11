@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
+from rich.markdown import Markdown
 from rich.text import Text
 
 from apyanki.console import console, consolePlain
@@ -21,7 +22,7 @@ def card_pprint(card: Card, verbose: bool = True) -> None:
 
     if verbose:
         card_type = ["new", "learning", "review", "relearning"][int(card.type)]
-        columned = [
+        details = [
             f"[yellow]nid:[/yellow] {card.nid}",
             f"[yellow]model:[/yellow] {card.note_type()['name']}",
             f"[yellow]type:[/yellow] {card_type}",
@@ -32,8 +33,8 @@ def card_pprint(card: Card, verbose: bool = True) -> None:
             f"[yellow]ease:[/yellow] {int(card.factor / 10)} %",
             "",
         ]
-        for line in columned:
-            consolePlain.print(line)
+        for detail in details:
+            consolePlain.print(detail)
 
     rendered = card.render_output()
     for title, field in [
@@ -47,7 +48,10 @@ def card_pprint(card: Card, verbose: bool = True) -> None:
         console.print(f"[blue]## {title}[/blue]\n")
         prepared = prepare_field_for_cli(field)
         prepared = prepared.replace("\n\n", "\n")
-        console.print(prepared)
+        if is_markdown:
+            console.print(Markdown(prepared))
+        else:
+            console.print(prepared)
         console.print()
 
 

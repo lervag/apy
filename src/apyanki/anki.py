@@ -388,10 +388,19 @@ class Anki:
             self.col.models.save(model, templates=True)
             self.modified = True
 
-    def list_notes(self, query: str) -> None:
-        """List notes that match a query"""
+    def list_note_questions(self, query: str) -> None:
+        """List first card questions for notes that match a query"""
         for note in self.find_notes(query):
             cards.print_question(note.n.cards()[0])
+
+    def list_notes(
+        self, query: str, show_cards: bool, show_raw_fields: bool, verbose: bool
+    ) -> None:
+        """List notes that match a query"""
+        for note in self.find_notes(query):
+            note.pprint(
+                print_raw=show_raw_fields, list_cards=show_cards, verbose=verbose
+            )
 
     def list_cards(self, query: str, verbose: bool) -> None:
         """List cards that match a query"""
