@@ -52,7 +52,9 @@ _apy() {
     'check-media:Check media' \
     'edit:Edit notes that match QUERY directly' \
     'info:Print some basic statistics' \
+    'list-cards:List cards that match QUERY' \
     'list-cards-table:List cards that match QUERY in table format' \
+    'list-notes:List notes that match QUERY' \
     'model:Interact with the models' \
     'reposition:Reposition new cards that match QUERY' \
     'review:Review/Edit notes that match QUERY [default: marked/flagged]' \
@@ -108,6 +110,12 @@ _apy() {
         );;
     info)
       opts=( $opts_help );;
+    list-cards)
+      opts=( \
+        '::Query' \
+        '(-v --verbose)'{-v,--verbose}'[Print note details]' \
+        $opts_help \
+        );;
     list-cards-table)
       opts=( \
         '::Query' \
@@ -119,6 +127,14 @@ _apy() {
         '(-t --show-type)'{-t,--show-type}'[Display card type]' \
         '(-e --show-ease)'{-e,--show-ease}'[Display card ease]' \
         '(-l --show-lapses)'{-l,--show-lapses}'[Display card number of lapses]' \
+        $opts_help \
+        );;
+    list-notes)
+      opts=( \
+        '::Query' \
+        '(-c --show-cards)'{-c,--show-cards}'[Print card specs]' \
+        '(-r --show-raw-fields)'{-r,--show-raw-fields}'[Print raw field data]' \
+        '(-v --verbose)'{-v,--verbose}'[Print note details]' \
         $opts_help \
         );;
     model) __model; return;;
