@@ -46,17 +46,21 @@ _apy() {
 
   subcmds=( \
     'add:Add notes interactively from terminal' \
-    'add-single:Add a single note from command line arguments' \
     'add-from-file:Add notes from Markdown file (alias for update-from-file)' \
-    'update-from-file:Update existing or add new notes from Markdown file' \
+    'add-single:Add a single note from command line arguments' \
+    'backup:Backup Anki database to specified target file' \
     'check-media:Check media' \
+    'edit:Edit notes that match QUERY directly' \
     'info:Print some basic statistics' \
+    'list-cards:List cards that match QUERY' \
+    'list-cards-table:List cards that match QUERY in table format' \
+    'list-notes:List notes that match QUERY' \
     'model:Interact with the models' \
-    'list:Print cards that match query' \
-    'review:Review/Edit notes that match query [default: marked/flagged]' \
-    'reposition:Reposition new card with given CID' \
+    'reposition:Reposition new cards that match QUERY' \
+    'review:Review/Edit notes that match QUERY [default: marked/flagged]' \
     'sync:Synchronize collection with AnkiWeb' \
-    'tag:Add or remove tags from notes that match query' \
+    'tag:Add or remove tags from notes that match QUERY' \
+    'update-from-file:Update existing or add new notes from Markdown file' \
     )
 
   _arguments $opts '*:: :->subcmds' && return 0
@@ -91,10 +95,28 @@ _apy() {
         '(-u --update-file)'{-u,--update-file}'[Update original file with note IDs]' \
         $opts_help \
         );;
+    backup)
+      opts=( \
+        '::Target file' \
+        '(-m --include-media)'{-m,--include-media}'[Include media files]:media:' \
+        '(-l --legacy)'{-l,--legacy}'[Support older Anki Versions]:legacy:' \
+        $opts_help \
+        );;
+    edit)
+      opts=( \
+        '::Query' \
+        '(-f --force-multiple)'{-f,--force-multiple}'[Allow editing multiple notes]' \
+        $opts_help \
+        );;
     info)
       opts=( $opts_help );;
-    model) __model; return;;
-    list)
+    list-cards)
+      opts=( \
+        '::Query' \
+        '(-v --verbose)'{-v,--verbose}'[Print note details]' \
+        $opts_help \
+        );;
+    list-cards-table)
       opts=( \
         '::Query' \
         '(-w --wrap)'{-w,--wrap}'[Wrap the question and answer on multiple lines]' \
@@ -107,9 +129,20 @@ _apy() {
         '(-l --show-lapses)'{-l,--show-lapses}'[Display card number of lapses]' \
         $opts_help \
         );;
+    list-notes)
+      opts=( \
+        '::Query' \
+        '(-c --show-cards)'{-c,--show-cards}'[Print card specs]' \
+        '(-r --show-raw-fields)'{-r,--show-raw-fields}'[Print raw field data]' \
+        '(-v --verbose)'{-v,--verbose}'[Print note details]' \
+        $opts_help \
+        );;
+    model) __model; return;;
     review)
       opts=( \
-        '(-q --query)'{-q,--query}'[Query string]:query:' \
+        '::Query' \
+        '(-m --check-markdown-consistency)'{-m,----check-markdown-consistency}'[Check for Markdown consistency]' \
+        '(-n --cmc-range)'{-n,--cmc-range}'[Number of days to check]:range:' \
         $opts_help \
         );;
     reposition)

@@ -135,6 +135,8 @@ currently recognized:
 - `query`: Specify default query for `apy list`, `apy review` and `apy tag`.
 - `review_show_cards`: Whether to show list of cards by default during note
   review
+- `review_verbose`: Whether to show note details by default during note
+  review
 
 An example configuration:
 

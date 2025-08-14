@@ -388,13 +388,27 @@ class Anki:
             self.col.models.save(model, templates=True)
             self.modified = True
 
-    def list_notes(self, query: str) -> None:
-        """List notes that match a query"""
+    def list_note_questions(self, query: str) -> None:
+        """List first card questions for notes that match a query"""
         for note in self.find_notes(query):
             cards.print_question(note.n.cards()[0])
 
-    def list_cards(self, query: str, opts_display: dict[str, bool]) -> None:
+    def list_notes(
+        self, query: str, show_cards: bool, show_raw_fields: bool, verbose: bool
+    ) -> None:
+        """List notes that match a query"""
+        for note in self.find_notes(query):
+            note.pprint(
+                print_raw=show_raw_fields, list_cards=show_cards, verbose=verbose
+            )
+
+    def list_cards(self, query: str, verbose: bool) -> None:
         """List cards that match a query"""
+        for cid in self.col.find_cards(query):
+            cards.card_pprint(self.col.get_card(cid), verbose)
+
+    def list_cards_as_table(self, query: str, opts_display: dict[str, bool]) -> None:
+        """List cards that match a query in tabular format"""
         width = console.width - 1
         if opts_display.get("show_cid", False):
             width -= 15
@@ -431,11 +445,13 @@ class Anki:
 
         for cid in self.col.find_cards(query):
             card = self.col.get_card(cid)
-            row: list[str | Text] = [
-                cards.card_field_to_text(card.question(), max_width=width)
-            ]
+            question, answer = cards.card_fields_as_md(
+                card, one_line=True, max_width=width
+            )
+
+            row: list[str | Text] = [question]
             if opts_display.get("show_answer", False):
-                row += [cards.card_field_to_text(card.answer(), max_width=width)]
+                row += [answer]
             if opts_display.get("show_cid", False):
                 row += [str(card.id)]
             if opts_display.get("show_due", False):

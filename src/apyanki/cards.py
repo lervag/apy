@@ -2,54 +2,93 @@
 
 from __future__ import annotations
 
+import re
 from typing import TYPE_CHECKING
 
+from rich.markdown import Markdown
 from rich.text import Text
 
-from apyanki.console import console
-from apyanki.fields import prepare_field_for_cli_oneline
+from markdownify import markdownify as to_md
+
+from apyanki.console import console, consolePlain
 
 if TYPE_CHECKING:
     from anki.cards import Card
 
 
-def card_field_to_text(field: str, max_width: int = 0) -> Text:
-    prepared_field = prepare_field_for_cli_oneline(field)
+def card_pprint(card: Card, verbose: bool = True) -> None:
+    """Pretty print a card."""
+    flag = get_flag(card)
+    consolePlain.print(f"[green]# Card (cid: {card.id})[/green]{flag}\n")
+
+    if verbose:
+        card_type = ["new", "learning", "review", "relearning"][int(card.type)]
+        details = [
+            f"[yellow]nid:[/yellow] {card.nid}",
+            f"[yellow]model:[/yellow] {card.note_type()['name']}",
+            f"[yellow]type:[/yellow] {card_type}",
+            f"[yellow]due:[/yellow] {card.due} days",
+            f"[yellow]interval:[/yellow] {card.ivl} days",
+            f"[yellow]repetitions:[/yellow] {card.reps}",
+            f"[yellow]lapses:[/yellow] {card.lapses}",
+            f"[yellow]ease:[/yellow] {int(card.factor / 10)} %",
+            "",
+        ]
+        for detail in details:
+            consolePlain.print(detail)
+
+    question, answer = card_fields_as_md(card)
+    for title, field in [
+        ["Front", question],
+        ["Back", answer],
+    ]:
+        console.print(f"[blue]## {title}[/blue]\n")
+        console.print(Markdown(field))
+        console.print()
+
+
+def card_fields_as_md(
+    card: Card, one_line: bool = False, max_width: int = 0
+) -> tuple[str, str]:
+    rendered = card.render_output()
+
+    return (
+        _field_to_md(rendered.question_text, one_line, max_width),
+        _field_to_md(rendered.answer_text, one_line, max_width),
+    )
+
+
+def _field_to_md(field: str, one_line: bool = False, max_width: int = 0) -> str:
+    prepared_field: str = to_md(field).replace("\n\n", "\n")
+
+    if one_line:
+        prepared_field = prepared_field.replace("\n", " ")
+        prepared_field = re.sub(r"\s\s+", " ", prepared_field)
+
     if max_width > 0:
         prepared_field = prepared_field[0:max_width]
-    return Text.from_markup(prepared_field)
+
+    return prepared_field
 
 
 def print_question(card: Card) -> None:
     """Print the card question"""
-    question = Text("Q: ")
-    question.stylize("yellow", 0, 2)
-    _ = question.append_text(card_field_to_text(card.question()))
-    console.print(question.fit(console.width))
+    question, _ = card_fields_as_md(card)
+
+    output = Text("Q: ")
+    output.stylize("yellow", 0, 2)
+    _ = output.append_text(Text.from_markup(question))
+    console.print(output.fit(console.width))
 
 
 def print_answer(card: Card) -> None:
     """Print the card answer"""
-    answer = Text("A: ")
-    answer.stylize("yellow", 0, 2)
-    _ = answer.append_text(card_field_to_text(card.answer()))
-    console.print(answer.fit(console.width))
+    _, answer = card_fields_as_md(card)
 
-
-def print_stats(card: Card) -> None:
-    """Print the card statistics"""
-    cardtype = int(card.type)
-    card_type = ["new", "learning", "review", "relearning"][cardtype]
-
-    style = "green"
-    console.print(
-        Text.assemble(("model: ", style), card.note_type()["name"]),
-        Text.assemble(("due: ", style), str(card.due)),
-        Text.assemble(("type: ", style), card_type),
-        Text.assemble(("ease: ", style), str(card.factor / 10)),
-        Text.assemble(("lapses: ", style), str(card.lapses)),
-        "\n",
-    )
+    output = Text("Q: ")
+    output.stylize("yellow", 0, 2)
+    _ = output.append_text(Text.from_markup(answer))
+    console.print(output.fit(console.width))
 
 
 def get_flag(card: Card, text: str = "  ") -> str:

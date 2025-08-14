@@ -85,26 +85,12 @@ def prepare_field_for_cli_raw(field: str) -> str:
     return f"Could not parse!\n{field}"
 
 
-def prepare_field_for_cli_oneline(field: str) -> str:
-    """Prepare field html for printing to screen on one line"""
-    text = prepare_field_for_cli(field, check_consistency=False)
-
-    text = text.replace("\n", " ")
-    text = re.sub(r"\s\s+", " ", text)
-    return text
-
-
 def convert_field_to_text(field: str, check_consistency: bool = True) -> str:
     """Extract text from field HTML"""
-    # Remove the style block, which can be present if field is taken directly from
-    # a note card via card.question() or card.answer().
-    field = re.sub(r"\<style\>.*\<\/style\>", "", field, flags=re.S)
-
     if check_if_generated_from_markdown(field):
         return _convert_field_to_markdown(field, check_consistency)
 
     text = _clean_html(field)
-    text = re.sub(r"\<style\>.*\<\/style\>", "", field, flags=re.S)
     for source, target in [
         ["<br>", "\n"],
         ["<br/>", "\n"],

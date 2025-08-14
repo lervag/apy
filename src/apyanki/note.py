@@ -80,41 +80,47 @@ class Note:
 
         return "\n".join(lines)
 
-    def pprint(self, print_raw: bool = False, list_cards: bool = False) -> None:
+    def pprint(
+        self, print_raw: bool = False, list_cards: bool = False, verbose: bool = False
+    ) -> None:
         """Print to screen"""
         from anki import latex
 
         header = f"[green]# Note (nid: {self.n.id})[/green]"
         if self.suspended:
             header += " [red](suspended)[/red]"
+        consolePlain.print(header + "\n")
 
-        created = strftime("%F %H:%M", localtime(self.n.id / 1000))
-        modified = strftime("%F %H:%M", localtime(self.n.mod))
-        columned = [
-            f"[yellow]model:[/yellow] {self.model_name} ({len(self.n.cards())} cards)",
-            f"[yellow]tags:[/yellow] {self.get_tag_string()}",
-            f"[yellow]created:[/yellow] {created}",
-            f"[yellow]modified:[/yellow] {modified}",
-        ]
-        if self.a.n_decks > 1:
-            columned += ["[yellow]deck:[/yellow] " + self.get_deck()]
-
-        if not list_cards:
-            flagged = [
-                cards.get_flag(c, str(c.template()["name"]))
-                for c in self.n.cards()
-                if c.flags > 0
+        if verbose:
+            created = strftime("%F %H:%M", localtime(self.n.id / 1000))
+            modified = strftime("%F %H:%M", localtime(self.n.mod))
+            details = [
+                f"[yellow]model:[/yellow] {self.model_name} ({len(self.n.cards())} cards)",
+                f"[yellow]tags:[/yellow] {self.get_tag_string()}",
+                f"[yellow]created:[/yellow] {created}",
+                f"[yellow]modified:[/yellow] {modified}",
             ]
-            if flagged:
-                columned += [f"[yellow]flagged:[/yellow] {', '.join(flagged)}"]
+            if self.a.n_decks > 1:
+                details += ["[yellow]deck:[/yellow] " + self.get_deck()]
 
-        consolePlain.print(header)
-        consolePlain.print(Columns(columned, width=37))
+            if not list_cards:
+                flagged = [
+                    cards.get_flag(c, str(c.template()["name"]))
+                    for c in self.n.cards()
+                    if c.flags > 0
+                ]
+                if flagged:
+                    details += [f"[yellow]flagged:[/yellow] {', '.join(flagged)}"]
+
+            for detail in details:
+                consolePlain.print(detail)
 
         if list_cards:
             self.print_cards()
 
-        console.print()
+        if verbose or list_cards:
+            console.print()
+
         imgs: list[Path] = []
         for name, field in self.n.items():
             is_markdown = check_if_generated_from_markdown(field)
@@ -158,7 +164,7 @@ class Note:
         table.add_column("Interval", justify="right", header_style="white")
         table.add_column("Reps", justify="right", header_style="white")
         table.add_column("Lapses", justify="right", header_style="white")
-        table.add_column("Factor", justify="right", header_style="white")
+        table.add_column("Ease", justify="right", header_style="white")
         for card in sorted(self.n.cards(), key=lambda x: x.factor):
             table.add_row(
                 "- " + str(card.template()["name"]) + cards.get_flag(card),
@@ -361,9 +367,7 @@ class Note:
 
         card = card_list[card_name]
         console.print("\n[magenta]Resetting progress for card:")
-        cards.print_question(card)
-        cards.print_answer(card)
-        cards.print_stats(card)
+        cards.card_pprint(card)
         if not console.confirm("[red bold]Are you sure?"):
             return
 
@@ -441,6 +445,7 @@ class Note:
             "N": "Change model",
             "s": "Save and stop",
             "v": "Show cards",
+            "V": "Show details",
             "x": "Save and stop",
         }
 
@@ -471,14 +476,15 @@ class Note:
         )
 
         print_raw_fields = False
-        refresh = True
+        verbose = cfg["review_verbose"]
         show_cards = cfg["review_show_cards"]
+        refresh = True
         while True:
             if refresh:
                 console.clear()
                 console.print(menu)
                 console.print("")
-                self.pprint(print_raw_fields, list_cards=show_cards)
+                self.pprint(print_raw_fields, list_cards=show_cards, verbose=verbose)
 
             refresh = True
             choice = readchar.readchar()
@@ -560,6 +566,12 @@ class Note:
 
             if action == "Show cards":
                 show_cards = not show_cards
+                cfg["review_show_cards"] = show_cards
+                continue
+
+            if action == "Show details":
+                verbose = not verbose
+                cfg["review_verbose"] = verbose
                 continue
 
 

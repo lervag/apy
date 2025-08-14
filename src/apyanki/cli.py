@@ -374,25 +374,10 @@ def rename(old_name: str, new_name: str) -> None:
         a.rename_model(old_name, new_name)
 
 
-@main.command("list")
+@main.command("list-cards")
 @click.argument("query", required=False, nargs=-1)
-@click.option("-a", "--show-answer", is_flag=True, help="Display answer")
-@click.option("-m", "--show-model", is_flag=True, help="Display model")
-@click.option("-c", "--show-cid", is_flag=True, help="Display card ids")
-@click.option("-d", "--show-due", is_flag=True, help="Display card due time in days")
-@click.option("-t", "--show-type", is_flag=True, help="Display card type")
-@click.option("-e", "--show-ease", is_flag=True, help="Display card ease")
-@click.option("-l", "--show-lapses", is_flag=True, help="Display card number of lapses")
-def list_cards(
-    query: str,
-    show_answer: bool,
-    show_model: bool,
-    show_due: bool,
-    show_type: bool,
-    show_ease: bool,
-    show_lapses: bool,
-    show_cid: bool,
-) -> None:
+@click.option("-v", "--verbose", is_flag=True, help="Print details for each card")
+def list_cards(query: str, verbose: bool) -> None:
     """List cards that match QUERY.
 
     The default QUERY is "tag:marked OR -flag:0". This default can be
@@ -409,7 +394,72 @@ def list_cards(
         query = cfg["query"]
 
     with Anki(**cfg) as a:
-        a.list_cards(
+        a.list_cards(query, verbose)
+
+
+@main.command("list-notes")
+@click.argument("query", required=False, nargs=-1)
+@click.option("-c", "--show-cards", is_flag=True, help="Print card specs")
+@click.option("-r", "--show-raw-fields", is_flag=True, help="Print raw field data")
+@click.option("-v", "--verbose", is_flag=True, help="Print note details")
+def list_notes(
+    query: str, show_cards: bool, show_raw_fields: bool, verbose: bool
+) -> None:
+    """List notes that match QUERY.
+
+    The default QUERY is "tag:marked OR -flag:0". This default can be
+    customized in the config file `~/.config/apy/apy.json`, e.g. with
+
+    \b
+    {
+      "query": "tag:marked OR tag:leech"
+    }
+    """
+    if query:
+        query = " ".join(query)
+    else:
+        query = cfg["query"]
+
+    with Anki(**cfg) as a:
+        a.list_notes(query, show_cards, show_raw_fields, verbose)
+
+
+@main.command("list-cards-table")
+@click.argument("query", required=False, nargs=-1)
+@click.option("-a", "--show-answer", is_flag=True, help="Display answer")
+@click.option("-m", "--show-model", is_flag=True, help="Display model")
+@click.option("-c", "--show-cid", is_flag=True, help="Display card ids")
+@click.option("-d", "--show-due", is_flag=True, help="Display card due time in days")
+@click.option("-t", "--show-type", is_flag=True, help="Display card type")
+@click.option("-e", "--show-ease", is_flag=True, help="Display card ease")
+@click.option("-l", "--show-lapses", is_flag=True, help="Display card number of lapses")
+def list_cards_table(
+    query: str,
+    show_answer: bool,
+    show_model: bool,
+    show_due: bool,
+    show_type: bool,
+    show_ease: bool,
+    show_lapses: bool,
+    show_cid: bool,
+) -> None:
+    """List cards that match QUERY in a tabular format.
+
+    The default QUERY is "tag:marked OR -flag:0". This default can be
+    customized in the config file `~/.config/apy/apy.json`, e.g. with
+
+    \b
+    {
+      "query": "tag:marked OR tag:leech"
+    }
+    """
+    if query:
+        query = " ".join(query)
+    else:
+        query = cfg["query"]
+
+    with Anki(**cfg) as a:
+        a.list_cards_as_table(
             query,
             {
                 "show_answer": show_answer,
@@ -656,7 +706,7 @@ def tag(
             raise click.Abort()
 
         console.print(f"The operation will be applied to {n_notes} matched notes:")
-        a.list_notes(query)
+        a.list_note_questions(query)
         console.print("")
 
         if add_tags is not None:
