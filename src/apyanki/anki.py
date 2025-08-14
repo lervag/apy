@@ -445,11 +445,13 @@ class Anki:
 
         for cid in self.col.find_cards(query):
             card = self.col.get_card(cid)
-            row: list[str | Text] = [
-                cards.card_field_to_text(card.question(), max_width=width)
-            ]
+            question, answer = cards.card_fields_as_md(
+                card, one_line=True, max_width=width
+            )
+
+            row: list[str | Text] = [question]
             if opts_display.get("show_answer", False):
-                row += [cards.card_field_to_text(card.answer(), max_width=width)]
+                row += [answer]
             if opts_display.get("show_cid", False):
                 row += [str(card.id)]
             if opts_display.get("show_due", False):

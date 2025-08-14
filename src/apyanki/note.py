@@ -367,9 +367,7 @@ class Note:
 
         card = card_list[card_name]
         console.print("\n[magenta]Resetting progress for card:")
-        cards.print_question(card)
-        cards.print_answer(card)
-        cards.print_stats(card)
+        cards.card_pprint(card)
         if not console.confirm("[red bold]Are you sure?"):
             return
 
