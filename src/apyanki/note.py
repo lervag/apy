@@ -88,7 +88,14 @@ class Note:
 
         header = f"[green]# Note (nid: {self.n.id})[/green]"
         if self.suspended:
-            header += " [red](suspended)[/red]"
+            header += " | [red]suspended[/red]"
+
+        tags = self.get_tag_string()
+        if "marked" in tags:
+            header += " | [blue]marked[/blue]"
+        if "leech" in tags:
+            header += " | [yellow]leech[/yellow]"
+
         consolePlain.print(header + "\n")
 
         if verbose:
@@ -96,7 +103,7 @@ class Note:
             modified = strftime("%F %H:%M", localtime(self.n.mod))
             details = [
                 f"[yellow]model:[/yellow] {self.model_name} ({len(self.n.cards())} cards)",
-                f"[yellow]tags:[/yellow] {self.get_tag_string()}",
+                f"[yellow]tags:[/yellow] {tags}",
                 f"[yellow]created:[/yellow] {created}",
                 f"[yellow]modified:[/yellow] {modified}",
             ]
@@ -327,6 +334,15 @@ class Note:
         self.n.flush()
         self.a.modified = True
 
+    def toggle_leech(self) -> None:
+        """Toggle leech tag for note"""
+        if "leech" in self.n.tags:
+            self.n.remove_tag("leech")
+        else:
+            self.n.add_tag("leech")
+        self.n.flush()
+        self.a.modified = True
+
     def toggle_suspend(self) -> None:
         """Toggle suspend for note"""
         cids = [c.id for c in self.n.cards()]
@@ -430,11 +446,14 @@ class Note:
         actions = {
             "c": "Continue",
             "p": "Go back",
+            "s": "Save and stop",
+            "x": "Save and stop",
             "e": "Edit",
             "a": "Add new",
             "d": "Delete",
             "m": "Toggle markdown",
             "*": "Toggle marked",
+            "l": "Toggle leech",
             "z": "Toggle suspend",
             "P": "Toggle pprint",
             "F": "Clear flags",
@@ -443,10 +462,8 @@ class Note:
             "E": "Edit CSS",
             "D": "Change deck",
             "N": "Change model",
-            "s": "Save and stop",
             "v": "Show cards",
             "V": "Show details",
-            "x": "Save and stop",
         }
 
         if remove_actions:
@@ -523,6 +540,10 @@ class Note:
 
             if action == "Toggle marked":
                 self.toggle_marked()
+                continue
+
+            if action == "Toggle leech":
+                self.toggle_leech()
                 continue
 
             if action == "Toggle suspend":
