@@ -92,7 +92,7 @@ apy add-single -s preset "Question/Front" "Answer/Back"
 
 # List leech cards (will show cid values for each card). Note that the query
 # should be similar to a search query in the Anki browser.
-apy list -v tag:leech
+apy list-cards -v tag:leech
 
 # Review and possibly edit file with given cid
 apy review cid:12345678
@@ -132,7 +132,7 @@ currently recognized:
 - `presets`: Specify preset combination of model and tags for use with `apy
   add-single`.
 - `profile_name`: Specify which profile to load by default.
-- `query`: Specify default query for `apy list`, `apy review` and `apy tag`.
+- `query`: Specify default query for `apy list*`, `apy review` and `apy tag`.
 - `review_show_cards`: Whether to show list of cards by default during note
   review
 - `review_verbose`: Whether to show note details by default during note
