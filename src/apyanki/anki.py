@@ -14,6 +14,7 @@ from types import TracebackType
 from typing import TYPE_CHECKING, Any
 
 from click import Abort
+from rich.markdown import Markdown
 from rich.progress import Progress, SpinnerColumn, TextColumn
 from rich.table import Table
 from rich.text import Text
@@ -449,9 +450,9 @@ class Anki:
                 card, one_line=True, max_width=width
             )
 
-            row: list[str | Text] = [question]
+            row: list[str | Text | Markdown] = [Markdown(question)]
             if opts_display.get("show_answer", False):
-                row += [answer]
+                row += [Markdown(answer)]
             if opts_display.get("show_cid", False):
                 row += [str(card.id)]
             if opts_display.get("show_due", False):

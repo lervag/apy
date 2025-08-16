@@ -59,7 +59,7 @@ def card_fields_as_md(
 
 
 def _field_to_md(field: str, one_line: bool = False, max_width: int = 0) -> str:
-    prepared_field: str = to_md(field).replace("\n\n", "\n")
+    prepared_field: str = to_md(field)
 
     if one_line:
         prepared_field = prepared_field.replace("\n", " ")
