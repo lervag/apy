@@ -1,24 +1,8 @@
-from apyanki import fields
-from apyanki.config import cfg
+from bs4 import BeautifulSoup
 from common import AnkiEmpty
 
-
-def test_mdlatex_to_mathjax() -> None:
-    for [in_string, expect] in [
-        ["$$block$$", r"\\[block\\]"],
-        ["$inline$", r"\\(inline\\)"],
-    ]:
-        out = fields._mdlatex_to_mathjax(in_string)
-        assert out == expect
-
-
-def test_mdlatex_to_latex() -> None:
-    for [in_string, expect] in [
-        ["$$block$$", r"[$$]block[/$$]"],
-        ["$inline$", r"[$]inline[/$]"],
-    ]:
-        out = fields._mdlatex_to_latex(in_string)
-        assert out == expect
+from apyanki import fields
+from apyanki.config import cfg
 
 
 def test_mathjax_to_mdlatex() -> None:
@@ -39,23 +23,7 @@ def test_latex_to_mdlatex() -> None:
         assert out == expect
 
 
-def test_markdown_latex_mode_mathjax() -> None:
-    """Simple text replacement test for mathjax option"""
-    cfg["markdown_latex_mode"] = "mathjax"
-
-    with AnkiEmpty() as a:
-        note = a.add_notes_single(
-            ["This is $$block$$ math.", "This is $inline$ math."],
-            markdown=True,
-        )
-        print(note.n.fields)
-        assert "data-original-markdown" in note.n.fields[0]
-        assert "\\[block\\]" in note.n.fields[0]
-        assert "\\(inline\\)" in note.n.fields[1]
-
-
-def test_markdown_latex_mode_latex() -> None:
-    """Simple text replacement test for latex option"""
+def test_markdown_to_latex_1() -> None:
     cfg["markdown_latex_mode"] = "latex"
 
     with AnkiEmpty() as a:
@@ -66,3 +34,52 @@ def test_markdown_latex_mode_latex() -> None:
         assert "data-original-markdown" in note.n.fields[0]
         assert "[$$]block[/$$]" in note.n.fields[0]
         assert "[$]inline[/$]" in note.n.fields[1]
+
+
+def test_markdown_to_latex_2() -> None:
+    cfg["markdown_latex_mode"] = "latex"
+
+    with AnkiEmpty() as a:
+        input = r"$\mathbb{R}_+$ and $\mathbb{R}_+$"
+        expected = r"[$]\mathbb{R}_+[/$] and [$]\mathbb{R}_+[/$]"
+
+        note = a.add_notes_single([input, ""], markdown=True)
+        soup = BeautifulSoup(note.n.fields[0], "html.parser")
+        assert soup.text == expected
+
+
+def test_markdown_to_latex_3() -> None:
+    cfg["markdown_latex_mode"] = "latex"
+
+    with AnkiEmpty() as a:
+        input = r"$$\mathbb{R}_+$$ and $$\mathbb{R}_+$$"
+        expected = r"[$$]\mathbb{R}_+[/$$] and [$$]\mathbb{R}_+[/$$]"
+
+        note = a.add_notes_single([input, ""], markdown=True)
+        soup = BeautifulSoup(note.n.fields[0], "html.parser")
+        assert soup.text == expected
+
+
+def test_markdown_to_mathjax_1() -> None:
+    cfg["markdown_latex_mode"] = "mathjax"
+
+    with AnkiEmpty() as a:
+        note = a.add_notes_single(
+            ["This is $$block$$ math.", "This is $inline$ math."],
+            markdown=True,
+        )
+        assert "data-original-markdown" in note.n.fields[0]
+        assert "\\[block\\]" in note.n.fields[0]
+        assert "\\(inline\\)" in note.n.fields[1]
+
+
+def test_markdown_to_mathjax_2() -> None:
+    cfg["markdown_latex_mode"] = "mathjax"
+
+    with AnkiEmpty() as a:
+        input = r"$\mathbb{R}_+$ and $$\mathbb{R}_+$$"
+        expected = r"\(\mathbb{R}_+\) and \[\mathbb{R}_+\]"
+
+        note = a.add_notes_single([input, ""], markdown=True)
+        soup = BeautifulSoup(note.n.fields[0], "html.parser")
+        assert soup.text == expected

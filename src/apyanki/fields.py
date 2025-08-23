@@ -18,6 +18,7 @@ from markdown.extensions.footnotes import FootnoteExtension
 from markdownify import markdownify as to_md
 
 from apyanki.config import cfg
+from apyanki.markdown_math import MathProtectExtension
 
 if TYPE_CHECKING:
     from anki.models import NotetypeDict
@@ -217,12 +218,6 @@ def _convert_markdown_to_field(text: str) -> str:
     text = text.replace(r"\(", r"\\(")
     text = text.replace(r"\)", r"\\)")
 
-    # Apply latex translation based on specified latex mode
-    if cfg["markdown_latex_mode"] == "latex":
-        text = _mdlatex_to_latex(text)
-    else:
-        text = _mdlatex_to_mathjax(text)
-
     html = markdown.markdown(
         text,
         extensions=[
@@ -237,6 +232,7 @@ def _convert_markdown_to_field(text: str) -> str:
             DefListExtension(),
             FencedCodeExtension(),
             FootnoteExtension(),
+            MathProtectExtension(cfg["markdown_latex_mode"]),
         ],
         output_format="html",
     )
@@ -248,27 +244,6 @@ def _convert_markdown_to_field(text: str) -> str:
         root["data-original-markdown"] = original_encoded
 
     return str(soup)
-
-
-def _mdlatex_to_latex(text: str) -> str:
-    """Replace $$…$$ and $…$ with [$$]…[/$$] and [$]…[/$]"""
-    pattern = re.compile(
-        r"""
-        (\$\$)(.*?)\$\$   # match $$…$$
-        |                 # or
-        (\$)(.*?)\$       # match $…$
-        """,
-        re.DOTALL | re.VERBOSE,
-    )
-
-    def replacer(match: re.Match[str]) -> str:
-        if match.group(1):
-            return f"[$$]{match.group(2)}[/$$]"
-        elif match.group(3):
-            return f"[$]{match.group(4)}[/$]"
-        return match.group(0)
-
-    return pattern.sub(replacer, text)
 
 
 def _latex_to_mdlatex(text: str) -> str:
@@ -290,13 +265,6 @@ def _latex_to_mdlatex(text: str) -> str:
         return match.group(0)
 
     return pattern.sub(replacer, text)
-
-
-def _mdlatex_to_mathjax(text: str) -> str:
-    """Replace $$…$$ and $…$ with \\[…\\] and \\(…\\)"""
-    text = re.sub(r"\$\$(.*?)\$\$", r"\\\\[\1\\\\]", text, flags=re.DOTALL)
-    text = re.sub(r"\$(.*?)\$", r"\\\\(\1\\\\)", text, flags=re.DOTALL)
-    return text
 
 
 def _mathjax_to_mdlatex(text: str) -> str:
