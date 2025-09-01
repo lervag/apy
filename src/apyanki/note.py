@@ -522,6 +522,7 @@ class Note:
                     tags=self.get_tag_string(),
                     model_name=self.model_name,
                     template=self,
+                    respect_note_ids=False,
                 )
 
                 console.print(f"Added {len(notes)} notes")

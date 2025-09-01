@@ -190,7 +190,7 @@ def update_from_file(file: Path, tags: str, deck: str, update_file: bool) -> Non
         New note content
     """
     with Anki(**cfg) as a:
-        notes = a.update_notes_from_file(str(file), tags, deck, update_file)
+        notes = a.add_notes_from_file(str(file), tags, deck, update_file)
         _added_notes_postprocessing(a, notes)
 
 
@@ -212,7 +212,7 @@ def add_from_file(file: Path, tags: str, deck: str, update_file: bool) -> None:
     and update existing ones.
     """
     with Anki(**cfg) as a:
-        notes = a.update_notes_from_file(str(file), tags, deck, update_file)
+        notes = a.add_notes_from_file(str(file), tags, deck, update_file)
         _added_notes_postprocessing(a, notes)
 
 

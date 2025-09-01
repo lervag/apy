@@ -476,6 +476,7 @@ class Anki:
         model_name: str | None = None,
         deck_name: str | None = None,
         template: Note | None = None,
+        respect_note_ids: bool = True,
     ) -> list[Note]:
         """Add new notes to collection with editor"""
         if template:
@@ -521,47 +522,26 @@ class Anki:
                 console.print(f"Editor return with exit code {retcode}!")
                 return []
 
-            return self.add_notes_from_file(tf.name)
+            return self.add_notes_from_file(tf.name, respect_note_ids=respect_note_ids)
 
     def add_notes_from_file(
         self,
         filename: str,
         tags: str = "",
         deck: str | None = None,
-        update_file: bool = False,
+        respect_note_ids: bool = True,
+        update_origin_file: bool = False,
     ) -> list[Note]:
-        """Add new notes to collection from Markdown file
+        """Add notes from Markdown file
 
         Args:
             filename: Path to the markdown file containing notes
             tags: Additional tags to add to the notes
             deck: Default deck for notes without a deck specified
-            update_file: If True, update the original file with note IDs
-
-        Returns:
-            List of notes that were added
-        """
-        # Reuse update_notes_from_file since it handles both adding new notes and updating existing ones
-        # For add_notes_from_file, we're essentially just adding new notes
-        return self.update_notes_from_file(filename, tags, deck, update_file)
-
-    def update_notes_from_file(
-        self,
-        filename: str,
-        tags: str = "",
-        deck: str | None = None,
-        update_file: bool = False,
-    ) -> list[Note]:
-        """Update existing notes or add new notes from Markdown file
-
-        This function looks for nid: or cid: headers in the file to determine
-        if a note should be updated rather than added.
-
-        Args:
-            filename: Path to the markdown file containing notes
-            tags: Additional tags to add to the notes
-            deck: Default deck for notes without a deck specified
-            update_file: If True, update the original file with note IDs
+            respect_note_ids: If True, then this function looks for nid: or cid: headers
+                              in the file to determine if a note should be updated
+                              rather than added.
+            update_origin_file: If True, update the original file with note IDs
 
         Returns:
             List of notes that were updated or added
@@ -569,34 +549,30 @@ class Anki:
         with open(filename, "r", encoding="utf-8") as f:
             original_content = f.read()
 
-        notes_data = markdown_file_to_notes(filename)
-        updated_notes: list[Note] = []
+        has_missing_nids: bool = False
+        notes: list[Note] = []
 
-        # Track if any notes were added that need IDs
-        needs_update = False
-
-        for note_data in notes_data:
+        for note_data in markdown_file_to_notes(filename):
             if tags:
                 note_data.tags = f"{tags} {note_data.tags}"
 
             if deck and not note_data.deck:
                 note_data.deck = deck
 
-            # Check if this note already has an ID
-            had_id = bool(note_data.nid)
+            has_missing_nids |= note_data.nid is None
 
-            note = note_data.update_or_add_to_collection(self)
-            updated_notes.append(note)
+            if respect_note_ids:
+                note = note_data.update_or_add_to_collection(self)
+            else:
+                note = note_data.add_to_collection(self)
 
-            # Mark for file update if this was a new note without an ID
-            if not had_id and update_file:
-                needs_update = True
+            notes.append(note)
 
         # Update the original file with note IDs if requested
-        if update_file and needs_update:
-            self._update_file_with_note_ids(filename, original_content, updated_notes)
+        if update_origin_file and has_missing_nids:
+            self._update_file_with_note_ids(filename, original_content, notes)
 
-        return updated_notes
+        return notes
 
     def _update_file_with_note_ids(
         self, filename: str, content: str, notes: list[Note]

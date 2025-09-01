@@ -103,7 +103,7 @@ def test_update_from_file(collection):
             )
 
         # Update the note
-        updated_note = a.update_notes_from_file("test_update.md")[0]
+        updated_note = a.add_notes_from_file("test_update.md")[0]
 
         # Verify it's the same note but updated
         assert updated_note.n.id == note_id
@@ -162,7 +162,7 @@ def test_update_from_file_by_cid(collection):
             )
 
         # Update the note
-        updated_note = a.update_notes_from_file("test_update_cid.md")[0]
+        updated_note = a.add_notes_from_file("test_update_cid.md")[0]
 
         # Verify it's the same note but updated
         assert updated_note.n.id == note.n.id
@@ -231,7 +231,7 @@ def test_update_from_file_new_and_existing(collection):
             )
 
         # Update the note
-        updated_notes = a.update_notes_from_file("test_mixed.md")
+        updated_notes = a.add_notes_from_file("test_mixed.md")
 
         # Verify we have two notes
         assert len(updated_notes) == 2
@@ -286,7 +286,7 @@ def test_update_file_with_note_ids(collection):
 
     with Anki(collection_db_path=collection) as a:
         # Add notes with update_file=True
-        notes = a.add_notes_from_file("test_no_ids.md", update_file=True)
+        notes = a.add_notes_from_file("test_no_ids.md", update_origin_file=True)
 
         # Verify two notes were added
         assert len(notes) == 2
@@ -359,7 +359,7 @@ def test_update_file_with_mixed_notes(collection):
             )
 
         # Update notes with update_file=True
-        notes = a.update_notes_from_file("test_update_mix.md", update_file=True)
+        notes = a.add_notes_from_file("test_update_mix.md", update_origin_file=True)
 
         # Verify two notes were affected
         assert len(notes) == 2
