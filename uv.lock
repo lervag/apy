@@ -1,10 +1,10 @@
 version = 1
-revision = 3
+revision = 2
 requires-python = ">=3.10"
 
 [[package]]
 name = "anki"
-version = "25.7.5"
+version = "25.9"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "decorator" },
@@ -16,11 +16,11 @@ dependencies = [
     { name = "typing-extensions" },
 ]
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/63/af/7f591aaf69be2484e1fcd97922fbb0e4e7f7fb4dc4d207a895bc1fd54eb7/anki-25.7.5-cp39-abi3-macosx_12_0_arm64.whl", hash = "sha256:2eced7b58e7c4da9325d5dca5eda3246f909e37adc5db363bfa39a42cf1b0e01", size = 9691289, upload-time = "2025-07-25T17:06:24.944Z" },
-    { url = "https://files.pythonhosted.org/packages/d4/45/9f7fa354625f164d7c9b9cb8b135f910dff185fd92b46b22ae9e7a4ce596/anki-25.7.5-cp39-abi3-macosx_12_0_x86_64.whl", hash = "sha256:26773bbb1bd49dfc605e19b93934e54bbf20064b0561698fe815aab154759d05", size = 10158501, upload-time = "2025-07-25T17:06:42.498Z" },
-    { url = "https://files.pythonhosted.org/packages/29/75/81eb12d43381f5150a2fb1acc2757d25741af5bf0635f40faab61eefcb44/anki-25.7.5-cp39-abi3-manylinux_2_36_aarch64.whl", hash = "sha256:3481df9f8fc7b89d805f5d051dde3def97e49716f280630e7aeee548a0fe45e5", size = 10917585, upload-time = "2025-07-25T17:06:59.617Z" },
-    { url = "https://files.pythonhosted.org/packages/a3/86/c1c459a06466ffc3a205de9852875a922c378a7bfb9fb1310bea019dacd1/anki-25.7.5-cp39-abi3-manylinux_2_36_x86_64.whl", hash = "sha256:a3d2472e9aa6b1ecc7c05a56f3e9a5a3271155af7613e34ead0268180b18b981", size = 11390697, upload-time = "2025-07-25T17:07:18.157Z" },
-    { url = "https://files.pythonhosted.org/packages/99/b9/edac3fb65165df124602931efb9ade803fe2fcbb3bcf0e0b584543eee49e/anki-25.7.5-cp39-abi3-win_amd64.whl", hash = "sha256:1789ec4cf613978b0d8de14b556ed7f0322dedf7f7fe059a98758adf2d47bb67", size = 10002518, upload-time = "2025-07-25T17:07:34.868Z" },
+    { url = "https://files.pythonhosted.org/packages/ae/1a/c619249d93ec46b032bab5ebbddff6dc57eb4e8a3683d60406bae13c2aca/anki-25.9-cp39-abi3-macosx_12_0_arm64.whl", hash = "sha256:cff31ee9ec3a0c198ee1dc0ab99a6f543ba688adbc2336b01858df4cf9f4fc81", size = 9650522, upload-time = "2025-09-06T11:33:29.45Z" },
+    { url = "https://files.pythonhosted.org/packages/76/a7/09bece0802d9d2b97493b71950bda58f06c5e12ff48774fdd01ee4f85e0a/anki-25.9-cp39-abi3-macosx_12_0_x86_64.whl", hash = "sha256:79eb0210c56bab843f0d3b235d88f50fd8084b116198d53c47c4f45b9e129071", size = 10150482, upload-time = "2025-09-06T11:33:35.763Z" },
+    { url = "https://files.pythonhosted.org/packages/bb/3e/b61430bde7b6b54ffe2a5c26a9ce93d86fd08ab787479c8fbe2bc5961ff7/anki-25.9-cp39-abi3-manylinux_2_36_aarch64.whl", hash = "sha256:7726933f17abf4f5a14af10b91629599d69a98052e3867e1bfcce03335568344", size = 10900256, upload-time = "2025-09-06T11:33:41.514Z" },
+    { url = "https://files.pythonhosted.org/packages/7f/56/a1603b10d38ee51b94ae2836be40cae6fc512f046cece5792aa3c896023e/anki-25.9-cp39-abi3-manylinux_2_36_x86_64.whl", hash = "sha256:5852cd00da37abfafde7baed67865c19c1b85bda2ea246e11a7a6f7625635ad8", size = 11397927, upload-time = "2025-09-06T11:33:46.758Z" },
+    { url = "https://files.pythonhosted.org/packages/f7/f9/ca8c86dd2c47224522c3f918f7cf6c7800d1ab3c8029ecc6e4380577f152/anki-25.9-cp39-abi3-win_amd64.whl", hash = "sha256:ec397258f6bf75f384649a5c75ac9579dea0bc117ef6271907bb2a075ac5a9aa", size = 9984966, upload-time = "2025-09-06T11:33:51.911Z" },
 ]
 
 [[package]]
@@ -50,7 +50,7 @@ dev = [
 
 [package.metadata]
 requires-dist = [
-    { name = "anki", specifier = ">=23.10" },
+    { name = "anki", specifier = ">=25.9" },
     { name = "beautifulsoup4", specifier = ">=4.12.2" },
     { name = "click", specifier = ">=8.1.3" },
     { name = "html5lib", specifier = "~=1.1" },
