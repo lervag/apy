@@ -598,7 +598,7 @@ class Anki:
 
         # Extract each note's section and check if it needs to be updated
         # Keep content before first '# Note'
-        updated_content: list[str] = content[0 : note_positions[0]]
+        updated_content: list[str] = [content[0 : note_positions[0]]]
         for i in range(len(note_positions) - 1):
             start = note_positions[i]
             end = note_positions[i + 1]
