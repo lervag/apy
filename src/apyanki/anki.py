@@ -529,8 +529,8 @@ class Anki:
         filename: str,
         tags: str = "",
         deck: str | None = None,
-        respect_note_ids: bool = True,
         update_origin_file: bool = False,
+        respect_note_ids: bool = True,
     ) -> list[Note]:
         """Add notes from Markdown file
 
@@ -538,10 +538,10 @@ class Anki:
             filename: Path to the markdown file containing notes
             tags: Additional tags to add to the notes
             deck: Default deck for notes without a deck specified
+            update_origin_file: If True, update the original file with note IDs
             respect_note_ids: If True, then this function looks for nid: or cid: headers
                               in the file to determine if a note should be updated
                               rather than added.
-            update_origin_file: If True, update the original file with note IDs
 
         Returns:
             List of notes that were updated or added
