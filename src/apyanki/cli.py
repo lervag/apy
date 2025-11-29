@@ -642,9 +642,7 @@ def sync() -> None:
 @click.option(
     "-c", "--sort-by-count", is_flag=True, help="When listing tags, sort by note count"
 )
-@click.option(
-    "-s", "--simple", is_flag=True, help="Only list available tags"
-)
+@click.option("-s", "--simple", is_flag=True, help="Only list available tags")
 @click.option(
     "-p",
     "--purge",

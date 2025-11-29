@@ -331,9 +331,11 @@ class Anki:
     def list_tags(self, sort_by_count: bool = False, simple: bool = False) -> None:
         """List all tags"""
         if sort_by_count:
+
             def sorter(x: tuple[str, int]) -> str | int:
                 return x[1]
         else:
+
             def sorter(x: tuple[str, int]) -> str | int:
                 return x[0]
 
