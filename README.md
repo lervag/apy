@@ -12,14 +12,20 @@ Anki. It does not require Anki to be running at the same time.
 
 ### Table of Contents
 
-* [Install instructions](#install-instructions)
-* [Usage](#usage)
-* [Configuration](#configuration)
-* [Zsh completion](#zsh-completion)
-* [fish completion](#fish-completion)
-* [Changelog](#changelog)
-* [Relevant resources](#relevant-resources)
-* [Alternatives](#alternatives)
+<!-- START doctoc generated TOC please keep comment here to allow auto update -->
+<!-- DON'T EDIT THIS SECTION, INSTEAD RE-RUN doctoc TO UPDATE -->
+
+- [Install instructions](#install-instructions)
+- [Usage](#usage)
+- [Examples of adding new notes](#examples-of-adding-new-notes)
+- [Configuration](#configuration)
+- [Zsh completion](#zsh-completion)
+- [Fish completion](#fish-completion)
+- [Relevant resources](#relevant-resources)
+- [Alternatives](#alternatives)
+- [Contributing](#contributing)
+
+<!-- END doctoc generated TOC please keep comment here to allow auto update -->
 
 ## Install instructions
 
@@ -102,7 +108,7 @@ apy review cid:12345678
 improve the process of adding and editing cards. For more information about
 this, see [the Wiki](https://github.com/lervag/apy/wiki/Vim).
 
-## Examples of new cards
+## Examples of adding new notes
 
 With `apy add` and `apy add-from-file`, the note input is provided through
 Markdown format. `apy add` opens an interactive editor that will write

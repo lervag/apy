@@ -10,4 +10,4 @@ uv run pytest
 uv run mypy .
 uv run ruff format --check
 """
-
+doctoc = "doctoc --notitle --maxlevel 2 README.md"
