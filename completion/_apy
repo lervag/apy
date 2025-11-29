@@ -17,7 +17,7 @@ __model() {
   case "$words[1]" in
     edit-css)
       opts=( \
-        '(-m --model)'{-m,--model}'[Specify model]:model:' \
+        '(-m --model)'{-m,--model}'[Specify model]:model:_apy_models' \
         '(-s --sync-after)'{-s,--sync-after}'[Synchronize after edit]' \
         $opts_help \
         );;
@@ -75,7 +75,7 @@ _apy() {
     add)
       opts=( \
         '(-t --tags)'{-t,--tags}'[Specify tags]:tags:' \
-        '(-m --model)'{-m,--model}'[Specify model]:model:' \
+        '(-m --model)'{-m,--model}'[Specify model]:model:_apy_models' \
         '(-d --deck)'{-d,--deck}'[Specify deck]:deck:' \
         $opts_help \
         );;
@@ -83,7 +83,7 @@ _apy() {
       opts=( \
         '(-s --preset)'{-s,--preset}'[Specify a preset]:preset:' \
         '(-t --tags)'{-t,--tags}'[Specify tags]:tags:' \
-        '(-m --model)'{-m,--model}'[Specify model]:model:' \
+        '(-m --model)'{-m,--model}'[Specify model]:model:_apy_models' \
         '(-d --deck)'{-d,--deck}'[Specify deck]:deck:' \
         '::Fields' \
         $opts_help \
@@ -168,6 +168,24 @@ _apy() {
   esac
 
   _arguments $opts
+}
+
+_apy_models() {
+  local cache_dir="${XDG_CACHE_HOME:-/tmp/cache}/apy"
+  local cache_file="$cache_dir/apy_models"
+
+  local -a models
+
+  [[ -d $cache_dir ]] || mkdir -p $cache_dir
+  if [[ -f $cache_file && $(($(date +%s) - $(date -r $cache_file +%s))) -lt 300 ]]
+  then
+    models=(${(f)"$(<$cache_file)"})
+  else
+    models=(${(f)"$(apy list-models 2>/dev/null)"})
+    print -l $models > $cache_file
+  fi
+  models=(${models//:/\\:})
+  _describe 'model' models
 }
 
 _apy "$@"
