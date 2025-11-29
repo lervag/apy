@@ -102,6 +102,90 @@ apy review cid:12345678
 improve the process of adding and editing cards. For more information about
 this, see [the Wiki](https://github.com/lervag/apy/wiki/Vim).
 
+## Examples of new cards
+
+With `apy add` and `apy add-from-file`, the note input is provided through
+Markdown format. `apy add` opens an interactive editor that will write
+a temporary file that `apy` reads afterwords. `apy add-from-file` will add
+notes from a specified file. These are therefore more or less equivalent
+commands.
+
+In the following, you may find a few examples of how such notes can be written.
+These will all be based on the standard note types (or _models_). See
+[here](https://docs.ankiweb.net/getting-started.html?highlight=note#note-types)
+for the Anki documentation of the standard note types.
+
+### Add with a specified model/note type
+
+This example will create two notes and four cards with the "Basic (and reversed
+card)" note type.
+
+````md
+model: Basic (and reversed card)
+tags: mytag
+
+# Note
+
+## Front
+
+This is my front.
+
+## Back
+
+This is my back.
+
+# Note
+
+## Front
+
+This is my second front.
+
+## Back
+
+This is my second back.
+````
+
+### Add with code snippet
+
+This example will create a Basic note with a single card that includes a code
+snippet.
+
+````md
+model: Basic
+tags: code
+
+# Note
+
+## Front
+
+What programming language is this?
+
+## Back
+
+```python
+x = 1
+if x > 0:
+    print("this is python")
+```
+````
+
+### Add a Cloze note
+
+```md
+# Note
+model: Cloze
+tags: mytag, othertag
+
+## Text
+
+{{c1::Canberra was {{c2::founded}}}} in 1913
+
+Or {{c3::REPLACE}} here.
+
+## Extra
+Extra information goes here.
+```
+
 ## Configuration
 
 `apy` loads configuration from `~/.config/apy/apy.json`. The following keys are
@@ -190,11 +274,6 @@ copy it to `~/.config/fish/completions/` directory:
 ```
 ln -s /path/to/apy/completion/apy.fish ~/.config/fish/completions/
 ```
-
-## Changelog
-
-See the [release history on GitHub](https://github.com/lervag/apy/releases).
-For details, feel free to inspect the commity history.
 
 ## Relevant resources
 
