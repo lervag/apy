@@ -643,6 +643,9 @@ def sync() -> None:
     "-c", "--sort-by-count", is_flag=True, help="When listing tags, sort by note count"
 )
 @click.option(
+    "-s", "--simple", is_flag=True, help="Only list available tags"
+)
+@click.option(
     "-p",
     "--purge",
     is_flag=True,
@@ -652,6 +655,7 @@ def tag(
     query: str,
     add_tags: str | None,
     remove_tags: str | None,
+    simple: bool,
     sort_by_count: bool,
     purge: bool,
 ) -> None:
@@ -704,7 +708,7 @@ def tag(
         if (add_tags is None or add_tags == "") and (
             remove_tags is None or remove_tags == ""
         ):
-            a.list_tags(sort_by_count)
+            a.list_tags(sort_by_count, simple)
             return
 
         n_notes = len(list(a.find_notes(query)))

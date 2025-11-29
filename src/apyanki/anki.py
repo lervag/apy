@@ -328,26 +328,29 @@ class Anki:
         _ = self.col.models.update_dict(model)
         self.modified = True
 
-    def list_tags(self, sort_by_count: bool = False) -> None:
+    def list_tags(self, sort_by_count: bool = False, simple: bool = False) -> None:
         """List all tags"""
-        table = Table(show_edge=False, box=None, header_style="bold white")
-        table.add_column("tag", style="cyan")
-        table.add_column("notes", style="magenta", justify="right")
-
         if sort_by_count:
-
             def sorter(x: tuple[str, int]) -> str | int:
                 return x[1]
         else:
-
             def sorter(x: tuple[str, int]) -> str | int:
                 return x[0]
 
         tags = [(t, len(self.col.find_notes(f"tag:{t}"))) for t in self.col.tags.all()]
-        for tag, n in sorted(tags, key=sorter):
-            table.add_row(tag, str(n))
 
-        console.print(table)
+        if simple:
+            for t, _ in tags:
+                console.print(t)
+        else:
+            table = Table(show_edge=False, box=None, header_style="bold white")
+            table.add_column("tag", style="cyan")
+            table.add_column("notes", style="magenta", justify="right")
+
+            for tag, n in sorted(tags, key=sorter):
+                table.add_row(tag, str(n))
+
+            console.print(table)
 
     def change_tags(self, query: str, tags: str, add: bool = True) -> None:
         """Add/Remove tags from notes that match query"""

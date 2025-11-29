@@ -74,7 +74,7 @@ _apy() {
   case "$words[1]" in
     add)
       opts=( \
-        '(-t --tags)'{-t,--tags}'[Specify tags]:tags:' \
+        '(-t --tags)'{-t,--tags}'[Specify tags]:tags:_apy_tags' \
         '(-m --model)'{-m,--model}'[Specify model]:model:_apy_models' \
         '(-d --deck)'{-d,--deck}'[Specify deck]:deck:' \
         $opts_help \
@@ -82,7 +82,7 @@ _apy() {
     add-single)
       opts=( \
         '(-s --preset)'{-s,--preset}'[Specify a preset]:preset:' \
-        '(-t --tags)'{-t,--tags}'[Specify tags]:tags:' \
+        '(-t --tags)'{-t,--tags}'[Specify tags]:tags:_apy_tags' \
         '(-m --model)'{-m,--model}'[Specify model]:model:_apy_models' \
         '(-d --deck)'{-d,--deck}'[Specify deck]:deck:' \
         '::Fields' \
@@ -91,7 +91,7 @@ _apy() {
     add-from-file|update-from-file)
       opts=( \
         '::Markdown input file:_files -g "*.md"' \
-        '(-t --tags)'{-t,--tags}'[Specify tags]:tags:' \
+        '(-t --tags)'{-t,--tags}'[Specify tags]:tags:_apy_tags' \
         '(-d --deck)'{-d,--deck}'[Specify deck]:deck:' \
         '(-u --update-file)'{-u,--update-file}'[Update original file with note IDs]' \
         $opts_help \
@@ -159,7 +159,7 @@ _apy() {
     tag)
       opts=( \
         '(-a --add-tags)'{-a,--add-tags}'[Add specified tags]:tags:' \
-        '(-r --remove-tags)'{-r,--remove-tags}'[Remove specified tags]:tags:' \
+        '(-r --remove-tags)'{-r,--remove-tags}'[Remove specified tags]:tags:_apy_tags' \
         $opts_help \
         '::Query' \
         );;
@@ -186,6 +186,40 @@ _apy_models() {
   fi
   models=(${models//:/\\:})
   _describe 'model' models
+}
+
+_apy_tags() {
+  local cache_dir="${XDG_CACHE_HOME:-/tmp/cache}/apy"
+  local cache_file="$cache_dir/apy_tags"
+
+  local -a tags
+
+  [[ -d $cache_dir ]] || mkdir -p $cache_dir
+  if [[ -f $cache_file && $(($(date +%s) - $(date -r $cache_file +%s))) -lt 300 ]]
+  then
+    tags=(${(f)"$(<$cache_file)"})
+  else
+    tags=(${(f)"$(apy tag -s 2>/dev/null)"})
+    print -l $tags > $cache_file
+  fi
+
+  local current_input="${words[CURRENT]}"
+  local current_tag="${current_input##*,}"
+  local prefix="${current_input%,*}"
+
+  local -a used_tags_array=(${(s:,:)prefix})
+  local -a available_tags
+  for tag in $tags; do
+    if [[ ! " ${used_tags_array[@]} " =~ " ${tag} " ]]; then
+      available_tags+=($tag)
+    fi
+  done
+
+  if [[ $current_input == *","* ]]; then
+    compadd -P "${prefix}," -a available_tags
+  else
+    _describe 'tags' available_tags
+  fi
 }
 
 _apy "$@"
