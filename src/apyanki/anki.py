@@ -470,6 +470,11 @@ class Anki:
 
         console.print(table)
 
+    def list_models(self) -> None:
+        """List available models"""
+        for name in self.model_names:
+            console.print(name)
+
     def add_notes_with_editor(
         self,
         tags: str = "",

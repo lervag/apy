@@ -397,33 +397,6 @@ def list_cards(query: str, verbose: bool) -> None:
         a.list_cards(query, verbose)
 
 
-@main.command("list-notes")
-@click.argument("query", required=False, nargs=-1)
-@click.option("-c", "--show-cards", is_flag=True, help="Print card specs")
-@click.option("-r", "--show-raw-fields", is_flag=True, help="Print raw field data")
-@click.option("-v", "--verbose", is_flag=True, help="Print note details")
-def list_notes(
-    query: str, show_cards: bool, show_raw_fields: bool, verbose: bool
-) -> None:
-    """List notes that match QUERY.
-
-    The default QUERY is "tag:marked OR -flag:0". This default can be
-    customized in the config file `~/.config/apy/apy.json`, e.g. with
-
-    \b
-    {
-      "query": "tag:marked OR tag:leech"
-    }
-    """
-    if query:
-        query = " ".join(query)
-    else:
-        query = cfg["query"]
-
-    with Anki(**cfg) as a:
-        a.list_notes(query, show_cards, show_raw_fields, verbose)
-
-
 @main.command("list-cards-table")
 @click.argument("query", required=False, nargs=-1)
 @click.option("-a", "--show-answer", is_flag=True, help="Display answer")
@@ -471,6 +444,40 @@ def list_cards_table(
                 "show_lapses": show_lapses,
             },
         )
+
+
+@main.command("list-models")
+def list_models() -> None:
+    """List available models."""
+    with Anki(**cfg) as a:
+        a.list_models()
+
+
+@main.command("list-notes")
+@click.argument("query", required=False, nargs=-1)
+@click.option("-c", "--show-cards", is_flag=True, help="Print card specs")
+@click.option("-r", "--show-raw-fields", is_flag=True, help="Print raw field data")
+@click.option("-v", "--verbose", is_flag=True, help="Print note details")
+def list_notes(
+    query: str, show_cards: bool, show_raw_fields: bool, verbose: bool
+) -> None:
+    """List notes that match QUERY.
+
+    The default QUERY is "tag:marked OR -flag:0". This default can be
+    customized in the config file `~/.config/apy/apy.json`, e.g. with
+
+    \b
+    {
+      "query": "tag:marked OR tag:leech"
+    }
+    """
+    if query:
+        query = " ".join(query)
+    else:
+        query = cfg["query"]
+
+    with Anki(**cfg) as a:
+        a.list_notes(query, show_cards, show_raw_fields, verbose)
 
 
 @main.command()
