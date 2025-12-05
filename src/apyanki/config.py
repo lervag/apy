@@ -55,6 +55,7 @@ CFG_DEFAULT_VALUES: dict[str, Any] = {
     "query": "tag:marked OR -flag:0",
     "review_show_cards": False,
     "review_verbose": False,
+    "auto_sync": False,
 }
 
 # Ensure that cfg has required keys

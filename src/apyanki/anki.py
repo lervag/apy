@@ -155,9 +155,12 @@ class Anki:
         exc_tb: TracebackType | None,
     ) -> None:
         if self.modified:
-            console.print("Database was modified.")
-            if self._profile is not None and self._profile["syncKey"]:
-                console.print("[blue]Remember to sync!")
+            if cfg["auto_sync"]:
+                self.sync()
+            else:
+                console.print("Database was modified.")
+                if self._profile is not None and self._profile["syncKey"]:
+                    console.print("[blue]Remember to sync!")
 
         self.col.close()
 

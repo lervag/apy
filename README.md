@@ -199,6 +199,7 @@ currently recognized:
 
 - `base_path`: Specify where `apy` should look for your Anki database. This is
   usually something like `/home/your_name/.local/share/Anki2/`.
+- `auto_sync`: Set to `true` to enable auto sync after any mutating operations.
 - `img_viewers`: Specify a dictionary of image viewer commands. Each key is
   a file extension. The value is a command list, e.g. `['display', 'density',
   '300']` which specifies the command and its options to use for the
@@ -232,6 +233,7 @@ An example configuration:
 
 ```json
 {
+  "auto_sync": true,
   "base_path": "/home/your_name/.local/share/Anki2/",
   "profile_name": "MyAnkiProfile",
   "query": "tag:leech",
