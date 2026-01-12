@@ -177,6 +177,8 @@ if x > 0:
 
 ### Add a Cloze note
 
+The following shows how a Cloze card can be added, e.g. after doing `apy add -m Cloze`:
+
 ```md
 # Note
 model: Cloze
@@ -184,11 +186,11 @@ tags: mytag, othertag
 
 ## Text
 
-{{c1::Canberra was {{c2::founded}}}} in 1913
+{{c1::Canberra}} was {{c2::founded}}}} in 1913
 
 Or {{c3::REPLACE}} here.
 
-## Extra
+## Back Extra
 Extra information goes here.
 ```
 
