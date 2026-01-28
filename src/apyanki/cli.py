@@ -406,6 +406,7 @@ def list_cards(query: str, verbose: bool) -> None:
 @click.option("-t", "--show-type", is_flag=True, help="Display card type")
 @click.option("-e", "--show-ease", is_flag=True, help="Display card ease")
 @click.option("-l", "--show-lapses", is_flag=True, help="Display card number of lapses")
+@click.option("-D", "--show-deck", is_flag=True, help="Display deck")
 def list_cards_table(
     query: str,
     show_answer: bool,
@@ -415,6 +416,7 @@ def list_cards_table(
     show_ease: bool,
     show_lapses: bool,
     show_cid: bool,
+    show_deck: bool,
 ) -> None:
     """List cards that match QUERY in a tabular format.
 
@@ -442,6 +444,7 @@ def list_cards_table(
                 "show_type": show_type,
                 "show_ease": show_ease,
                 "show_lapses": show_lapses,
+                "show_deck": show_deck,
             },
         )
 

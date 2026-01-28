@@ -434,6 +434,8 @@ class Anki:
         if opts_display.get("show_answer", False):
             width //= 2
             width -= 1
+        if opts_display.get("show_deck", False):
+            width -= 25
 
         table = Table(box=None, header_style="bold white")
         table.add_column("question")
@@ -451,6 +453,8 @@ class Anki:
             table.add_column("lapses", min_width=3)
         if opts_display.get("show_model", False):
             table.add_column("model", min_width=10)
+        if opts_display.get("show_deck", False):
+            table.add_column("deck", min_width=10)
 
         for cid in self.col.find_cards(query):
             card = self.col.get_card(cid)
@@ -474,6 +478,9 @@ class Anki:
                 row += [str(card.lapses)]
             if opts_display.get("show_model", False):
                 row += [card.note_type()["name"]]
+            if opts_display.get("show_deck", False):
+                deck_id = card.current_deck_id()
+                row += [self.col.decks.name(deck_id)]
             table.add_row(*row)
 
         console.print(table)
