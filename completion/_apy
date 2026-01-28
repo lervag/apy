@@ -120,7 +120,6 @@ _apy() {
     list-cards-table)
       opts=( \
         '::Query' \
-        '(-w --wrap)'{-w,--wrap}'[Wrap the question and answer on multiple lines]' \
         '(-a --show-answer)'{-a,--show-answer}'[Display answer]' \
         '(-m --show-model)'{-m,--show-model}'[Display model]' \
         '(-c --show-cid)'{-c,--show-cid}'[Display card ids]' \
@@ -128,6 +127,7 @@ _apy() {
         '(-t --show-type)'{-t,--show-type}'[Display card type]' \
         '(-e --show-ease)'{-e,--show-ease}'[Display card ease]' \
         '(-l --show-lapses)'{-l,--show-lapses}'[Display card number of lapses]' \
+        '(-l --show-deck)'{-l,--show-lapses}'[Display deck]' \
         $opts_help \
         );;
     list-models)
