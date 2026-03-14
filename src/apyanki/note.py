@@ -668,7 +668,7 @@ class NoteData:
                 note_id = NoteId(int(self.nid))
                 existing_note = anki.col.get_note(note_id)
                 return self._update_note(anki, existing_note)
-            except (ValueError, TypeError):
+            except ValueError, TypeError:
                 console.print(
                     f"[yellow]Invalid note ID format: {self.nid}. Will create a new note.[/yellow]"
                 )
@@ -688,7 +688,7 @@ class NoteData:
                 if card:
                     existing_note = card.note()
                     return self._update_note(anki, existing_note)
-            except (ValueError, TypeError):
+            except ValueError, TypeError:
                 console.print(
                     f"[yellow]Invalid card ID format: {self.cid}. Will create a new note.[/yellow]"
                 )
