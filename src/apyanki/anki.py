@@ -552,6 +552,7 @@ class Anki:
         deck: str | None = None,
         update_origin_file: bool = False,
         respect_note_ids: bool = False,
+        link_duplicates: bool = False,
     ) -> list[Note]:
         """Add notes from Markdown file
 
@@ -563,6 +564,8 @@ class Anki:
             respect_note_ids: If True, then this function looks for nid: or cid: headers
                               in the file to determine if a note should be updated
                               rather than added.
+            link_duplicates: If True, when a duplicate is detected, find the existing
+                             note and update the IDs file with its nid.
 
         Returns:
             List of notes that were updated or added
@@ -573,6 +576,7 @@ class Anki:
         has_missing_nids: bool = False
         notes: list[Note] = []
         external_ids_map: dict[str, str] = {}
+        internal_ids_list: list[str] = []
 
         for note_data in markdown_file_to_notes(filename):
             if tags:
@@ -588,10 +592,15 @@ class Anki:
             else:
                 note = note_data.add_to_collection(self)
 
-            notes.append(note)
+            notes.append(note[0])
 
-            if note_data.external_id:
-                external_ids_map[note_data.external_id] = str(note.n.id)
+            nid = str(note[0].n.id)
+            if note[1] == "duplicate" and not link_duplicates:
+                nid = "duplicate"
+
+            internal_ids_list.append(nid)
+            if note_data.external_id and nid != "duplicate":
+                external_ids_map[note_data.external_id] = nid
 
         if update_origin_file and has_missing_nids:
             if len(external_ids_map) > 0:
@@ -601,12 +610,19 @@ class Anki:
                     external_ids_map,
                 )
             else:
-                self._update_file_with_note_ids(filename, original_content, notes)
+                self._update_file_with_note_ids(
+                    filename,
+                    original_content,
+                    internal_ids_list,
+                )
 
         return notes
 
     def _update_file_with_note_ids(
-        self, filename: str, content: str, notes: list[Note]
+        self,
+        filename: str,
+        content: str,
+        note_ids: list[str],
     ) -> None:
         """Update the original markdown file with note IDs
 
@@ -615,7 +631,7 @@ class Anki:
         Args:
             filename: Path to the markdown file
             content: Original content of the file
-            notes: List of notes that were added/updated
+            note_ids: List of note ids for notes that were added/updated
         """
         # Find all '# Note' or similar headers in the file
         note_headers = re.finditer(r"^# .*$", content, re.MULTILINE)
@@ -654,9 +670,8 @@ class Anki:
                         insert_pos = j + 1  # Insert after this line
 
                 # If we have a note ID for this position, insert it
-                if i < len(notes):
-                    note_id = notes[i].n.id
-                    lines.insert(insert_pos, f"nid: {note_id}")
+                if i < len(note_ids):
+                    lines.insert(insert_pos, f"nid: {note_ids[i]}")
                     updated_content.append("\n".join(lines))
                 else:
                     # Couldn't match this section to a note, keep unchanged
@@ -707,7 +722,7 @@ class Anki:
             if note.deck is None:
                 note.deck = deck
             note.tags = f"{tags} {note.tags}"
-            notes.append(note.add_to_collection(self))
+            notes.append(note.add_to_collection(self)[0])
 
         return notes
 
@@ -732,4 +747,4 @@ class Anki:
         fields = dict(zip(field_names, field_values))
 
         new_note = NoteData(model_name, tags, fields, markdown, deck)
-        return new_note.add_to_collection(self)
+        return new_note.add_to_collection(self)[0]

@@ -137,7 +137,13 @@ def add(tags: str, model_name: str, deck: str) -> None:
 @click.argument("file", type=click.Path(exists=True, dir_okay=False))
 @click.option("-t", "--tags", default="", help="Specify default tags for cards.")
 @click.option("-d", "--deck", help="Specify default deck for cards.")
-def update_from_file(file: Path, tags: str, deck: str) -> None:
+@click.option(
+    "-l",
+    "--link-duplicates",
+    is_flag=True,
+    help="Link duplicates to existing notes in IDs file.",
+)
+def update_from_file(file: Path, tags: str, deck: str, link_duplicates: bool) -> None:
     """Update existing notes or add new notes from Markdown file.
 
     This command will update existing notes when a note ID (nid) is available.
@@ -231,6 +237,7 @@ def update_from_file(file: Path, tags: str, deck: str) -> None:
             deck,
             update_origin_file=True,
             respect_note_ids=True,
+            link_duplicates=link_duplicates,
         )
         _added_notes_postprocessing(a, notes)
 

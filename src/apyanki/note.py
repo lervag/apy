@@ -321,7 +321,7 @@ class Note:
             deck=self.get_deck(),
         )
 
-        new_note = note_data.add_to_collection(self.a)
+        new_note = note_data.add_to_collection(self.a)[0]
         new_note.edit()
         self.a.delete_notes(self.n.id)
 
@@ -599,6 +599,9 @@ class Note:
                 continue
 
 
+type NoteAddResult = tuple[Note, Literal["added", "updated", "duplicate"]]
+
+
 @dataclass
 class NoteData:
     """Dataclass to contain data for a single note"""
@@ -611,7 +614,7 @@ class NoteData:
     nid: str | None = None
     external_id: str | None = None
 
-    def add_to_collection(self, anki: Anki) -> Note:
+    def add_to_collection(self, anki: Anki) -> NoteAddResult:
         """Add note to collection
 
         Returns: The new note
@@ -642,18 +645,26 @@ class NoteData:
         for tag in self.tags.strip().split():
             new_note.add_tag(tag)
 
-        if new_note.duplicate_or_empty():
+        check_duplicate = new_note.duplicate_or_empty()
+        if check_duplicate == 2:
             field_name, field_value = list(self.fields.items())[0]
             console.print("[red]Dupe detected: note was not added!")
             console.print(f"First field: {field_name}")
             console.print(f"First value: {field_value}")
-        else:
-            _ = anki.col.addNote(new_note)
-            anki.modified = True
 
-        return Note(anki, new_note)
+            # Find the duplicate note
+            nids = anki.col.find_notes(f'{field_name}:"{field_value}"')
+            if len(nids) == 1:
+                existing_note = anki.col.get_note(nids[0])
+                return (Note(anki, existing_note), "duplicate")
 
-    def update_or_add_to_collection(self, anki: Anki) -> Note:
+            return (Note(anki, new_note), "duplicate")
+
+        _ = anki.col.addNote(new_note)
+        anki.modified = True
+        return (Note(anki, new_note), "added")
+
+    def update_or_add_to_collection(self, anki: Anki) -> NoteAddResult:
         """Update existing note in collection if ID is provided, otherwise add as new
 
         Returns: The updated or new note
@@ -676,7 +687,7 @@ class NoteData:
 
         return self.add_to_collection(anki)
 
-    def _update_note(self, anki: Anki, existing_note: Any) -> Note:
+    def _update_note(self, anki: Anki, existing_note: Any) -> NoteAddResult:
         """Update an existing note with new field values
 
         Returns: The updated note
@@ -731,7 +742,7 @@ class NoteData:
         _ = anki.col.update_note(existing_note)
         anki.modified = True
 
-        return Note(anki, existing_note)
+        return (Note(anki, existing_note), "updated")
 
 
 def markdown_file_to_notes(filename: str) -> list[NoteData]:

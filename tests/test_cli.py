@@ -28,24 +28,17 @@ def test_cli_base_directory():
         assert result.exit_code == 0
 
 
-# List of files that apy add-from-file should be able to successfully parse
-note_files_input = [
-    "basic.md",
-    "empty.md",
-]
-
-
-@pytest.mark.parametrize(
-    "note_files", [test_data_dir + file for file in note_files_input]
-)
-def test_cli_update_from_file(note_files):
+@pytest.mark.parametrize("infile", ["basic.md", "empty.md"])
+def test_cli_update_from_file(infile):
     """Test 'apy update-from-file' for various note file inputs."""
     runner = CliRunner()
 
     with tempfile.TemporaryDirectory() as tmpdirname:
         shutil.copytree(test_collection_dir, tmpdirname, dirs_exist_ok=True)
-        result = runner.invoke(main, ["-b", tmpdirname, "update-from-file", note_files])
-
+        shutil.copy(test_data_dir + infile, tmpdirname)
+        result = runner.invoke(
+            main, ["-b", tmpdirname, "update-from-file", f"{tmpdirname}/{infile}"]
+        )
         assert result.exit_code == 0
 
 
@@ -174,3 +167,49 @@ def test_external_ids_update_file():
         assert "note2" in updated_ids
         assert updated_ids["note1"] != ""
         assert updated_ids["note2"] != ""
+
+
+def test_link_duplicates():
+    """Test that --link-duplicates updates IDs file with existing nid on duplicate."""
+    runner = CliRunner()
+
+    with tempfile.TemporaryDirectory() as tmpdirname:
+        shutil.copytree(test_collection_dir, tmpdirname, dirs_exist_ok=True)
+        shutil.copy(test_data_dir + "duplicate_test.md", tmpdirname)
+
+        external_ids_file = tmpdirname + "/external_ids.json"
+        with open(external_ids_file, "w") as f:
+            json.dump({}, f)
+
+        result1 = runner.invoke(
+            main,
+            ["-b", tmpdirname, "update-from-file", tmpdirname + "/duplicate_test.md"],
+        )
+        assert result1.exit_code == 0
+
+        with open(external_ids_file, "r") as f:
+            ids_after_first = json.load(f)
+
+        assert "note1" in ids_after_first
+        original_nid = ids_after_first["note1"]
+
+        with open(external_ids_file, "w") as f:
+            json.dump({}, f)
+
+        result2 = runner.invoke(
+            main,
+            [
+                "-b",
+                tmpdirname,
+                "update-from-file",
+                "-l",
+                tmpdirname + "/duplicate_test.md",
+            ],
+        )
+        assert result2.exit_code == 0
+        assert "Dupe detected" in result2.output
+
+        with open(external_ids_file, "r") as f:
+            ids_after_link = json.load(f)
+
+        assert ids_after_link["note1"] == original_nid

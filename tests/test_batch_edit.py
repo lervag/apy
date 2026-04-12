@@ -82,7 +82,6 @@ def test_update_from_file(collection):
         # Add initial note
         note = a.add_notes_from_file("test.md")[0]
         note_id = note.n.id
-        print(note_id)
 
         # Now create update file with the note ID
         with open("test_update.md", "w") as f:
@@ -105,8 +104,6 @@ def test_update_from_file(collection):
 
         # Update the note
         updated_note = a.add_notes_from_file("test_update.md", respect_note_ids=True)[0]
-        print(note)
-        print(updated_note)
 
         # Verify it's the same note but updated
         assert updated_note.n.id == note_id
