@@ -137,34 +137,31 @@ def add(tags: str, model_name: str, deck: str) -> None:
 @click.argument("file", type=click.Path(exists=True, dir_okay=False))
 @click.option("-t", "--tags", default="", help="Specify default tags for cards.")
 @click.option("-d", "--deck", help="Specify default deck for cards.")
-@click.option(
-    "-u", "--update-file", is_flag=True, help="Update original file with note IDs."
-)
-def update_from_file(file: Path, tags: str, deck: str, update_file: bool) -> None:
+def update_from_file(file: Path, tags: str, deck: str) -> None:
     """Update existing notes or add new notes from Markdown file.
 
-    This command will update existing notes if a note ID (nid) or card ID (cid)
-    is provided in the file header, otherwise it will add new notes.
+    This command will update existing notes when a note ID (nid) is available.
+    There are two modes:
 
-    With the --update-file option, the original file will be updated to include
-    note IDs for any new notes added.
+      * External IDs: Each note has a unique `id` key in the note header, and
+        the `nid` is found in an external JSON file. When adding new cards, the
+        Markdown file will be updated to add missing `id`, and the external ID
+        file will be updated accordingly with the corresponding `nid` values.
+      * Internal IDs: Each note has a `nid` key in the note header. When adding
+        new notes, the Markdown file will be updated with the added `nid` value
+        for the new cards.
 
-    The syntax is similar to add-from-file, but with two additional keys:
+    INTERNAL IDS MODE
 
-    \b
-    * nid:      The note ID to update (optional)
-    * cid:      The card ID to update (optional, used if nid is not provided)
-
-    If neither nid nor cid is provided, a new note will be created.
-
-    Here is an example Markdown input for updating:
+    Here is an example of an internal ID Markdown input:
 
         // example.md
         model: Basic
         tags: marked
-        nid: 1619153168151
 
         # Note 1
+        nid: 1619153168151
+
         ## Front
         Updated question?
 
@@ -172,7 +169,7 @@ def update_from_file(file: Path, tags: str, deck: str, update_file: bool) -> Non
         Updated answer.
 
         # Note 2
-        cid: 1619153168152
+        nid: 1619153168152
 
         ## Front
         Another updated question?
@@ -188,9 +185,53 @@ def update_from_file(file: Path, tags: str, deck: str, update_file: bool) -> Non
 
         ## Back
         New note content
+
+    EXTERNAL IDS MODE
+
+    For collaborative workflows (e.g., sharing markdown files via Git), you can
+    store note IDs in a separate external JSON file instead of in the Markdown
+    file itself.
+
+    To activate external IDs mode, add an 'external-ids:' header at the top of
+    the markdown file pointing to the JSON file:
+
+        // notes.md
+        external-ids: .anki-ids.json
+
+        # Note 1
+        id: note1
+
+        ## Front
+        Question 1
+
+        ## Back
+        Answer 1
+
+        # Note 2
+        id: note2
+
+        ## Front
+        Question 2
+
+        ## Back
+        Answer 2
+
+    The external IDs file (e.g., .anki-ids.json) maps user-defined IDs to Anki
+    note IDs:
+
+        {
+            "note1": "1619153168151",
+            "note2": "1619153168152"
+        }
     """
     with Anki(**cfg) as a:
-        notes = a.add_notes_from_file(str(file), tags, deck, update_file)
+        notes = a.add_notes_from_file(
+            str(file),
+            tags,
+            deck,
+            update_origin_file=True,
+            respect_note_ids=True,
+        )
         _added_notes_postprocessing(a, notes)
 
 
@@ -199,20 +240,51 @@ def update_from_file(file: Path, tags: str, deck: str, update_file: bool) -> Non
 @click.argument("file", type=click.Path(exists=True, dir_okay=False))
 @click.option("-t", "--tags", default="", help="Specify default tags for new cards.")
 @click.option("-d", "--deck", help="Specify default deck for new cards.")
-@click.option(
-    "-u", "--update-file", is_flag=True, help="Update original file with note IDs."
-)
-def add_from_file(file: Path, tags: str, deck: str, update_file: bool) -> None:
-    """Add notes from Markdown file.
+def add_from_file(file: Path, tags: str, deck: str) -> None:
+    """Add new notes from Markdown file.
 
-    With the --update-file option, the original file will be updated to include
-    note IDs for any new notes added.
+    This command will add new notes to the collection. Unlike update-from-file,
+    it will not update existing notes based on IDs - all notes are treated as new.
+    The file (or external IDs file when using external-ids mode) will NOT be
+    updated with note IDs.
 
-    This command is an alias for update-from-file, which can both add new notes
-    and update existing ones.
+    This command is useful for importing notes without modifying the source file.
+
+    Here is an example Markdown input for adding notes:
+
+        // example.md
+        model: Basic
+        tags: marked
+
+        # Note 1
+        nid: 1619153168151    <-  NB! This is IGNORED!
+
+        ## Front
+        Updated question?
+
+        ## Back
+        Updated answer.
+
+        # Note 2
+
+        ## Front
+        Another updated question?
+
+        ## Back
+        Another updated answer.
+
+        # Note 3
+        model: Basic
+        tags: newtag
+
+        ## Front
+        This will be a new note (no ID provided)
+
+        ## Back
+        New note content
     """
     with Anki(**cfg) as a:
-        notes = a.add_notes_from_file(str(file), tags, deck, update_file)
+        notes = a.add_notes_from_file(str(file), tags, deck)
         _added_notes_postprocessing(a, notes)
 
 

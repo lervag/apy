@@ -2,9 +2,11 @@
 
 from __future__ import annotations
 
+import json
 import os
 import re
 import tempfile
+import uuid
 from dataclasses import dataclass
 from pathlib import Path
 from subprocess import DEVNULL, Popen
@@ -607,7 +609,7 @@ class NoteData:
     markdown: bool = True
     deck: str | None = None
     nid: str | None = None
-    cid: str | None = None
+    external_id: str | None = None
 
     def add_to_collection(self, anki: Anki) -> Note:
         """Add note to collection
@@ -640,14 +642,14 @@ class NoteData:
         for tag in self.tags.strip().split():
             new_note.add_tag(tag)
 
-        if not new_note.duplicate_or_empty():
-            _ = anki.col.addNote(new_note)
-            anki.modified = True
-        else:
+        if new_note.duplicate_or_empty():
             field_name, field_value = list(self.fields.items())[0]
-            console.print("[red]Dupe detected, new_note was not added!")
+            console.print("[red]Dupe detected: note was not added!")
             console.print(f"First field: {field_name}")
             console.print(f"First value: {field_value}")
+        else:
+            _ = anki.col.addNote(new_note)
+            anki.modified = True
 
         return Note(anki, new_note)
 
@@ -656,13 +658,8 @@ class NoteData:
 
         Returns: The updated or new note
         """
-        # First try to find the note by nid or cid
-        existing_note = None
-
         if self.nid:
-            # Try to find the note by its note ID
             try:
-                # Import NoteId here to avoid circular imports at module level
                 from anki.notes import NoteId
 
                 note_id = NoteId(int(self.nid))
@@ -677,27 +674,6 @@ class NoteData:
                     f"[yellow]Note with ID {self.nid} not found: {e}. Will create a new note.[/yellow]"
                 )
 
-        if not existing_note and self.cid:
-            # Try to find the note by card ID
-            try:
-                # Import CardId here to avoid circular imports at module level
-                from anki.cards import CardId
-
-                card_id = CardId(int(self.cid))
-                card = anki.col.get_card(card_id)
-                if card:
-                    existing_note = card.note()
-                    return self._update_note(anki, existing_note)
-            except ValueError, TypeError:
-                console.print(
-                    f"[yellow]Invalid card ID format: {self.cid}. Will create a new note.[/yellow]"
-                )
-            except Exception as e:
-                console.print(
-                    f"[yellow]Card with ID {self.cid} not found: {e}. Will create a new note.[/yellow]"
-                )
-
-        # If no existing note found or ID not provided, add as new
         return self.add_to_collection(anki)
 
     def _update_note(self, anki: Anki, existing_note: Any) -> Note:
@@ -769,7 +745,7 @@ def markdown_file_to_notes(filename: str) -> list[NoteData]:
                 markdown=x["markdown"],
                 deck=x["deck"],
                 nid=x["nid"],
-                cid=x["cid"],
+                external_id=x.get("external_id"),
             )
             for x in _parse_markdown_file(filename)
         ]
@@ -784,7 +760,7 @@ def markdown_file_to_notes(filename: str) -> list[NoteData]:
 def _parse_markdown_file(filename: str) -> list[dict[str, Any]]:
     """Parse the content of a Markdown file
 
-    This must adhere to the specification of {add_from_file} from cli.py!
+    This must adhere to the specification of {update_from_file} from cli.py!
     """
     defaults: dict[str, Any] = {
         "model": "Basic",
@@ -792,7 +768,7 @@ def _parse_markdown_file(filename: str) -> list[dict[str, Any]]:
         "tags": "",
         "deck": None,
         "nid": None,
-        "cid": None,
+        "external_ids_file": None,
     }
     with open(filename, "r", encoding="utf8") as f:
         for line in f:
@@ -800,7 +776,7 @@ def _parse_markdown_file(filename: str) -> list[dict[str, Any]]:
             if match:
                 break
 
-            match = re.match(r"(\w+): (.*)", line)
+            match = re.match(r"([\w-]+): (.*)", line)
             if match:
                 k, v = match.groups()
                 k = k.lower()
@@ -811,15 +787,29 @@ def _parse_markdown_file(filename: str) -> list[dict[str, Any]]:
                     defaults["markdown"] = v in ("true", "yes")
                 elif k == "nid":
                     defaults["nid"] = v
-                elif k == "cid":
-                    defaults["cid"] = v
+                elif k == "external-ids":
+                    defaults["external_ids_file"] = v
                 else:
                     defaults[k] = v
+
+    external_ids_map: dict[str, dict[str, Any]] = {}
+    if defaults["external_ids_file"]:
+        ids_file_path = Path(filename).parent / defaults["external_ids_file"]
+        if ids_file_path.exists():
+            with open(ids_file_path, "r", encoding="utf8") as f:
+                external_ids_map = json.load(f)
 
     notes: list[dict[str, Any]] = []
     current_note: dict[str, Any] = {}
     current_field: str | None = None
     is_in_codeblock = False
+
+    if defaults["external_ids_file"] and defaults["nid"]:
+        console.print(
+            "[red]Error: Cannot use nid in file header when external-ids is set.[/red]"
+        )
+        raise Abort()
+
     with open(filename, "r", encoding="utf8") as f:
         for line in f:
             if is_in_codeblock:
@@ -844,7 +834,6 @@ def _parse_markdown_file(filename: str) -> list[dict[str, Any]]:
                     k = k.lower()
                     v = v.strip()
                     if k in ("tag", "tags"):
-                        # Merge global tags with note-specific tags
                         current_tags = current_note.get("tags", "").strip()
                         if current_tags:
                             current_note["tags"] = (
@@ -854,6 +843,18 @@ def _parse_markdown_file(filename: str) -> list[dict[str, Any]]:
                             current_note["tags"] = v.replace(",", "")
                     elif k in ("markdown", "md"):
                         current_note["markdown"] = v in ("true", "yes")
+                    elif k == "id":
+                        current_note["external_id"] = v
+                        if defaults["external_ids_file"]:
+                            if v in external_ids_map:
+                                current_note["nid"] = str(external_ids_map[v])
+                    elif k == "nid":
+                        if defaults["external_ids_file"]:
+                            console.print(
+                                f"[red]Error: Cannot use {k} in note when external-ids mode is active.[/red]"
+                            )
+                            raise Abort()
+                        current_note[k] = v
                     else:
                         current_note[k] = v
 
@@ -874,6 +875,10 @@ def _parse_markdown_file(filename: str) -> list[dict[str, Any]]:
 
                 current_note = {"title": title, "fields": {}, **defaults}
                 current_field = None
+                if defaults["external_ids_file"] and not current_note.get(
+                    "external_id"
+                ):
+                    current_note["external_id"] = str(uuid.uuid4())
                 continue
 
             if len(level) == 2:

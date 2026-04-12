@@ -1,7 +1,8 @@
 """Test the CLI"""
 
-import tempfile
+import json
 import shutil
+import tempfile
 
 import pytest
 from click.testing import CliRunner
@@ -80,3 +81,96 @@ def test_cli_add_single():
             ],
         )
         assert result.exit_code == 0
+
+
+def test_external_ids_mode():
+    """Test update-from-file with external IDs mode."""
+    runner = CliRunner()
+
+    with tempfile.TemporaryDirectory() as tmpdirname:
+        shutil.copytree(test_collection_dir, tmpdirname, dirs_exist_ok=True)
+        shutil.copy(test_data_dir + "external_ids.md", tmpdirname)
+        shutil.copy(test_data_dir + "external_ids.json", tmpdirname)
+
+        result = runner.invoke(
+            main,
+            ["-b", tmpdirname, "update-from-file", tmpdirname + "/external_ids.md"],
+        )
+
+        assert result.exit_code == 0
+        assert "Updated/added" in result.output
+        assert "nid:" in result.output
+
+
+def test_external_ids_missing_id_header():
+    """Test auto-generation of UUID when id header missing."""
+    runner = CliRunner()
+
+    with tempfile.TemporaryDirectory() as tmpdirname:
+        shutil.copytree(test_collection_dir, tmpdirname, dirs_exist_ok=True)
+        shutil.copy(test_data_dir + "external_ids_auto.md", tmpdirname)
+
+        result = runner.invoke(
+            main,
+            [
+                "-b",
+                tmpdirname,
+                "update-from-file",
+                tmpdirname + "/external_ids_auto.md",
+            ],
+        )
+
+        assert result.exit_code == 0
+        assert "Updated/added" in result.output
+        assert "nid:" in result.output
+
+
+def test_external_ids_conflict_error():
+    """Test error when mixing external-ids with nid/cid headers."""
+    runner = CliRunner()
+
+    with tempfile.TemporaryDirectory() as tmpdirname:
+        shutil.copytree(test_collection_dir, tmpdirname, dirs_exist_ok=True)
+        shutil.copy(test_data_dir + "external_ids_conflict.md", tmpdirname)
+
+        result = runner.invoke(
+            main,
+            [
+                "-b",
+                tmpdirname,
+                "update-from-file",
+                tmpdirname + "/external_ids_conflict.md",
+            ],
+        )
+
+        assert result.exit_code != 0
+        assert "Cannot use" in result.output
+
+
+def test_external_ids_update_file():
+    """Test that update-from-file automatically updates the JSON file."""
+    runner = CliRunner()
+
+    with tempfile.TemporaryDirectory() as tmpdirname:
+        shutil.copytree(test_collection_dir, tmpdirname, dirs_exist_ok=True)
+        shutil.copy(test_data_dir + "external_ids.md", tmpdirname)
+
+        json_file = tmpdirname + "/external_ids.json"
+        with open(json_file, "w") as f:
+            json.dump({}, f)
+
+        result = runner.invoke(
+            main,
+            ["-b", tmpdirname, "update-from-file", tmpdirname + "/external_ids.md"],
+        )
+
+        assert result.exit_code == 0
+
+        with open(json_file, "r") as f:
+            updated_ids = json.load(f)
+
+        assert len(updated_ids) > 0
+        assert "note1" in updated_ids
+        assert "note2" in updated_ids
+        assert updated_ids["note1"] != ""
+        assert updated_ids["note2"] != ""

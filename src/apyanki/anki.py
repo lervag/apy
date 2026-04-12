@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import json
 import os
 import pickle
 import re
@@ -550,7 +551,7 @@ class Anki:
         tags: str = "",
         deck: str | None = None,
         update_origin_file: bool = False,
-        respect_note_ids: bool = True,
+        respect_note_ids: bool = False,
     ) -> list[Note]:
         """Add notes from Markdown file
 
@@ -571,6 +572,7 @@ class Anki:
 
         has_missing_nids: bool = False
         notes: list[Note] = []
+        external_ids_map: dict[str, str] = {}
 
         for note_data in markdown_file_to_notes(filename):
             if tags:
@@ -588,9 +590,18 @@ class Anki:
 
             notes.append(note)
 
-        # Update the original file with note IDs if requested
+            if note_data.external_id:
+                external_ids_map[note_data.external_id] = str(note.n.id)
+
         if update_origin_file and has_missing_nids:
-            self._update_file_with_note_ids(filename, original_content, notes)
+            if len(external_ids_map) > 0:
+                self._update_external_ids_file(
+                    filename,
+                    original_content,
+                    external_ids_map,
+                )
+            else:
+                self._update_file_with_note_ids(filename, original_content, notes)
 
         return notes
 
@@ -654,6 +665,35 @@ class Anki:
         # Write back the updated content
         with open(filename, "w", encoding="utf-8") as f:
             _ = f.write("".join(updated_content))
+
+    def _update_external_ids_file(
+        self, filename: str, content: str, external_ids_map: dict[str, str]
+    ) -> None:
+        """Update the external IDs JSON file with new note IDs
+
+        This function updates the external IDs file when using external-ids mode.
+
+        Args:
+            filename: Path to the markdown file
+            content: Original content of the file (unused, kept for signature consistency)
+            external_ids_map: Dictionary mapping external IDs to NIDs
+        """
+        match = re.search(r"external-ids:\s*(.+)", content)
+        if not match:
+            return
+
+        ids_filename = match.group(1).strip()
+        ids_file_path = Path(filename).parent / ids_filename
+
+        existing_ids: dict[str, str] = {}
+        if ids_file_path.exists():
+            with open(ids_file_path, "r", encoding="utf-8") as f:
+                existing_ids = json.load(f)
+
+        existing_ids.update(external_ids_map)
+
+        with open(ids_file_path, "w", encoding="utf-8") as f:
+            json.dump(existing_ids, f, indent=2)
 
     def add_notes_from_list(
         self,
