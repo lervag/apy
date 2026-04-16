@@ -3,7 +3,7 @@
 import os
 import sys
 from pathlib import Path
-from typing import Any
+from typing import Any, Literal
 
 import click
 
@@ -130,7 +130,7 @@ def add(tags: str, model_name: str, deck: str) -> None:
     """
     with Anki(**cfg) as a:
         notes = a.add_notes_with_editor(tags, model_name, deck)
-        _added_notes_postprocessing(a, notes)
+        _added_notes_postprocessing(a, notes, "Added")
 
 
 @main.command("update-from-file")
@@ -239,7 +239,7 @@ def update_from_file(file: Path, tags: str, deck: str, link_duplicates: bool) ->
             respect_note_ids=True,
             link_duplicates=link_duplicates,
         )
-        _added_notes_postprocessing(a, notes)
+        _added_notes_postprocessing(a, notes, "Updated/added")
 
 
 # Create an alias for backward compatibility
@@ -292,10 +292,14 @@ def add_from_file(file: Path, tags: str, deck: str) -> None:
     """
     with Anki(**cfg) as a:
         notes = a.add_notes_from_file(str(file), tags, deck)
-        _added_notes_postprocessing(a, notes)
+        _added_notes_postprocessing(a, notes, "Added")
 
 
-def _added_notes_postprocessing(a: Anki, notes: list[Note]) -> None:
+def _added_notes_postprocessing(
+    a: Anki,
+    notes: list[Note],
+    action_word: Literal["Updated/added", "Added"],
+) -> None:
     """Common postprocessing after 'apy add[-from-file]' or 'apy update-from-file'."""
     n_notes = len(notes)
     if n_notes == 0:
@@ -307,18 +311,6 @@ def _added_notes_postprocessing(a: Anki, notes: list[Note]) -> None:
     if n_decks == 0:
         console.print("No notes added or updated")
         return
-
-    # Check if the command is update or add (based on caller function name)
-    import inspect
-
-    caller_frame = inspect.currentframe()
-    if caller_frame is not None and caller_frame.f_back is not None:
-        caller_function = caller_frame.f_back.f_code.co_name
-    else:
-        caller_function = ""
-    is_update = "update" in caller_function.lower()
-
-    action_word = "Updated/added" if is_update else "Added"
 
     if a.n_decks > 1:
         if n_notes == 1:
@@ -332,9 +324,12 @@ def _added_notes_postprocessing(a: Anki, notes: list[Note]) -> None:
 
     for note in notes:
         cards = note.n.cards()
-        console.print(f"* nid: {note.n.id} (with {len(cards)} cards)")
-        for card in note.n.cards():
-            console.print(f"  * cid: {card.id}")
+        if (n := len(cards)) == 1:
+            console.print(f"* nid: {note.n.id} / cid: {cards[0].id}")
+        else:
+            console.print(f"* nid: {note.n.id} / with {n} cards:")
+            for card in cards:
+                console.print(f"  * cid: {card.id}")
 
 
 @main.command("check-media")

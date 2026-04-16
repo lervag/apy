@@ -76,6 +76,30 @@ def test_cli_add_single():
         assert result.exit_code == 0
 
 
+def test_cli_update_file_with_duplicates():
+    """Test duplicate behaviour with update-from-file"""
+    runner = CliRunner()
+
+    with tempfile.TemporaryDirectory() as tmpdirname:
+        shutil.copytree(test_collection_dir, tmpdirname, dirs_exist_ok=True)
+        shutil.copy(test_data_dir + "duplicate_test_2.md", tmpdirname)
+
+        filename = tmpdirname + "/duplicate_test_2.md"
+        result = runner.invoke(
+            main,
+            ["-b", tmpdirname, "update-from-file", filename],
+        )
+
+        assert result.exit_code == 0
+        assert "Dupe detected" in result.output
+
+        with open(filename, "r") as f:
+            updated_content = f.readlines()
+
+        nid_lines = [line for line in updated_content if "nid:" in line]
+        assert len(nid_lines) == 2
+
+
 def test_external_ids_mode():
     """Test update-from-file with external IDs mode."""
     runner = CliRunner()

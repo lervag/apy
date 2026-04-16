@@ -576,9 +576,9 @@ class Anki:
         has_missing_nids: bool = False
         notes: list[Note] = []
         external_ids_map: dict[str, str] = {}
-        internal_ids_list: list[str] = []
+        internal_ids_map: dict[int, str] = {}
 
-        for note_data in markdown_file_to_notes(filename):
+        for idx, note_data in enumerate(markdown_file_to_notes(filename)):
             if tags:
                 note_data.tags = f"{tags} {note_data.tags}"
 
@@ -592,15 +592,16 @@ class Anki:
             else:
                 note = note_data.add_to_collection(self)
 
+            if note[1] == "duplicate" and not link_duplicates:
+                continue
+
             notes.append(note[0])
 
             nid = str(note[0].n.id)
-            if note[1] == "duplicate" and not link_duplicates:
-                nid = "duplicate"
-
-            internal_ids_list.append(nid)
-            if note_data.external_id and nid != "duplicate":
+            if note_data.external_id:
                 external_ids_map[note_data.external_id] = nid
+            else:
+                internal_ids_map[idx] = nid
 
         if update_origin_file and has_missing_nids:
             if len(external_ids_map) > 0:
@@ -613,7 +614,7 @@ class Anki:
                 self._update_file_with_note_ids(
                     filename,
                     original_content,
-                    internal_ids_list,
+                    internal_ids_map,
                 )
 
         return notes
@@ -622,7 +623,7 @@ class Anki:
         self,
         filename: str,
         content: str,
-        note_ids: list[str],
+        note_id_map: dict[int, str],
     ) -> None:
         """Update the original markdown file with note IDs
 
@@ -631,7 +632,8 @@ class Anki:
         Args:
             filename: Path to the markdown file
             content: Original content of the file
-            note_ids: List of note ids for notes that were added/updated
+            note_id_map: A dict from note index to note ids for notes that were
+                         added/updated
         """
         # Find all '# Note' or similar headers in the file
         note_headers = re.finditer(r"^# .*$", content, re.MULTILINE)
@@ -670,8 +672,8 @@ class Anki:
                         insert_pos = j + 1  # Insert after this line
 
                 # If we have a note ID for this position, insert it
-                if i < len(note_ids):
-                    lines.insert(insert_pos, f"nid: {note_ids[i]}")
+                if i in note_id_map:
+                    lines.insert(insert_pos, f"nid: {note_id_map[i]}")
                     updated_content.append("\n".join(lines))
                 else:
                     # Couldn't match this section to a note, keep unchanged
