@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import json
 import os
 import pickle
 import re
@@ -550,7 +551,8 @@ class Anki:
         tags: str = "",
         deck: str | None = None,
         update_origin_file: bool = False,
-        respect_note_ids: bool = True,
+        respect_note_ids: bool = False,
+        link_duplicates: bool = False,
     ) -> list[Note]:
         """Add notes from Markdown file
 
@@ -562,6 +564,8 @@ class Anki:
             respect_note_ids: If True, then this function looks for nid: or cid: headers
                               in the file to determine if a note should be updated
                               rather than added.
+            link_duplicates: If True, when a duplicate is detected, find the existing
+                             note and update the IDs file with its nid.
 
         Returns:
             List of notes that were updated or added
@@ -571,8 +575,10 @@ class Anki:
 
         has_missing_nids: bool = False
         notes: list[Note] = []
+        external_ids_map: dict[str, str] = {}
+        internal_ids_map: dict[int, str] = {}
 
-        for note_data in markdown_file_to_notes(filename):
+        for idx, note_data in enumerate(markdown_file_to_notes(filename)):
             if tags:
                 note_data.tags = f"{tags} {note_data.tags}"
 
@@ -586,16 +592,38 @@ class Anki:
             else:
                 note = note_data.add_to_collection(self)
 
-            notes.append(note)
+            if note[1] == "duplicate" and not link_duplicates:
+                continue
 
-        # Update the original file with note IDs if requested
+            notes.append(note[0])
+
+            nid = str(note[0].n.id)
+            if note_data.external_id:
+                external_ids_map[note_data.external_id] = nid
+            else:
+                internal_ids_map[idx] = nid
+
         if update_origin_file and has_missing_nids:
-            self._update_file_with_note_ids(filename, original_content, notes)
+            if len(external_ids_map) > 0:
+                self._update_external_ids_file(
+                    filename,
+                    original_content,
+                    external_ids_map,
+                )
+            else:
+                self._update_file_with_note_ids(
+                    filename,
+                    original_content,
+                    internal_ids_map,
+                )
 
         return notes
 
     def _update_file_with_note_ids(
-        self, filename: str, content: str, notes: list[Note]
+        self,
+        filename: str,
+        content: str,
+        note_id_map: dict[int, str],
     ) -> None:
         """Update the original markdown file with note IDs
 
@@ -604,7 +632,8 @@ class Anki:
         Args:
             filename: Path to the markdown file
             content: Original content of the file
-            notes: List of notes that were added/updated
+            note_id_map: A dict from note index to note ids for notes that were
+                         added/updated
         """
         # Find all '# Note' or similar headers in the file
         note_headers = re.finditer(r"^# .*$", content, re.MULTILINE)
@@ -643,9 +672,8 @@ class Anki:
                         insert_pos = j + 1  # Insert after this line
 
                 # If we have a note ID for this position, insert it
-                if i < len(notes):
-                    note_id = notes[i].n.id
-                    lines.insert(insert_pos, f"nid: {note_id}")
+                if i in note_id_map:
+                    lines.insert(insert_pos, f"nid: {note_id_map[i]}")
                     updated_content.append("\n".join(lines))
                 else:
                     # Couldn't match this section to a note, keep unchanged
@@ -654,6 +682,35 @@ class Anki:
         # Write back the updated content
         with open(filename, "w", encoding="utf-8") as f:
             _ = f.write("".join(updated_content))
+
+    def _update_external_ids_file(
+        self, filename: str, content: str, external_ids_map: dict[str, str]
+    ) -> None:
+        """Update the external IDs JSON file with new note IDs
+
+        This function updates the external IDs file when using external-ids mode.
+
+        Args:
+            filename: Path to the markdown file
+            content: Original content of the file (unused, kept for signature consistency)
+            external_ids_map: Dictionary mapping external IDs to NIDs
+        """
+        match = re.search(r"external-ids:\s*(.+)", content)
+        if not match:
+            return
+
+        ids_filename = match.group(1).strip()
+        ids_file_path = Path(filename).parent / ids_filename
+
+        existing_ids: dict[str, str] = {}
+        if ids_file_path.exists():
+            with open(ids_file_path, "r", encoding="utf-8") as f:
+                existing_ids = json.load(f)
+
+        existing_ids.update(external_ids_map)
+
+        with open(ids_file_path, "w", encoding="utf-8") as f:
+            json.dump(existing_ids, f, indent=2)
 
     def add_notes_from_list(
         self,
@@ -667,7 +724,7 @@ class Anki:
             if note.deck is None:
                 note.deck = deck
             note.tags = f"{tags} {note.tags}"
-            notes.append(note.add_to_collection(self))
+            notes.append(note.add_to_collection(self)[0])
 
         return notes
 
@@ -692,4 +749,4 @@ class Anki:
         fields = dict(zip(field_names, field_values))
 
         new_note = NoteData(model_name, tags, fields, markdown, deck)
-        return new_note.add_to_collection(self)
+        return new_note.add_to_collection(self)[0]

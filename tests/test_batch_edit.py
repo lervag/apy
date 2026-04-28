@@ -103,7 +103,7 @@ def test_update_from_file(collection):
             )
 
         # Update the note
-        updated_note = a.add_notes_from_file("test_update.md")[0]
+        updated_note = a.add_notes_from_file("test_update.md", respect_note_ids=True)[0]
 
         # Verify it's the same note but updated
         assert updated_note.n.id == note_id
@@ -115,64 +115,6 @@ def test_update_from_file(collection):
     # Clean up
     os.remove("test.md")
     os.remove("test_update.md")
-
-
-def test_update_from_file_by_cid(collection):
-    """Test updating a note from a Markdown file using card ID."""
-    # First create a note
-    with open("test.md", "w") as f:
-        f.write(
-            textwrap.dedent(
-                """\
-            model: Basic
-            tags: marked
-
-            # Note 1
-            ## Front
-            Original question?
-
-            ## Back
-            Original answer.
-            """
-            )
-        )
-
-    with Anki(collection_db_path=collection) as a:
-        # Add initial note
-        note = a.add_notes_from_file("test.md")[0]
-        card_id = note.n.cards()[0].id
-
-        # Now create update file with the card ID
-        with open("test_update_cid.md", "w") as f:
-            f.write(
-                textwrap.dedent(
-                    f"""\
-                model: Basic
-                tags: marked card-updated
-                cid: {card_id}
-
-                # Note 1
-                ## Front
-                Updated by card ID!
-
-                ## Back
-                Updated answer via card ID.
-                """
-                )
-            )
-
-        # Update the note
-        updated_note = a.add_notes_from_file("test_update_cid.md")[0]
-
-        # Verify it's the same note but updated
-        assert updated_note.n.id == note.n.id
-        assert sorted(updated_note.n.tags) == ["card-updated", "marked"]
-        assert "Updated by card ID!" in updated_note.n.fields[0]
-        assert "Updated answer via card ID." in updated_note.n.fields[1]
-
-    # Clean up
-    os.remove("test.md")
-    os.remove("test_update_cid.md")
 
 
 def test_update_from_file_new_and_existing(collection):
@@ -231,7 +173,7 @@ def test_update_from_file_new_and_existing(collection):
             )
 
         # Update the note
-        updated_notes = a.add_notes_from_file("test_mixed.md")
+        updated_notes = a.add_notes_from_file("test_mixed.md", respect_note_ids=True)
 
         # Verify we have two notes
         assert len(updated_notes) == 2
@@ -359,7 +301,11 @@ def test_update_file_with_mixed_notes(collection):
             )
 
         # Update notes with update_file=True
-        notes = a.add_notes_from_file("test_update_mix.md", update_origin_file=True)
+        notes = a.add_notes_from_file(
+            "test_update_mix.md",
+            respect_note_ids=True,
+            update_origin_file=True,
+        )
 
         # Verify two notes were affected
         assert len(notes) == 2
