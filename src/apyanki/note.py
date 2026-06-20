@@ -38,6 +38,7 @@ from apyanki.fields import (
 from apyanki.utilities import cd, choose, edit_file
 
 if TYPE_CHECKING:
+    from anki.decks import DeckId
     from anki.notes import Note as ANote
 
     from apyanki.anki import Anki
@@ -258,7 +259,7 @@ class Note:
         self.a.modified = True
 
         # Check for duplication issues
-        if self.n.dupeOrEmpty():
+        if self.n.duplicate_or_empty():
             console.print("[red]Warning: The updated note is now a dupe![/red]")
             console.wait_for_keypress()
 
@@ -333,7 +334,7 @@ class Note:
             self.n.remove_tag("marked")
         else:
             self.n.add_tag("marked")
-        self.n.flush()
+        self.a.col.update_note(self.n)
         self.a.modified = True
 
     def toggle_leech(self) -> None:
@@ -342,7 +343,7 @@ class Note:
             self.n.remove_tag("leech")
         else:
             self.n.add_tag("leech")
-        self.n.flush()
+        self.a.col.update_note(self.n)
         self.a.modified = True
 
     def toggle_suspend(self) -> None:
@@ -364,7 +365,7 @@ class Note:
             index = self.field_names.index(field_name)
 
         self.n.fields[index] = toggle_field_to_markdown(self.n.fields[index])
-        self.n.flush()
+        self.a.col.update_note(self.n)
         self.a.modified = True
 
     def clear_flags(self) -> None:
@@ -372,7 +373,7 @@ class Note:
         for c in self.n.cards():
             if c.flags > 0:
                 c.flags = 0
-                c.flush()
+                self.a.col.update_card(c)
                 self.a.modified = True
 
     def reset_progress(self) -> None:
@@ -660,7 +661,12 @@ class NoteData:
 
             return (Note(anki, new_note), "duplicate")
 
-        _ = anki.col.addNote(new_note)
+        deck_id: DeckId = (
+            note_type["did"]
+            if note_type is not None
+            else anki.col.decks.current()["id"]
+        )
+        _ = anki.col.add_note(new_note, deck_id)
         anki.modified = True
         return (Note(anki, new_note), "added")
 
