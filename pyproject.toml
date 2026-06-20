@@ -12,14 +12,14 @@ classifiers = [
   "Environment :: Console",
 ]
 dependencies = [
-  "beautifulsoup4",
-  "click",
-  "markdown",
-  "readchar",
-  "markdownify",
-  "anki>=25.9",
-  "html5lib",
-  "rich",
+  "beautifulsoup4>=4.15",
+  "click>=8.4",
+  "markdown>=3.10",
+  "readchar>=4.2",
+  "markdownify>=1.2",
+  "anki>=26.5",
+  "html5lib>=1.1",
+  "rich>=15.0",
 ]
 
 [project.urls]
@@ -31,11 +31,11 @@ apy = "apyanki.cli:main"
 
 [dependency-groups]
 dev = [
-  "pytest",
-  "mypy",
-  "types-beautifulsoup4",
-  "types-markdown",
-  "ruff",
+  "pytest>=9.1",
+  "mypy>=2.1",
+  "types-beautifulsoup4>=4.12",
+  "types-markdown>=3.10",
+  "ruff>=0.15",
 ]
 
 [build-system]
