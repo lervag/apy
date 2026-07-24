@@ -81,7 +81,7 @@ def prepare_field_for_cli_raw(field: str) -> str:
         content = [
             e.prettify() if isinstance(e, Tag) else str(e) for e in third.contents
         ]
-        return "".join(["```html\n"] + content + ["\n```"])
+        return "".join(["```html\n", *content, "\n```"])
 
     return f"Could not parse!\n{field}"
 

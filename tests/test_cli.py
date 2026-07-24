@@ -13,7 +13,7 @@ test_data_dir = "tests/data/"
 test_collection_dir = test_data_dir + "test_base/"
 
 
-def test_cli_base_directory():
+def test_cli_base_directory() -> None:
     """Simple tests for base directory option."""
     runner = CliRunner()
 
@@ -29,7 +29,7 @@ def test_cli_base_directory():
 
 
 @pytest.mark.parametrize("infile", ["basic.md", "empty.md"])
-def test_cli_update_from_file(infile):
+def test_cli_update_from_file(infile: str) -> None:
     """Test 'apy update-from-file' for various note file inputs."""
     runner = CliRunner()
 
@@ -42,7 +42,7 @@ def test_cli_update_from_file(infile):
         assert result.exit_code == 0
 
 
-def test_cli_add_from_file_alias():
+def test_cli_add_from_file_alias() -> None:
     """Test that 'apy add-from-file' works as an alias for 'update-from-file'."""
     runner = CliRunner()
 
@@ -56,7 +56,7 @@ def test_cli_add_from_file_alias():
         assert result.exit_code == 0
 
 
-def test_cli_add_single():
+def test_cli_add_single() -> None:
     """Test 'apy add-single' with Markdown parser."""
     runner = CliRunner()
 
@@ -76,7 +76,7 @@ def test_cli_add_single():
         assert result.exit_code == 0
 
 
-def test_cli_update_file_with_duplicates():
+def test_cli_update_file_with_duplicates() -> None:
     """Test duplicate behaviour with update-from-file"""
     runner = CliRunner()
 
@@ -93,14 +93,14 @@ def test_cli_update_file_with_duplicates():
         assert result.exit_code == 0
         assert "Dupe detected" in result.output
 
-        with open(filename, "r") as f:
+        with open(filename) as f:
             updated_content = f.readlines()
 
         nid_lines = [line for line in updated_content if "nid:" in line]
         assert len(nid_lines) == 2
 
 
-def test_external_ids_mode():
+def test_external_ids_mode() -> None:
     """Test update-from-file with external IDs mode."""
     runner = CliRunner()
 
@@ -119,7 +119,7 @@ def test_external_ids_mode():
         assert "nid:" in result.output
 
 
-def test_external_ids_missing_id_header():
+def test_external_ids_missing_id_header() -> None:
     """Test auto-generation of UUID when id header missing."""
     runner = CliRunner()
 
@@ -142,7 +142,7 @@ def test_external_ids_missing_id_header():
         assert "nid:" in result.output
 
 
-def test_external_ids_conflict_error():
+def test_external_ids_conflict_error() -> None:
     """Test error when mixing external-ids with nid/cid headers."""
     runner = CliRunner()
 
@@ -164,7 +164,7 @@ def test_external_ids_conflict_error():
         assert "Cannot use" in result.output
 
 
-def test_external_ids_update_file():
+def test_external_ids_update_file() -> None:
     """Test that update-from-file automatically updates the JSON file."""
     runner = CliRunner()
 
@@ -183,7 +183,7 @@ def test_external_ids_update_file():
 
         assert result.exit_code == 0
 
-        with open(json_file, "r") as f:
+        with open(json_file) as f:
             updated_ids = json.load(f)
 
         assert len(updated_ids) > 0
@@ -193,7 +193,7 @@ def test_external_ids_update_file():
         assert updated_ids["note2"] != ""
 
 
-def test_link_duplicates():
+def test_link_duplicates() -> None:
     """Test that --link-duplicates updates IDs file with existing nid on duplicate."""
     runner = CliRunner()
 
@@ -211,7 +211,7 @@ def test_link_duplicates():
         )
         assert result1.exit_code == 0
 
-        with open(external_ids_file, "r") as f:
+        with open(external_ids_file) as f:
             ids_after_first = json.load(f)
 
         assert "note1" in ids_after_first
@@ -233,7 +233,7 @@ def test_link_duplicates():
         assert result2.exit_code == 0
         assert "Dupe detected" in result2.output
 
-        with open(external_ids_file, "r") as f:
+        with open(external_ids_file) as f:
             ids_after_link = json.load(f)
 
         assert ids_after_link["note1"] == original_nid

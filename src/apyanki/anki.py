@@ -41,7 +41,7 @@ class Anki:
         collection_db_path: str | None = None,
         profile_name: str | None = None,
         **_kwargs: dict[str, Any],
-    ):
+    ) -> None:
         self.modified: bool = False
 
         self._meta: Any = None
@@ -151,9 +151,9 @@ class Anki:
 
     def __exit__(
         self,
-        exc_type: type[BaseException] | None,
-        exc_val: BaseException | None,
-        exc_tb: TracebackType | None,
+        _exc_type: type[BaseException] | None,
+        _exc_val: BaseException | None,
+        _exc_tb: TracebackType | None,
     ) -> None:
         if self.modified:
             if cfg["auto_sync"]:
@@ -275,7 +275,7 @@ class Anki:
                     if os.path.isfile(file):
                         os.remove(file)
 
-    def find_notes(self, query: str) -> Generator[Note, None, None]:
+    def find_notes(self, query: str) -> Generator[Note]:
         """Find notes in Collection and return Note objects"""
         return (
             Note(self, self.col.get_note(i)) for i in set(self.col.find_notes(query))
@@ -390,7 +390,7 @@ class Anki:
                 console.print(f"Editor return with exit code {retcode}!")
                 return
 
-            with open(tf.name, "r", encoding="utf8") as f:
+            with open(tf.name, encoding="utf8") as f:
                 new_content = f.read()
 
         if model["css"] != new_content:
@@ -570,7 +570,7 @@ class Anki:
         Returns:
             List of notes that were updated or added
         """
-        with open(filename, "r", encoding="utf-8") as f:
+        with open(filename, encoding="utf-8") as f:
             original_content = f.read()
 
         has_missing_nids: bool = False
@@ -704,7 +704,7 @@ class Anki:
 
         existing_ids: dict[str, str] = {}
         if ids_file_path.exists():
-            with open(ids_file_path, "r", encoding="utf-8") as f:
+            with open(ids_file_path, encoding="utf-8") as f:
                 existing_ids = json.load(f)
 
         existing_ids.update(external_ids_map)

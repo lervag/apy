@@ -11,7 +11,7 @@ from dataclasses import dataclass
 from pathlib import Path
 from subprocess import DEVNULL, Popen
 from time import localtime, strftime
-from typing import TYPE_CHECKING, Any, Literal
+from typing import TYPE_CHECKING, Any, Literal, override
 
 import readchar
 from click import Abort
@@ -19,7 +19,6 @@ from rich.columns import Columns
 from rich.markdown import Markdown
 from rich.table import Table
 from rich.text import Text
-from typing_extensions import override
 
 from apyanki import cards
 from apyanki.config import cfg
@@ -202,7 +201,7 @@ class Note:
                 view_cmd = cfg["img_viewers"].get(
                     file.suffix[1:], cfg["img_viewers_default"]
                 )
-                _ = Popen(view_cmd + [file], stdout=DEVNULL, stderr=DEVNULL)
+                _ = Popen([*view_cmd, file], stdout=DEVNULL, stderr=DEVNULL)
 
     def edit(self) -> None:
         """Edit tags and fields of current note"""
@@ -648,7 +647,7 @@ class NoteData:
 
         check_duplicate = new_note.duplicate_or_empty()
         if check_duplicate == 2:
-            field_name, field_value = list(self.fields.items())[0]
+            field_name, field_value = next(iter(self.fields.items()))
             console.print("[red]Dupe detected: note was not added!")
             console.print(f"First field: {field_name}")
             console.print(f"First value: {field_value}")
@@ -787,7 +786,7 @@ def _parse_markdown_file(filename: str) -> list[dict[str, Any]]:
         "nid": None,
         "external_ids_file": None,
     }
-    with open(filename, "r", encoding="utf8") as f:
+    with open(filename, encoding="utf8") as f:
         for line in f:
             match = re.match(r"#+\s*.*", line)
             if match:
@@ -813,7 +812,7 @@ def _parse_markdown_file(filename: str) -> list[dict[str, Any]]:
     if defaults["external_ids_file"]:
         ids_file_path = Path(filename).parent / defaults["external_ids_file"]
         if ids_file_path.exists():
-            with open(ids_file_path, "r", encoding="utf8") as f:
+            with open(ids_file_path, encoding="utf8") as f:
                 external_ids_map = json.load(f)
 
     notes: list[dict[str, Any]] = []
@@ -827,7 +826,7 @@ def _parse_markdown_file(filename: str) -> list[dict[str, Any]]:
         )
         raise Abort()
 
-    with open(filename, "r", encoding="utf8") as f:
+    with open(filename, encoding="utf8") as f:
         for line in f:
             if is_in_codeblock:
                 if current_field is not None:

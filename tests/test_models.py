@@ -1,9 +1,9 @@
 """Test model features"""
 
-from common import AnkiSimple
+from tests.common import AnkiSimple
 
 
-def test_rename_model():
+def test_rename_model() -> None:
     """Test that we can rename models"""
     with AnkiSimple() as a:
         assert "MyTest" in a.model_names

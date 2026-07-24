@@ -1,8 +1,8 @@
 from bs4 import BeautifulSoup
-from common import AnkiEmpty
 
 from apyanki import fields
 from apyanki.config import cfg
+from tests.common import AnkiEmpty
 
 
 def test_mathjax_to_mdlatex() -> None:

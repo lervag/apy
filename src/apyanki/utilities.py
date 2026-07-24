@@ -60,14 +60,16 @@ def edit_text(input_text: str, prefix: str = "") -> str:
 chooseType = TypeVar("chooseType")
 
 
-def choose(items: list[chooseType], text: str = "Choose from list:") -> chooseType:
+def choose[chooseType](
+    items: list[chooseType], text: str = "Choose from list:"
+) -> chooseType:
     """Choose from list of items"""
     if shutil.which("fzf"):
         return choose_with_fzf(items, text)
     return choose_from_list(items, text)
 
 
-def choose_with_fzf(
+def choose_with_fzf[chooseType](
     items: list[chooseType], text: str = "Choose from list:"
 ) -> chooseType:
     """Choose from list of items with fzf"""
@@ -95,7 +97,7 @@ def choose_with_fzf(
     raise Abort()
 
 
-def choose_from_list(
+def choose_from_list[chooseType](
     items: list[chooseType], text: str = "Choose from list:"
 ) -> chooseType:
     """Choose from list of items"""

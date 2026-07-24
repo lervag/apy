@@ -2,19 +2,19 @@
 
 import pytest
 
-from common import testDir, AnkiEmpty, AnkiSimple
+from tests.common import AnkiEmpty, AnkiSimple, testDir
 
 pytestmark = pytest.mark.filterwarnings("ignore")
 
 
-def test_empty_collection():
+def test_empty_collection() -> None:
     """Test empty collection"""
     with AnkiEmpty() as a:
         assert a.col.card_count() == 0
         assert len(a.model_names) == 6
 
 
-def test_add_basic():
+def test_add_basic() -> None:
     """Test adding two Basic notes from file"""
     with AnkiEmpty() as a:
         input_file = testDir + "/data/basic.md"
@@ -22,10 +22,12 @@ def test_add_basic():
 
         assert a.col.card_count() == 2
         assert a.col.note_count() == 2
-        assert notes[1].n.note_type()["name"] == "Basic (type in the answer)"
+        note_type = notes[1].n.note_type()
+        assert note_type is not None
+        assert note_type["name"] == "Basic (type in the answer)"
 
 
-def test_add_different_models():
+def test_add_different_models() -> None:
     """Test adding with different models"""
     with AnkiSimple() as a:
         n_cards = a.col.card_count()
@@ -33,7 +35,7 @@ def test_add_different_models():
         assert a.col.card_count() == n_cards + 6
 
 
-def test_add_single_with_markdown():
+def test_add_single_with_markdown() -> None:
     """Test adding single note with Markdown parser."""
     with AnkiEmpty() as a:
         note = a.add_notes_single(

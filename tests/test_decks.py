@@ -2,12 +2,12 @@
 
 import pytest
 
-from common import testDir, AnkiSimple
+from tests.common import AnkiSimple, testDir
 
 pytestmark = pytest.mark.filterwarnings("ignore")
 
 
-def test_decks():
+def test_decks() -> None:
     """Test empty collection"""
     with AnkiSimple() as a:
         assert a.col.decks.count() == 2

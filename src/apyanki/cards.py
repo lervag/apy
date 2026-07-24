@@ -5,10 +5,9 @@ from __future__ import annotations
 import re
 from typing import TYPE_CHECKING
 
+from markdownify import markdownify as to_md
 from rich.markdown import Markdown
 from rich.text import Text
-
-from markdownify import markdownify as to_md
 
 from apyanki.console import console, consolePlain
 

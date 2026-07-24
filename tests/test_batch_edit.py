@@ -2,16 +2,17 @@
 # ruff: noqa: F401, F811
 
 import os
-import pytest
 import textwrap
 
-from common import testDir, AnkiSimple, collection
+import pytest
+
 from apyanki.anki import Anki
+from tests.common import AnkiSimple, collection, testDir
 
 pytestmark = pytest.mark.filterwarnings("ignore")
 
 
-def test_change_tags():
+def test_change_tags() -> None:
     """Test empty collection"""
     with AnkiSimple() as a:
         a.add_notes_from_file(testDir + "/" + "data/deck.md")
@@ -26,7 +27,7 @@ def test_change_tags():
         assert len(list(a.find_notes(query))) == 0
 
 
-def test_add_from_file(collection):
+def test_add_from_file(collection: str) -> None:
     """Test adding a note from a Markdown file."""
     with open("test.md", "w") as f:
         f.write(
@@ -58,7 +59,7 @@ def test_add_from_file(collection):
     os.remove("test.md")
 
 
-def test_update_from_file(collection):
+def test_update_from_file(collection: str) -> None:
     """Test updating a note from a Markdown file."""
     # First create a note
     with open("test.md", "w") as f:
@@ -117,7 +118,7 @@ def test_update_from_file(collection):
     os.remove("test_update.md")
 
 
-def test_update_from_file_new_and_existing(collection):
+def test_update_from_file_new_and_existing(collection: str) -> None:
     """Test updating a file with both new and existing notes."""
     # First create a note
     with open("test.md", "w") as f:
@@ -199,7 +200,7 @@ def test_update_from_file_new_and_existing(collection):
     os.remove("test_mixed.md")
 
 
-def test_update_file_with_note_ids(collection):
+def test_update_file_with_note_ids(collection: str) -> None:
     """Test that --update-file option updates the original file with note IDs."""
     # First create a note file without IDs
     with open("test_no_ids.md", "w") as f:
@@ -234,7 +235,7 @@ def test_update_file_with_note_ids(collection):
         assert len(notes) == 2
 
         # Read the file again to check if IDs were added
-        with open("test_no_ids.md", "r") as f:
+        with open("test_no_ids.md") as f:
             updated_content = f.read()
 
         # The file should now contain nid: lines
@@ -245,7 +246,7 @@ def test_update_file_with_note_ids(collection):
     os.remove("test_no_ids.md")
 
 
-def test_update_file_with_mixed_notes(collection):
+def test_update_file_with_mixed_notes(collection: str) -> None:
     """Test that --update-file option updates only new notes in update-from-file."""
     # First create a note to get its ID
     with open("test_initial.md", "w") as f:
@@ -311,7 +312,7 @@ def test_update_file_with_mixed_notes(collection):
         assert len(notes) == 2
 
         # Read the updated file
-        with open("test_update_mix.md", "r") as f:
+        with open("test_update_mix.md") as f:
             updated_content = f.read()
 
         # Verify the original ID is preserved and the new note got an ID
