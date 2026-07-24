@@ -14,10 +14,10 @@ classifiers = [
 dependencies = [
   "anki==26.5",
   "beautifulsoup4==4.15.0",
-  "click==8.4.1",
+  "click==8.4.2",
   "html5lib==1.1",
   "markdown==3.10.2",
-  "markdownify==1.2.2",
+  "markdownify==1.2.3",
   "readchar==4.2.2",
   "rich==15.0.0",
 ]
