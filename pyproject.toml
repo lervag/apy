@@ -2,60 +2,79 @@
 name = "apyanki"
 version = "0.21.0"
 description = "CLI script for interacting with local Anki collection"
-authors = [{ name = "Karl Yngve Lervåg", email = "karl.yngve@lervag.net" }]
-requires-python = ">=3.14"
 readme = "README.md"
+requires-python = ">=3.14"
+authors = [{ name = "Karl Yngve Lervåg", email = "karl.yngve@lervag.net" }]
 classifiers = [
-  "Programming Language :: Python :: 3",
+  "Environment :: Console",
   "License :: OSI Approved :: MIT License",
   "Operating System :: OS Independent",
-  "Environment :: Console",
+  "Programming Language :: Python :: 3",
 ]
 dependencies = [
-  "beautifulsoup4>=4.15",
-  "click>=8.4",
-  "markdown>=3.10",
-  "readchar>=4.2",
-  "markdownify>=1.2",
-  "anki>=26.5",
-  "html5lib>=1.1",
-  "rich>=15.0",
+  "anki==26.5",
+  "beautifulsoup4==4.15.0",
+  "click==8.4.1",
+  "html5lib==1.1",
+  "markdown==3.10.2",
+  "markdownify==1.2.2",
+  "readchar==4.2.2",
+  "rich==15.0.0",
 ]
 
 [project.urls]
-Homepage = "https://github.com/lervag/apy"
 "Bug Tracker" = "https://github.com/lervag/apy/issues"
+Homepage = "https://github.com/lervag/apy"
 
 [project.scripts]
 apy = "apyanki.cli:main"
 
 [dependency-groups]
 dev = [
-  "pytest>=9.1",
-  "mypy>=2.1",
-  "types-beautifulsoup4>=4.12",
-  "types-markdown>=3.10",
-  "ruff>=0.15",
+  "pytest==9.1.1",
+  "pyrefly==1.1.1",
+  "ruff==0.15.18",
+  "types-beautifulsoup4==4.12.0.20250516",
+  "types-markdown==3.10.2.20260518",
 ]
 
 [build-system]
 requires = ["hatchling"]
 build-backend = "hatchling.build"
 
+[tool.pyrefly]
+project-includes = ["src", "tests"]
+
+[tool.pyrefly.errors]
+implicit-any-parameter = true
+unannotated-return = true
+implicit-any-attribute = true
+unused-ignore = true
+unreachable = true
+
 [tool.pytest]
 filterwarnings = ["ignore::DeprecationWarning:html5lib.*:"]
+pythonpath = ["."]
 
-[tool.mypy]
-exclude = ["^tests/.*\\.py$"]
-strict = true
+[tool.ruff]
+line-length = 88
+target-version = "py314"
 
-[[tool.mypy.overrides]]
-module = ["markdownify"]
-ignore_missing_imports = true
+[tool.ruff.lint]
+select = ["E", "F", "W", "I", "TID252", "UP", "C4", "RUF"]
+ignore = [
+  "E265",  # block comment should start with '# '
+  "E501",  # line too long (handled by formatter)
+]
 
-[tool.basedpyright]
-ignore = ["tests/*.py"]
-reportImportCycles = false
-reportExplicitAny = false
-reportAny = false
-reportImplicitStringConcatenation = false
+[tool.ruff.lint.flake8-tidy-imports]
+ban-relative-imports = "all"
+
+[tool.ruff.format]
+quote-style = "double"
+indent-style = "space"
+skip-magic-trailing-comma = false
+line-ending = "auto"
+
+[tool.uv]
+add-bounds = "exact"

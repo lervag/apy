@@ -1,13 +1,32 @@
 [tools]
-uv = 'latest'
+uv = "0.11.28"
 
 [env]
 _.python.venv = { path = ".venv" }
 
 [tasks]
-test = """
-uv run pytest
-uv run mypy .
-uv run ruff format --check
-"""
 doctoc = "doctoc --notitle --maxlevel 2 README.md"
+test = "uv run pytest"
+
+[tasks.check]
+description = "Run formatting, linting and type checking"
+usage = """
+flag "--no-fix" help="Specify to disable auto-fix for CI"
+"""
+run = """
+if [ "${usage_no_fix}" = "true" ]; then
+  uv run ruff format --check
+  uv run ruff check
+else
+  uv run ruff format
+  uv run ruff check --fix
+fi
+
+uv run pyrefly check --baseline pyrefly-baseline.json
+"""
+
+[tasks.update-baseline]
+description = "Update type check baseline"
+run = """
+uv run pyrefly check --baseline pyrefly-baseline.json --update-baseline
+"""
