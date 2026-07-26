@@ -626,7 +626,7 @@ class NoteData:
             anki.modified = False
             raise Abort()
 
-        field_names = [x.replace(" (markdown)", "") for x in self.fields.keys()]
+        field_names = [x.replace(" (markdown)", "") for x in self.fields]
         for x, y in zip(model_field_names, field_names):
             if x != y:
                 console.print(f"Warning: Inconsistent field names ({x} != {y})")
@@ -685,7 +685,7 @@ class NoteData:
                 console.print(
                     f"[yellow]Invalid note ID format: {self.nid}. Will create a new note.[/yellow]"
                 )
-            except Exception as e:
+            except Exception as e:  # noqa: BLE001
                 console.print(
                     f"[yellow]Note with ID {self.nid} not found: {e}. Will create a new note.[/yellow]"
                 )
@@ -723,7 +723,7 @@ class NoteData:
                     if deck_id is not None:  # Make sure deck_id exists and is not None
                         card_ids = [c.id for c in cards]
                         _ = anki.col.set_deck(card_ids, deck_id)
-            except Exception as e:
+            except Exception as e:  # noqa: BLE001
                 console.print(f"[yellow]Failed to update deck: {e}[/yellow]")
 
         # Update fields
@@ -861,9 +861,8 @@ def _parse_markdown_file(filename: str) -> list[dict[str, Any]]:
                         current_note["markdown"] = v in ("true", "yes")
                     elif k == "id":
                         current_note["external_id"] = v
-                        if defaults["external_ids_file"]:
-                            if v in external_ids_map:
-                                current_note["nid"] = str(external_ids_map[v])
+                        if defaults["external_ids_file"] and v in external_ids_map:
+                            current_note["nid"] = str(external_ids_map[v])
                     elif k == "nid":
                         if defaults["external_ids_file"]:
                             console.print(

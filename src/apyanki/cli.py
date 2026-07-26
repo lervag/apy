@@ -343,7 +343,7 @@ def check_media() -> None:
 def info() -> None:
     """Print some basic statistics."""
     if cfg_file.exists():
-        for key in cfg.keys():
+        for key in cfg:
             console.print(f"Config loaded:     {key}")
         console.print(f"Config file:       {cfg_file}")
     else:

@@ -61,7 +61,7 @@ def prepare_field_for_cli(
         ]
 
     for pattern, repl in regex_replaces:
-        text = re.sub(pattern, repl, text, flags=re.S)
+        text = re.sub(pattern, repl, text, flags=re.DOTALL)
 
     for source, target in literal_replaces:
         text = text.replace(source, target)

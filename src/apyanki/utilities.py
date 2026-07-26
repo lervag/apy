@@ -112,9 +112,8 @@ def choose_from_list[chooseType](
 @contextmanager
 def suppress_stdout() -> Generator[TextIOWrapper, Any, Any]:
     """A context manager that redirects stdout to devnull"""
-    with open(os.devnull, "w", encoding="utf8") as fnull:
-        with redirect_stdout(fnull) as out:
-            yield out
+    with open(os.devnull, "w", encoding="utf8") as fnull, redirect_stdout(fnull) as out:
+        yield out
 
 
 def _read_number_between(first: int, last: int) -> int:

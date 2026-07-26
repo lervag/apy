@@ -12,7 +12,7 @@ import time
 from collections.abc import Generator, KeysView
 from pathlib import Path
 from types import TracebackType
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, Self
 
 from click import Abort
 from rich.markdown import Markdown
@@ -146,7 +146,7 @@ class Anki:
         if "svgCommands" in cfg:
             latex.svgCommands = cfg["svgCommands"]
 
-    def __enter__(self) -> Anki:
+    def __enter__(self) -> Self:
         return self
 
     def __exit__(
