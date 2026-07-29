@@ -1,11 +1,11 @@
 """Simple utility functions."""
 
 import os
-import pathlib
 import shutil
 from collections.abc import Generator
 from contextlib import contextmanager, redirect_stdout
 from io import TextIOWrapper
+from pathlib import Path
 from subprocess import PIPE, Popen, call
 from tempfile import NamedTemporaryFile
 from types import TracebackType
@@ -114,7 +114,7 @@ def choose_from_list[chooseType](
 def suppress_stdout() -> Generator[TextIOWrapper, Any, Any]:
     """A context manager that redirects stdout to devnull"""
     with (
-        pathlib.Path(os.devnull).open("w", encoding="utf8") as fnull,
+        Path(os.devnull).open("w", encoding="utf8") as fnull,
         redirect_stdout(fnull) as out,
     ):
         yield out

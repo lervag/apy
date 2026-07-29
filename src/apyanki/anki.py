@@ -272,8 +272,9 @@ class Anki:
 
             if len(output.unused) > 0 and console.confirm("Delete unused media?"):
                 for file in output.unused:
-                    if Path(file).is_file():
-                        Path(file).unlink()
+                    path = Path(file)
+                    if path.is_file():
+                        path.unlink()
 
     def find_notes(self, query: str) -> Generator[Note]:
         """Find notes in Collection and return Note objects"""
