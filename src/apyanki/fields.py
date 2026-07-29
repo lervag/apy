@@ -260,7 +260,7 @@ def _latex_to_mdlatex(text: str) -> str:
     def replacer(match: re.Match[str]) -> str:
         if match.group(1):
             return f"$${match.group(2)}$$"
-        elif match.group(3):
+        if match.group(3):
             return f"${match.group(4)}$"
         return match.group(0)
 

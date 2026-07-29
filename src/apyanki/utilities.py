@@ -1,6 +1,7 @@
 """Simple utility functions."""
 
 import os
+import pathlib
 import shutil
 from collections.abc import Generator
 from contextlib import contextmanager, redirect_stdout
@@ -45,7 +46,7 @@ def edit_file(filepath: str) -> int:
 def edit_text(input_text: str, prefix: str = "") -> str:
     """Use EDITOR to edit text (from a temporary file)"""
     if prefix:
-        prefix = prefix + "_"
+        prefix += "_"
 
     with NamedTemporaryFile(mode="w+", prefix=prefix, suffix=".md") as tf:
         _ = tf.write(input_text)
@@ -112,7 +113,10 @@ def choose_from_list[chooseType](
 @contextmanager
 def suppress_stdout() -> Generator[TextIOWrapper, Any, Any]:
     """A context manager that redirects stdout to devnull"""
-    with open(os.devnull, "w", encoding="utf8") as fnull, redirect_stdout(fnull) as out:
+    with (
+        pathlib.Path(os.devnull).open("w", encoding="utf8") as fnull,
+        redirect_stdout(fnull) as out,
+    ):
         yield out
 
 

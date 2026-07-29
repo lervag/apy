@@ -1,6 +1,7 @@
 """Implement some basic test fixtures"""
 
 import os
+import pathlib
 import shutil
 import tempfile
 from collections.abc import Iterator
@@ -22,8 +23,8 @@ def collection() -> Iterator[str]:
     yield tmppath
 
     # Clean up after test
-    if os.path.exists(tmppath):
-        os.remove(tmppath)
+    if pathlib.Path(tmppath).exists():
+        pathlib.Path(tmppath).unlink()
 
 
 class AnkiTest:
@@ -50,7 +51,7 @@ class AnkiEmpty(AnkiTest):
     def __init__(self) -> None:
         (self.fd, self.name) = tempfile.mkstemp(suffix=".anki2")
         os.close(self.fd)
-        os.unlink(self.name)
+        pathlib.Path(self.name).unlink()
         super().__init__(Anki(collection_db_path=self.name))
 
 
@@ -69,4 +70,4 @@ class AnkiSimple(AnkiTest):
         traceback: TracebackType | None,
     ) -> None:
         super().__exit__(exception_type, exception_value, traceback)
-        os.remove(self.tmppath)
+        pathlib.Path(self.tmppath).unlink()
