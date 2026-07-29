@@ -786,7 +786,7 @@ def _parse_markdown_file(filename: str) -> list[dict[str, Any]]:
         "nid": None,
         "external_ids_file": None,
     }
-    with open(filename, encoding="utf8") as f:
+    with Path(filename).open(encoding="utf8") as f:
         for line in f:
             match = re.match(r"#+\s*.*", line)
             if match:
@@ -812,7 +812,7 @@ def _parse_markdown_file(filename: str) -> list[dict[str, Any]]:
     if defaults["external_ids_file"]:
         ids_file_path = Path(filename).parent / defaults["external_ids_file"]
         if ids_file_path.exists():
-            with open(ids_file_path, encoding="utf8") as f:
+            with Path(ids_file_path).open(encoding="utf8") as f:
                 external_ids_map = json.load(f)
 
     notes: list[dict[str, Any]] = []
@@ -826,7 +826,7 @@ def _parse_markdown_file(filename: str) -> list[dict[str, Any]]:
         )
         raise Abort()
 
-    with open(filename, encoding="utf8") as f:
+    with Path(filename).open(encoding="utf8") as f:
         for line in f:
             if is_in_codeblock:
                 if current_field is not None:

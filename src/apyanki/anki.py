@@ -272,8 +272,9 @@ class Anki:
 
             if len(output.unused) > 0 and console.confirm("Delete unused media?"):
                 for file in output.unused:
-                    if os.path.isfile(file):
-                        os.remove(file)
+                    path = Path(file)
+                    if path.is_file():
+                        path.unlink()
 
     def find_notes(self, query: str) -> Generator[Note]:
         """Find notes in Collection and return Note objects"""
@@ -390,7 +391,7 @@ class Anki:
                 console.print(f"Editor return with exit code {retcode}!")
                 return
 
-            with open(tf.name, encoding="utf8") as f:
+            with Path(tf.name).open(encoding="utf8") as f:
                 new_content = f.read()
 
         if model["css"] != new_content:
@@ -420,41 +421,41 @@ class Anki:
     def list_cards_as_table(self, query: str, opts_display: dict[str, bool]) -> None:
         """List cards that match a query in tabular format"""
         width = console.width - 1
-        if opts_display.get("show_cid", False):
+        if opts_display.get("show_cid"):
             width -= 15
-        if opts_display.get("show_due", False):
+        if opts_display.get("show_due"):
             width -= 6
-        if opts_display.get("show_type", False):
+        if opts_display.get("show_type"):
             width -= 9
-        if opts_display.get("show_ease", False):
+        if opts_display.get("show_ease"):
             width -= 5
-        if opts_display.get("show_lapses", False):
+        if opts_display.get("show_lapses"):
             width -= 5
-        if opts_display.get("show_model", False):
+        if opts_display.get("show_model"):
             width -= 25
-        if opts_display.get("show_answer", False):
+        if opts_display.get("show_answer"):
             width //= 2
             width -= 1
-        if opts_display.get("show_deck", False):
+        if opts_display.get("show_deck"):
             width -= 25
 
         table = Table(box=None, header_style="bold white")
         table.add_column("question")
-        if opts_display.get("show_answer", False):
+        if opts_display.get("show_answer"):
             table.add_column("answer")
-        if opts_display.get("show_cid", False):
+        if opts_display.get("show_cid"):
             table.add_column("cid", min_width=13)
-        if opts_display.get("show_due", False):
+        if opts_display.get("show_due"):
             table.add_column("due", min_width=4)
-        if opts_display.get("show_type", False):
+        if opts_display.get("show_type"):
             table.add_column("type", min_width=8)
-        if opts_display.get("show_ease", False):
+        if opts_display.get("show_ease"):
             table.add_column("ease", min_width=3)
-        if opts_display.get("show_lapses", False):
+        if opts_display.get("show_lapses"):
             table.add_column("lapses", min_width=3)
-        if opts_display.get("show_model", False):
+        if opts_display.get("show_model"):
             table.add_column("model", min_width=10)
-        if opts_display.get("show_deck", False):
+        if opts_display.get("show_deck"):
             table.add_column("deck", min_width=10)
 
         for cid in self.col.find_cards(query):
@@ -464,22 +465,22 @@ class Anki:
             )
 
             row: list[str | Text | Markdown] = [Markdown(question)]
-            if opts_display.get("show_answer", False):
+            if opts_display.get("show_answer"):
                 row += [Markdown(answer)]
-            if opts_display.get("show_cid", False):
+            if opts_display.get("show_cid"):
                 row += [str(card.id)]
-            if opts_display.get("show_due", False):
+            if opts_display.get("show_due"):
                 row += [str(card.due)]
-            if opts_display.get("show_type", False):
+            if opts_display.get("show_type"):
                 card_type = ["new", "learning", "review", "relearning"][int(card.type)]
                 row += [card_type]
-            if opts_display.get("show_ease", False):
+            if opts_display.get("show_ease"):
                 row += [str(int(card.factor / 10))]
-            if opts_display.get("show_lapses", False):
+            if opts_display.get("show_lapses"):
                 row += [str(card.lapses)]
-            if opts_display.get("show_model", False):
+            if opts_display.get("show_model"):
                 row += [card.note_type()["name"]]
-            if opts_display.get("show_deck", False):
+            if opts_display.get("show_deck"):
                 deck_id = card.current_deck_id()
                 row += [self.col.decks.name(deck_id)]
             table.add_row(*row)
@@ -570,7 +571,7 @@ class Anki:
         Returns:
             List of notes that were updated or added
         """
-        with open(filename, encoding="utf-8") as f:
+        with Path(filename).open(encoding="utf-8") as f:
             original_content = f.read()
 
         has_missing_nids: bool = False
@@ -680,7 +681,7 @@ class Anki:
                     updated_content.append(section)
 
         # Write back the updated content
-        with open(filename, "w", encoding="utf-8") as f:
+        with Path(filename).open("w", encoding="utf-8") as f:
             _ = f.write("".join(updated_content))
 
     def _update_external_ids_file(
@@ -704,12 +705,12 @@ class Anki:
 
         existing_ids: dict[str, str] = {}
         if ids_file_path.exists():
-            with open(ids_file_path, encoding="utf-8") as f:
+            with Path(ids_file_path).open(encoding="utf-8") as f:
                 existing_ids = json.load(f)
 
         existing_ids.update(external_ids_map)
 
-        with open(ids_file_path, "w", encoding="utf-8") as f:
+        with Path(ids_file_path).open("w", encoding="utf-8") as f:
             json.dump(existing_ids, f, indent=2)
 
     def add_notes_from_list(

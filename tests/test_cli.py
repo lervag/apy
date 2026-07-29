@@ -3,6 +3,7 @@
 import json
 import shutil
 import tempfile
+from pathlib import Path
 
 import pytest
 from click.testing import CliRunner
@@ -93,7 +94,7 @@ def test_cli_update_file_with_duplicates() -> None:
         assert result.exit_code == 0
         assert "Dupe detected" in result.output
 
-        with open(filename) as f:
+        with Path(filename).open() as f:
             updated_content = f.readlines()
 
         nid_lines = [line for line in updated_content if "nid:" in line]
@@ -173,7 +174,7 @@ def test_external_ids_update_file() -> None:
         shutil.copy(test_data_dir + "external_ids.md", tmpdirname)
 
         json_file = tmpdirname + "/external_ids.json"
-        with open(json_file, "w") as f:
+        with Path(json_file).open("w") as f:
             json.dump({}, f)
 
         result = runner.invoke(
@@ -183,7 +184,7 @@ def test_external_ids_update_file() -> None:
 
         assert result.exit_code == 0
 
-        with open(json_file) as f:
+        with Path(json_file).open() as f:
             updated_ids = json.load(f)
 
         assert len(updated_ids) > 0
@@ -202,7 +203,7 @@ def test_link_duplicates() -> None:
         shutil.copy(test_data_dir + "duplicate_test.md", tmpdirname)
 
         external_ids_file = tmpdirname + "/external_ids.json"
-        with open(external_ids_file, "w") as f:
+        with Path(external_ids_file).open("w") as f:
             json.dump({}, f)
 
         result1 = runner.invoke(
@@ -211,13 +212,13 @@ def test_link_duplicates() -> None:
         )
         assert result1.exit_code == 0
 
-        with open(external_ids_file) as f:
+        with Path(external_ids_file).open() as f:
             ids_after_first = json.load(f)
 
         assert "note1" in ids_after_first
         original_nid = ids_after_first["note1"]
 
-        with open(external_ids_file, "w") as f:
+        with Path(external_ids_file).open("w") as f:
             json.dump({}, f)
 
         result2 = runner.invoke(
@@ -233,7 +234,7 @@ def test_link_duplicates() -> None:
         assert result2.exit_code == 0
         assert "Dupe detected" in result2.output
 
-        with open(external_ids_file) as f:
+        with Path(external_ids_file).open() as f:
             ids_after_link = json.load(f)
 
         assert ids_after_link["note1"] == original_nid

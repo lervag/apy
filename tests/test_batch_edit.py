@@ -1,8 +1,8 @@
 """Test batch editing"""
 # ruff: noqa: F401, F811
 
-import os
 import textwrap
+from pathlib import Path
 
 import pytest
 
@@ -29,7 +29,7 @@ def test_change_tags() -> None:
 
 def test_add_from_file(collection: str) -> None:
     """Test adding a note from a Markdown file."""
-    with open("test.md", "w") as f:
+    with Path("test.md").open("w") as f:
         f.write(
             textwrap.dedent(
                 """
@@ -56,13 +56,13 @@ def test_add_from_file(collection: str) -> None:
         assert "Answer." in note.n.fields[1]
 
     # Clean up
-    os.remove("test.md")
+    Path("test.md").unlink()
 
 
 def test_update_from_file(collection: str) -> None:
     """Test updating a note from a Markdown file."""
     # First create a note
-    with open("test.md", "w") as f:
+    with Path("test.md").open("w") as f:
         f.write(
             textwrap.dedent(
                 """\
@@ -85,7 +85,7 @@ def test_update_from_file(collection: str) -> None:
         note_id = note.n.id
 
         # Now create update file with the note ID
-        with open("test_update.md", "w") as f:
+        with Path("test_update.md").open("w") as f:
             f.write(
                 textwrap.dedent(
                     f"""\
@@ -114,14 +114,14 @@ def test_update_from_file(collection: str) -> None:
         assert "Updated answer." in updated_note.n.fields[1]
 
     # Clean up
-    os.remove("test.md")
-    os.remove("test_update.md")
+    Path("test.md").unlink()
+    Path("test_update.md").unlink()
 
 
 def test_update_from_file_new_and_existing(collection: str) -> None:
     """Test updating a file with both new and existing notes."""
     # First create a note
-    with open("test.md", "w") as f:
+    with Path("test.md").open("w") as f:
         f.write(
             textwrap.dedent(
                 """\
@@ -144,7 +144,7 @@ def test_update_from_file_new_and_existing(collection: str) -> None:
         note_id = note.n.id
 
         # Now create update file with both the existing note and a new note
-        with open("test_mixed.md", "w") as f:
+        with Path("test_mixed.md").open("w") as f:
             f.write(
                 textwrap.dedent(
                     f"""\
@@ -196,14 +196,14 @@ def test_update_from_file_new_and_existing(collection: str) -> None:
         assert "Brand new content." in new_note.n.fields[1]
 
     # Clean up
-    os.remove("test.md")
-    os.remove("test_mixed.md")
+    Path("test.md").unlink()
+    Path("test_mixed.md").unlink()
 
 
 def test_update_file_with_note_ids(collection: str) -> None:
     """Test that --update-file option updates the original file with note IDs."""
     # First create a note file without IDs
-    with open("test_no_ids.md", "w") as f:
+    with Path("test_no_ids.md").open("w") as f:
         f.write(
             textwrap.dedent(
                 """\
@@ -235,7 +235,7 @@ def test_update_file_with_note_ids(collection: str) -> None:
         assert len(notes) == 2
 
         # Read the file again to check if IDs were added
-        with open("test_no_ids.md") as f:
+        with Path("test_no_ids.md").open() as f:
             updated_content = f.read()
 
         # The file should now contain nid: lines
@@ -243,13 +243,13 @@ def test_update_file_with_note_ids(collection: str) -> None:
         assert f"nid: {notes[1].n.id}" in updated_content
 
     # Clean up
-    os.remove("test_no_ids.md")
+    Path("test_no_ids.md").unlink()
 
 
 def test_update_file_with_mixed_notes(collection: str) -> None:
     """Test that --update-file option updates only new notes in update-from-file."""
     # First create a note to get its ID
-    with open("test_initial.md", "w") as f:
+    with Path("test_initial.md").open("w") as f:
         f.write(
             textwrap.dedent(
                 """\
@@ -272,7 +272,7 @@ def test_update_file_with_mixed_notes(collection: str) -> None:
         note_id = initial_note.n.id
 
         # Now create a file with the existing note ID and a new note
-        with open("test_update_mix.md", "w") as f:
+        with Path("test_update_mix.md").open("w") as f:
             f.write(
                 textwrap.dedent(
                     f"""\
@@ -312,7 +312,7 @@ def test_update_file_with_mixed_notes(collection: str) -> None:
         assert len(notes) == 2
 
         # Read the updated file
-        with open("test_update_mix.md") as f:
+        with Path("test_update_mix.md").open() as f:
             updated_content = f.read()
 
         # Verify the original ID is preserved and the new note got an ID
@@ -321,5 +321,5 @@ def test_update_file_with_mixed_notes(collection: str) -> None:
         assert f"nid: {new_note.n.id}" in updated_content  # New ID
 
     # Clean up
-    os.remove("test_initial.md")
-    os.remove("test_update_mix.md")
+    Path("test_initial.md").unlink()
+    Path("test_update_mix.md").unlink()
