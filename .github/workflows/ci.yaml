@@ -19,7 +19,7 @@ jobs:
           cache-dependency-glob: "uv.lock"
 
       - name: Set up mise
-        uses: jdx/mise-action@v4.2.1
+        uses: jdx/mise-action@v4.2.2
 
       - name: Install the project
         run: uv sync --locked --all-extras --dev
