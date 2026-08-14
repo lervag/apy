@@ -16,7 +16,7 @@ dependencies = [
   "beautifulsoup4==4.15.0",
   "click==8.4.2",
   "html5lib==1.1",
-  "markdown==3.10.2",
+  "markdown==3.10.3",
   "markdownify==1.2.3",
   "readchar==4.2.2",
   "rich==15.0.0",
@@ -33,7 +33,7 @@ apy = "apyanki.cli:main"
 dev = [
   "pytest==9.1.1",
   "pyrefly==1.1.1",
-  "ruff==0.16.0",
+  "ruff==0.16.1",
   "types-beautifulsoup4==4.12.0.20250516",
   "types-markdown==3.10.2.20260712",
 ]
