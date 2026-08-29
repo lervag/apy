@@ -33,7 +33,7 @@ apy = "apyanki.cli:main"
 dev = [
   "pytest==9.1.1",
   "pyrefly==1.2.0",
-  "ruff==0.16.2",
+  "ruff==0.16.3",
   "types-beautifulsoup4==4.12.0.20250516",
   "types-markdown==3.10.2.20260712",
 ]
