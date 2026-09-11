@@ -14,7 +14,7 @@ classifiers = [
 dependencies = [
   "anki==26.8.1",
   "beautifulsoup4==4.15.0",
-  "click==8.4.2",
+  "click==8.5.0",
   "html5lib==1.1",
   "markdown==3.10.3",
   "markdownify==1.2.3",
@@ -33,7 +33,7 @@ apy = "apyanki.cli:main"
 dev = [
   "pytest==9.1.1",
   "pyrefly==1.2.0",
-  "ruff==0.16.4",
+  "ruff==0.16.5",
   "types-beautifulsoup4==4.12.0.20250516",
   "types-markdown==3.10.2.20260712",
 ]
