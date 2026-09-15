@@ -155,26 +155,29 @@ class Anki:
         _exc_val: BaseException | None,
         _exc_tb: TracebackType | None,
     ) -> None:
-        if self.modified:
-            if cfg["auto_sync"]:
-                self.sync()
-            else:
-                console.print("Database was modified.")
-                if self._profile is not None and self._profile["syncKey"]:
-                    console.print("[blue]Remember to sync!")
-
-        self.col.close()
+        try:
+            if self.modified:
+                if cfg["auto_sync"]:
+                    self.sync()
+                else:
+                    console.print("Database was modified.")
+                    if self._profile is not None and self._profile["syncKey"]:
+                        console.print("[blue]Remember to sync!")
+        finally:
+            self.col.close()
 
     def sync(self) -> None:
         """Sync collection to AnkiWeb"""
         from anki.sync import SyncAuth
 
         if self._profile is None:
-            return
+            console.print("[red]Sync requires an Anki profile.")
+            raise Abort()
 
         hkey = self._profile.get("syncKey")
         if not hkey:
-            return
+            console.print("[red]Sync requires a sync key.")
+            raise Abort()
 
         auth = SyncAuth(
             hkey=hkey,
@@ -196,7 +199,62 @@ class Anki:
 
             # Perform main sync
             with suppress_stdout():
-                _ = self.col.sync_collection(auth, True)
+                output = self.col.sync_collection(auth, True)
+
+            if output.new_endpoint:
+                auth.endpoint = output.new_endpoint
+                self._profile["currentSyncUrl"] = output.new_endpoint
+
+            if output.server_message:
+                console.print(output.server_message)
+
+            if output.required != output.NO_CHANGES:
+                if output.required == output.FULL_DOWNLOAD:
+                    upload = False
+                    confirmed = console.confirm(
+                        "AnkiWeb must replace the local collection. Continue?",
+                        default=False,
+                    )
+                elif output.required == output.FULL_UPLOAD:
+                    upload = True
+                    confirmed = console.confirm(
+                        "The local collection must replace AnkiWeb. Continue?",
+                        default=False,
+                    )
+                elif output.required == output.FULL_SYNC:
+                    choice = console.prompt(
+                        "Collections conflict. Choose a full sync direction",
+                        choices=["upload", "download", "cancel"],
+                        default="cancel",
+                    )
+                    confirmed = choice != "cancel"
+                    upload = choice == "upload"
+                else:
+                    console.print("[red]AnkiWeb returned an unexpected sync response.")
+                    raise Abort()
+
+                if not confirmed:
+                    raise Abort()
+
+                if not upload:
+                    backup_folder = Path(self.col.path).parent / "backups"
+                    backup_folder.mkdir(exist_ok=True)
+                    self.col.create_backup(
+                        backup_folder=str(backup_folder),
+                        force=True,
+                        wait_for_completion=True,
+                    )
+
+                self.col.close_for_full_sync()
+                try:
+                    self.col.full_upload_or_download(
+                        auth=auth,
+                        server_usn=None,
+                        upload=upload,
+                    )
+                finally:
+                    self.col.reopen(after_full_sync=True)
+
             progress.update(t1, total=1, completed=1, description="[green]done!")
 
             # Perform media sync
