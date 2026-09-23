@@ -158,7 +158,12 @@ class Anki:
         try:
             if self.modified:
                 if cfg["auto_sync"]:
-                    self.sync()
+                    if self._profile is None:
+                        console.print("[yellow]Auto-sync skipped: no Anki profile.")
+                    elif not self._profile.get("syncKey"):
+                        console.print("[yellow]Auto-sync skipped: no sync key.")
+                    else:
+                        self.sync()
                 else:
                     console.print("Database was modified.")
                     if self._profile is not None and self._profile["syncKey"]:
@@ -203,35 +208,42 @@ class Anki:
 
             if output.new_endpoint:
                 auth.endpoint = output.new_endpoint
-                self._profile["currentSyncUrl"] = output.new_endpoint
 
             if output.server_message:
                 console.print(output.server_message)
 
             if output.required != output.NO_CHANGES:
-                if output.required == output.FULL_DOWNLOAD:
-                    upload = False
-                    confirmed = console.confirm(
-                        "AnkiWeb must replace the local collection. Continue?",
-                        default=False,
-                    )
-                elif output.required == output.FULL_UPLOAD:
-                    upload = True
-                    confirmed = console.confirm(
-                        "The local collection must replace AnkiWeb. Continue?",
-                        default=False,
-                    )
-                elif output.required == output.FULL_SYNC:
-                    choice = console.prompt(
-                        "Collections conflict. Choose a full sync direction",
-                        choices=["upload", "download", "cancel"],
-                        default="cancel",
-                    )
-                    confirmed = choice != "cancel"
-                    upload = choice == "upload"
-                else:
-                    console.print("[red]AnkiWeb returned an unexpected sync response.")
-                    raise Abort()
+                progress.stop()
+                try:
+                    if output.required == output.FULL_DOWNLOAD:
+                        upload = False
+                        confirmed = console.confirm(
+                            "AnkiWeb must replace the local collection. Continue?",
+                            default=False,
+                        )
+                    elif output.required == output.FULL_UPLOAD:
+                        upload = True
+                        confirmed = console.confirm(
+                            "The local collection must replace AnkiWeb. Continue?",
+                            default=False,
+                        )
+                    elif output.required == output.FULL_SYNC:
+                        choice = console.prompt(
+                            "Collections conflict. Choose a full sync direction",
+                            choices=["upload", "download", "cancel"],
+                            default="cancel",
+                        )
+                        confirmed = choice != "cancel"
+                        upload = choice == "upload"
+                    else:
+                        # sync_collection performs normal sync internally and returns
+                        # NO_CHANGES, so NORMAL_SYNC here is unexpected.
+                        console.print(
+                            "[red]AnkiWeb returned an unexpected sync response."
+                        )
+                        raise Abort()
+                finally:
+                    progress.start()
 
                 if not confirmed:
                     raise Abort()

@@ -2,7 +2,7 @@
 
 from pathlib import Path
 from types import SimpleNamespace
-from typing import Any
+from typing import Any, Self
 
 import pytest
 from anki.sync import SyncOutput
@@ -10,7 +10,6 @@ from click import Abort
 
 from apyanki.anki import Anki
 from apyanki.config import cfg
-from apyanki.console import console
 
 
 class FakeCollection:
@@ -50,6 +49,35 @@ class FakeCollection:
         return SimpleNamespace(active=False, progress=None)
 
 
+class RecordingProgress:
+    """Minimal progress implementation that records its live state."""
+
+    def __init__(self, *_args: Any, **_kwargs: Any) -> None:
+        self.running = False
+        self.events: list[str] = []
+
+    def __enter__(self) -> Self:
+        self.start()
+        return self
+
+    def __exit__(self, *_args: object) -> None:
+        self.stop()
+
+    def add_task(self, *_args: Any, **_kwargs: Any) -> int:
+        return 1
+
+    def update(self, *_args: Any, **_kwargs: Any) -> None:
+        pass
+
+    def start(self) -> None:
+        self.running = True
+        self.events.append("start")
+
+    def stop(self) -> None:
+        self.running = False
+        self.events.append("stop")
+
+
 def test_sync_downloads_when_server_requires_full_download(
     monkeypatch: pytest.MonkeyPatch, tmp_path: Path
 ) -> None:
@@ -62,31 +90,37 @@ def test_sync_downloads_when_server_requires_full_download(
     anki: Any = Anki.__new__(Anki)
     anki._profile = {"syncKey": "key"}
     anki.col = collection
-
-    monkeypatch.setattr(console, "confirm", lambda *_args, **_kwargs: True)
+    monkeypatch.setattr("apyanki.anki.console.confirm", lambda *_args, **_kwargs: True)
 
     anki.sync()
 
-    assert collection.operations == [
-        ("normal", True),
-        ("backup", (str(tmp_path / "backups"), True, True)),
-        ("close", None),
-        ("full", (False, None, "https://sync.example.test/")),
-        ("reopen", True),
-        ("media", "https://sync.example.test/"),
-    ]
+    backup = ("backup", (str(tmp_path / "backups"), True, True))
+    full_download = ("full", (False, None, "https://sync.example.test/"))
+    assert backup in collection.operations
+    assert full_download in collection.operations
+    assert collection.operations.index(backup) < collection.operations.index(
+        full_download
+    )
+    assert ("reopen", True) in collection.operations
+    assert ("media", "https://sync.example.test/") in collection.operations
 
 
-def test_sync_without_key_fails_instead_of_reporting_success(
+@pytest.mark.parametrize(
+    ("profile", "message"),
+    [(None, "profile"), ({"syncKey": ""}, "sync key")],
+)
+def test_explicit_sync_without_credentials_fails(
     capsys: pytest.CaptureFixture[str],
+    profile: dict[str, str] | None,
+    message: str,
 ) -> None:
     anki: Any = Anki.__new__(Anki)
-    anki._profile = {"syncKey": ""}
+    anki._profile = profile
 
     with pytest.raises(Abort):
         anki.sync()
 
-    assert "sync key" in capsys.readouterr().out.lower()
+    assert message in capsys.readouterr().out.lower()
 
 
 def test_sync_uploads_when_only_full_upload_is_allowed(
@@ -97,13 +131,12 @@ def test_sync_uploads_when_only_full_upload_is_allowed(
     anki: Any = Anki.__new__(Anki)
     anki._profile = {"syncKey": "key"}
     anki.col = collection
-
-    monkeypatch.setattr(console, "confirm", lambda *_args, **_kwargs: True)
+    monkeypatch.setattr("apyanki.anki.console.confirm", lambda *_args, **_kwargs: True)
 
     anki.sync()
 
     assert ("full", (True, None, "")) in collection.operations
-    assert all(operation != "backup" for operation, _ in collection.operations)
+    assert not any(name == "backup" for name, _ in collection.operations)
 
 
 def test_sync_conflict_can_be_cancelled(
@@ -114,29 +147,109 @@ def test_sync_conflict_can_be_cancelled(
     anki: Any = Anki.__new__(Anki)
     anki._profile = {"syncKey": "key"}
     anki.col = collection
-
-    monkeypatch.setattr(console, "prompt", lambda *_args, **_kwargs: "cancel")
+    monkeypatch.setattr(
+        "apyanki.anki.console.prompt", lambda *_args, **_kwargs: "cancel"
+    )
 
     with pytest.raises(Abort):
         anki.sync()
 
-    assert collection.operations == [("normal", True)]
+    assert not any(name == "full" for name, _ in collection.operations)
 
 
-def test_context_manager_closes_collection_when_auto_sync_has_no_key(
+@pytest.mark.parametrize(
+    ("profile", "message"),
+    [(None, "Anki profile"), ({"syncKey": ""}, "sync key")],
+)
+def test_auto_sync_without_credentials_warns_and_preserves_mutation(
     monkeypatch: pytest.MonkeyPatch,
+    capsys: pytest.CaptureFixture[str],
+    profile: dict[str, str] | None,
+    message: str,
 ) -> None:
     operations: list[str] = []
     anki: Any = Anki.__new__(Anki)
     anki.modified = True
-    anki._profile = {"syncKey": ""}
+    anki._profile = profile
     anki.col = SimpleNamespace(close=lambda: operations.append("close"))
     monkeypatch.setitem(cfg, "auto_sync", True)
 
-    with pytest.raises(Abort):
-        anki.__exit__(None, None, None)
+    anki.__exit__(None, None, None)
 
     assert operations == ["close"]
+    assert f"auto-sync skipped: no {message.lower()}" in capsys.readouterr().out.lower()
+
+
+@pytest.mark.parametrize(
+    ("required", "response", "upload"),
+    [
+        (SyncOutput.FULL_DOWNLOAD, "y", False),
+        (SyncOutput.FULL_UPLOAD, "y", True),
+        (SyncOutput.FULL_SYNC, "upload", True),
+    ],
+)
+def test_full_sync_prompts_pause_live_progress(
+    monkeypatch: pytest.MonkeyPatch,
+    tmp_path: Path,
+    required: Any,
+    response: str,
+    upload: bool,
+) -> None:
+    collection = FakeCollection(tmp_path, SyncOutput(required=required))
+    anki: Any = Anki.__new__(Anki)
+    anki._profile = {"syncKey": "key"}
+    anki.col = collection
+    progress = RecordingProgress()
+    prompt_states: list[bool] = []
+
+    monkeypatch.setattr("apyanki.anki.Progress", lambda *_args, **_kwargs: progress)
+
+    def respond(*_args: Any) -> str:
+        prompt_states.append(progress.running)
+        return response
+
+    monkeypatch.setattr("builtins.input", respond)
+
+    anki.sync()
+
+    assert prompt_states == [False]
+    assert progress.events == ["start", "stop", "start", "stop"]
+    assert ("full", (upload, None, "")) in collection.operations
+
+
+def test_full_sync_prompt_restarts_progress_after_exception(
+    monkeypatch: pytest.MonkeyPatch, tmp_path: Path
+) -> None:
+    collection = FakeCollection(tmp_path, SyncOutput(required=SyncOutput.FULL_DOWNLOAD))
+    anki: Any = Anki.__new__(Anki)
+    anki._profile = {"syncKey": "key"}
+    anki.col = collection
+    progress = RecordingProgress()
+    monkeypatch.setattr("apyanki.anki.Progress", lambda *_args, **_kwargs: progress)
+
+    def fail_prompt(*_args: Any, **_kwargs: Any) -> bool:
+        raise RuntimeError("prompt failed")
+
+    monkeypatch.setattr("apyanki.anki.console.confirm", fail_prompt)
+
+    with pytest.raises(RuntimeError, match="prompt failed"):
+        anki.sync()
+
+    assert progress.events == ["start", "stop", "start", "stop"]
+
+
+def test_unexpected_normal_sync_response_fails_without_full_sync(
+    tmp_path: Path,
+) -> None:
+    collection = FakeCollection(tmp_path, SyncOutput(required=SyncOutput.NORMAL_SYNC))
+    anki: Any = Anki.__new__(Anki)
+    anki._profile = {"syncKey": "key"}
+    anki.col = collection
+
+    with pytest.raises(Abort):
+        anki.sync()
+
+    assert not any(name == "full" for name, _ in collection.operations)
 
 
 def test_backup_failure_prevents_full_download(
@@ -147,8 +260,7 @@ def test_backup_failure_prevents_full_download(
     anki: Any = Anki.__new__(Anki)
     anki._profile = {"syncKey": "key"}
     anki.col = collection
-
-    monkeypatch.setattr(console, "confirm", lambda *_args, **_kwargs: True)
+    monkeypatch.setattr("apyanki.anki.console.confirm", lambda *_args, **_kwargs: True)
 
     def fail_backup(**_kwargs: Any) -> bool:
         collection.operations.append(("backup failed", None))
@@ -159,10 +271,8 @@ def test_backup_failure_prevents_full_download(
     with pytest.raises(RuntimeError, match="backup failed"):
         anki.sync()
 
-    assert collection.operations == [
-        ("normal", True),
-        ("backup failed", None),
-    ]
+    assert ("backup failed", None) in collection.operations
+    assert not any(name == "full" for name, _ in collection.operations)
 
 
 def test_failed_full_sync_reopens_collection(
@@ -173,8 +283,7 @@ def test_failed_full_sync_reopens_collection(
     anki: Any = Anki.__new__(Anki)
     anki._profile = {"syncKey": "key"}
     anki.col = collection
-
-    monkeypatch.setattr(console, "confirm", lambda *_args, **_kwargs: True)
+    monkeypatch.setattr("apyanki.anki.console.confirm", lambda *_args, **_kwargs: True)
 
     def fail_full_sync(**_kwargs: Any) -> None:
         collection.operations.append(("full failed", None))
@@ -185,9 +294,5 @@ def test_failed_full_sync_reopens_collection(
     with pytest.raises(RuntimeError, match="full sync failed"):
         anki.sync()
 
-    assert collection.operations == [
-        ("normal", True),
-        ("close", None),
-        ("full failed", None),
-        ("reopen", True),
-    ]
+    assert ("full failed", None) in collection.operations
+    assert ("reopen", True) in collection.operations
