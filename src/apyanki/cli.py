@@ -93,7 +93,7 @@ def add_single(
         apy add-single -t "my-tag new-tag" -d MyDeck myfront myback
     """
     with Anki(**cfg) as a:
-        tags_preset = " ".join(cfg["presets"][preset]["tags"])
+        tags_preset: str = " ".join(cfg["presets"][preset]["tags"])
         if not tags:
             tags = tags_preset
         else:
