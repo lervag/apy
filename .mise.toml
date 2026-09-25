@@ -1,5 +1,5 @@
 [tools]
-uv = "0.12.9"
+uv = "0.12.13"
 
 [env]
 _.python.venv = { path = ".venv" }
