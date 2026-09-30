@@ -9,13 +9,18 @@ from markdown.extensions import Extension
 from markdown.postprocessors import Postprocessor
 from markdown.preprocessors import Preprocessor
 
+START_MARKER = "\x02"  # start of text
+END_MARKER = "\x03"  # end of text
+
 
 class MathProtectExtension(Extension):
     def __init__(self, markdown_latex_mode: str) -> None:
         super().__init__()
         self.markdown_latex_mode: str = markdown_latex_mode
 
-    def extendMarkdown(self, md: Markdown) -> None:  # pyright: ignore[reportImplicitOverride]
+    def extendMarkdown(
+        self, md: Markdown
+    ) -> None:  # pyright: ignore[reportImplicitOverride]
         math_preprocessor = MathPreprocessor(md, self.markdown_latex_mode)
         math_postprocessor = MathPostprocessor(md, math_preprocessor.placeholders)
 
@@ -37,9 +42,11 @@ class MathPreprocessor(Preprocessor):
             self.fmt_display = r"\[{math}\]"
             self.fmt_inline = r"\({math}\)"
 
-    def run(self, lines: list[str]) -> list[str]:  # pyright: ignore[reportImplicitOverride]
+    def run(
+        self, lines: list[str]
+    ) -> list[str]:  # pyright: ignore[reportImplicitOverride]
         def replacer(match: re.Match[str]) -> str:
-            placeholder = f"MATH-PLACEHOLDER-{self.counter}"
+            placeholder = f"{START_MARKER}MATH-PLACEHOLDER-{self.counter}{END_MARKER}"
             self.counter += 1
 
             if matched := match.group(1):
@@ -61,6 +68,14 @@ class MathPostprocessor(Postprocessor):
         self.placeholders: dict[str, str] = placeholders
 
     def run(self, text: str) -> str:  # pyright: ignore[reportImplicitOverride]
-        for placeholder, math in self.placeholders.items():
-            text = text.replace(placeholder, math)
-        return text
+        def replacer(match: re.Match[str]) -> str:
+            # NOTE: the default argument `match.group(0)` is provided, in the
+            # unlikely case that the user provides input that matches the
+            # pattern
+            return self.placeholders.get(match.group(0), match.group(0))
+
+        return re.sub(
+            rf"{START_MARKER}MATH-PLACEHOLDER-\d+{END_MARKER}",
+            replacer,
+            text,
+        )
