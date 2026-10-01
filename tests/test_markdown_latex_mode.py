@@ -83,3 +83,27 @@ def test_markdown_to_mathjax_2() -> None:
         note = a.add_notes_single([input, ""], markdown=True)
         soup = BeautifulSoup(note.n.fields[0], "html.parser")
         assert soup.text == expected
+
+
+def test_markdown_to_mathjax_many() -> None:
+    cfg["markdown_latex_mode"] = "mathjax"
+
+    with AnkiEmpty() as a:
+        input = " ".join(f"${i}$" for i in range(12))
+        expected = " ".join(rf"\({i}\)" for i in range(12))
+
+        note = a.add_notes_single([input, ""], markdown=True)
+        soup = BeautifulSoup(note.n.fields[0], "html.parser")
+        assert soup.text == expected
+
+
+def test_markdown_to_mathjax_empty() -> None:
+    cfg["markdown_latex_mode"] = "mathjax"
+
+    with AnkiEmpty() as a:
+        input = "a $$$$ b"
+        expected = r"a \[\] b"
+
+        note = a.add_notes_single([input, ""], markdown=True)
+        soup = BeautifulSoup(note.n.fields[0], "html.parser")
+        assert soup.text == expected
