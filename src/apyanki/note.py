@@ -12,11 +12,11 @@ from time import localtime, strftime
 from typing import TYPE_CHECKING, Any, Literal, override
 
 import readchar
-from click import Abort
 from rich.columns import Columns
 from rich.markdown import Markdown
 from rich.table import Table
 from rich.text import Text
+from typer import Abort
 
 from apyanki import cards
 from apyanki.config import cfg

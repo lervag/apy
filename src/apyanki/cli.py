@@ -1,11 +1,11 @@
 """A script to interact with the Anki database"""
 
 import os
-import sys
 from pathlib import Path
-from typing import Any, Literal
+from typing import Annotated, Literal, override
 
-import click
+import typer
+from typer.core import TyperGroup
 
 from apyanki import __version__
 from apyanki.anki import Anki
@@ -17,12 +17,46 @@ from apyanki.utilities import suppress_stdout
 CONTEXT_SETTINGS = {"help_option_names": ["-h", "--help"]}
 
 
-@click.group(context_settings=CONTEXT_SETTINGS, invoke_without_command=True)
-@click.option("-b", "--base-path", help="Set Anki base directory")
-@click.option("-p", "--profile-name", help="Specify name of Anki profile to use")
-@click.option("-V", "--version", is_flag=True, help="Show apy version")
-@click.pass_context
-def main(ctx: Any, base_path: str, profile_name: str, version: bool) -> None:
+class SortedGroup(TyperGroup):
+    """List subcommands alphabetically in the help output"""
+
+    @override
+    def list_commands(self, ctx: object) -> list[str]:
+        return sorted(self.commands)
+
+
+main = typer.Typer(
+    cls=SortedGroup,
+    context_settings=CONTEXT_SETTINGS,
+    rich_markup_mode=None,
+    add_completion=False,
+    pretty_exceptions_enable=False,
+)
+
+QueryArgument = Annotated[list[str] | None, typer.Argument(metavar="[QUERY]...")]
+RequiredQueryArgument = Annotated[list[str], typer.Argument(metavar="QUERY...")]
+
+
+@main.callback(invoke_without_command=True)
+def callback(
+    ctx: typer.Context,
+    base_path: Annotated[
+        str | None,
+        typer.Option("-b", "--base-path", help="Set Anki base directory"),
+    ] = None,
+    profile_name: Annotated[
+        str | None,
+        typer.Option(
+            "-p",
+            "--profile-name",
+            help="Specify name of Anki profile to use",
+        ),
+    ] = None,
+    version: Annotated[
+        bool,
+        typer.Option("-V", "--version", help="Show apy version"),
+    ] = False,
+) -> None:
     """A script to interact with the Anki database.
 
     The base_path directory may be specified with the -b / --base-path option. For
@@ -47,7 +81,7 @@ def main(ctx: Any, base_path: str, profile_name: str, version: bool) -> None:
     """
     if version:
         console.print(f"apy {__version__}")
-        sys.exit()
+        raise typer.Exit()
 
     if base_path:
         cfg["base_path"] = os.path.abspath(os.path.expanduser(base_path))
@@ -56,25 +90,31 @@ def main(ctx: Any, base_path: str, profile_name: str, version: bool) -> None:
         cfg["profile_name"] = profile_name
 
     if ctx.invoked_subcommand is None:
-        ctx.invoke(info)
+        info()
 
 
 @main.command("add-single")
-@click.argument("fields", nargs=-1)
-@click.option("-p", "--parse-markdown", is_flag=True, help="Parse input as Markdown.")
-@click.option("-s", "--preset", default="default", help="Specify a preset.")
-@click.option("-t", "--tags", help="Specify default tags for new cards.")
-@click.option(
-    "-m", "--model", "model_name", help="Specify default model for new cards."
-)
-@click.option("-d", "--deck", help="Specify default deck for new cards.")
 def add_single(
-    fields: list[str],
-    parse_markdown: bool,
-    tags: str | None = None,
-    preset: str | None = None,
-    model_name: str | None = None,
-    deck: str | None = None,
+    fields: Annotated[list[str] | None, typer.Argument(metavar="[FIELDS]...")] = None,
+    parse_markdown: Annotated[
+        bool,
+        typer.Option("-p", "--parse-markdown", help="Parse input as Markdown."),
+    ] = False,
+    preset: Annotated[
+        str, typer.Option("-s", "--preset", help="Specify a preset.")
+    ] = "default",
+    tags: Annotated[
+        str | None,
+        typer.Option("-t", "--tags", help="Specify default tags for new cards."),
+    ] = None,
+    model_name: Annotated[
+        str | None,
+        typer.Option("-m", "--model", help="Specify default model for new cards."),
+    ] = None,
+    deck: Annotated[
+        str | None,
+        typer.Option("-d", "--deck", help="Specify default deck for new cards."),
+    ] = None,
 ) -> None:
     """Add a single note from command line arguments.
 
@@ -102,20 +142,24 @@ def add_single(
         if not model_name:
             model_name = cfg["presets"][preset]["model"]
 
-        _ = a.add_notes_single(fields, parse_markdown, tags, model_name, deck)
+        _ = a.add_notes_single(fields or [], parse_markdown, tags, model_name, deck)
 
 
 @main.command()
-@click.option("-t", "--tags", default="", help="Specify default tags for new cards.")
-@click.option(
-    "-m",
-    "--model",
-    "model_name",
-    default="Basic",
-    help=("Specify default model for new cards."),
-)
-@click.option("-d", "--deck", help="Specify default deck for new cards.")
-def add(tags: str, model_name: str, deck: str) -> None:
+def add(
+    tags: Annotated[
+        str,
+        typer.Option("-t", "--tags", help="Specify default tags for new cards."),
+    ] = "",
+    model_name: Annotated[
+        str,
+        typer.Option("-m", "--model", help="Specify default model for new cards."),
+    ] = "Basic",
+    deck: Annotated[
+        str | None,
+        typer.Option("-d", "--deck", help="Specify default deck for new cards."),
+    ] = None,
+) -> None:
     """Add notes interactively from terminal.
 
     Examples:
@@ -134,16 +178,25 @@ def add(tags: str, model_name: str, deck: str) -> None:
 
 
 @main.command("update-from-file")
-@click.argument("file", type=click.Path(exists=True, dir_okay=False))
-@click.option("-t", "--tags", default="", help="Specify default tags for cards.")
-@click.option("-d", "--deck", help="Specify default deck for cards.")
-@click.option(
-    "-l",
-    "--link-duplicates",
-    is_flag=True,
-    help="Link duplicates to existing notes in IDs file.",
-)
-def update_from_file(file: Path, tags: str, deck: str, link_duplicates: bool) -> None:
+def update_from_file(
+    file: Annotated[Path, typer.Argument(metavar="FILE", exists=True, dir_okay=False)],
+    tags: Annotated[
+        str,
+        typer.Option("-t", "--tags", help="Specify default tags for cards."),
+    ] = "",
+    deck: Annotated[
+        str | None,
+        typer.Option("-d", "--deck", help="Specify default deck for cards."),
+    ] = None,
+    link_duplicates: Annotated[
+        bool,
+        typer.Option(
+            "-l",
+            "--link-duplicates",
+            help="Link duplicates to existing notes in IDs file.",
+        ),
+    ] = False,
+) -> None:
     """Update existing notes or add new notes from Markdown file.
 
     This command will update existing notes when a note ID (nid) is available.
@@ -244,10 +297,17 @@ def update_from_file(file: Path, tags: str, deck: str, link_duplicates: bool) ->
 
 # Create an alias for backward compatibility
 @main.command("add-from-file")
-@click.argument("file", type=click.Path(exists=True, dir_okay=False))
-@click.option("-t", "--tags", default="", help="Specify default tags for new cards.")
-@click.option("-d", "--deck", help="Specify default deck for new cards.")
-def add_from_file(file: Path, tags: str, deck: str) -> None:
+def add_from_file(
+    file: Annotated[Path, typer.Argument(metavar="FILE", exists=True, dir_okay=False)],
+    tags: Annotated[
+        str,
+        typer.Option("-t", "--tags", help="Specify default tags for new cards."),
+    ] = "",
+    deck: Annotated[
+        str | None,
+        typer.Option("-d", "--deck", help="Specify default deck for new cards."),
+    ] = None,
+) -> None:
     """Add new notes from Markdown file.
 
     This command will add new notes to the collection. Unlike update-from-file,
@@ -416,20 +476,36 @@ def info() -> None:
         console.rule()
 
 
-@main.group(context_settings=CONTEXT_SETTINGS, invoke_without_command=True)
-def model() -> None:
+model = typer.Typer(
+    cls=SortedGroup,
+    context_settings=CONTEXT_SETTINGS,
+    rich_markup_mode=None,
+    add_completion=False,
+    pretty_exceptions_enable=False,
+)
+main.add_typer(model, name="model")
+
+
+@model.callback(invoke_without_command=True)
+def model_callback() -> None:
     """Interact with Anki models."""
 
 
 @model.command("edit-css")
-@click.option(
-    "-m",
-    "--model-name",
-    default="Basic",
-    help="Specify for which model to edit CSS template.",
-)
-@click.option("-s", "--sync-after", is_flag=True, help="Perform sync after any change.")
-def edit_css(model_name: str, sync_after: bool) -> None:
+def edit_css(
+    model_name: Annotated[
+        str,
+        typer.Option(
+            "-m",
+            "--model-name",
+            help="Specify for which model to edit CSS template.",
+        ),
+    ] = "Basic",
+    sync_after: Annotated[
+        bool,
+        typer.Option("-s", "--sync-after", help="Perform sync after any change."),
+    ] = False,
+) -> None:
     """Edit the CSS template for the specified model."""
     with Anki(**cfg) as a:
         a.edit_model_css(model_name)
@@ -440,18 +516,23 @@ def edit_css(model_name: str, sync_after: bool) -> None:
 
 
 @model.command()
-@click.argument("old-name")
-@click.argument("new-name")
-def rename(old_name: str, new_name: str) -> None:
+def rename(
+    old_name: Annotated[str, typer.Argument(metavar="OLD_NAME")],
+    new_name: Annotated[str, typer.Argument(metavar="NEW_NAME")],
+) -> None:
     """Rename model from old_name to new_name."""
     with Anki(**cfg) as a:
         a.rename_model(old_name, new_name)
 
 
 @main.command("list-cards")
-@click.argument("query", required=False, nargs=-1)
-@click.option("-v", "--verbose", is_flag=True, help="Print details for each card")
-def list_cards(query: tuple[str, ...], verbose: bool) -> None:
+def list_cards(
+    query: QueryArgument = None,
+    verbose: Annotated[
+        bool,
+        typer.Option("-v", "--verbose", help="Print details for each card"),
+    ] = False,
+) -> None:
     """List cards that match QUERY.
 
     The default QUERY is "tag:marked OR -flag:0". This default can be
@@ -469,25 +550,40 @@ def list_cards(query: tuple[str, ...], verbose: bool) -> None:
 
 
 @main.command("list-cards-table")
-@click.argument("query", required=False, nargs=-1)
-@click.option("-a", "--show-answer", is_flag=True, help="Display answer")
-@click.option("-m", "--show-model", is_flag=True, help="Display model")
-@click.option("-c", "--show-cid", is_flag=True, help="Display card ids")
-@click.option("-d", "--show-due", is_flag=True, help="Display card due time in days")
-@click.option("-t", "--show-type", is_flag=True, help="Display card type")
-@click.option("-e", "--show-ease", is_flag=True, help="Display card ease")
-@click.option("-l", "--show-lapses", is_flag=True, help="Display card number of lapses")
-@click.option("-D", "--show-deck", is_flag=True, help="Display deck")
 def list_cards_table(
-    query: tuple[str, ...],
-    show_answer: bool,
-    show_model: bool,
-    show_due: bool,
-    show_type: bool,
-    show_ease: bool,
-    show_lapses: bool,
-    show_cid: bool,
-    show_deck: bool,
+    query: QueryArgument = None,
+    show_answer: Annotated[
+        bool,
+        typer.Option("-a", "--show-answer", help="Display answer"),
+    ] = False,
+    show_model: Annotated[
+        bool,
+        typer.Option("-m", "--show-model", help="Display model"),
+    ] = False,
+    show_cid: Annotated[
+        bool,
+        typer.Option("-c", "--show-cid", help="Display card ids"),
+    ] = False,
+    show_due: Annotated[
+        bool,
+        typer.Option("-d", "--show-due", help="Display card due time in days"),
+    ] = False,
+    show_type: Annotated[
+        bool,
+        typer.Option("-t", "--show-type", help="Display card type"),
+    ] = False,
+    show_ease: Annotated[
+        bool,
+        typer.Option("-e", "--show-ease", help="Display card ease"),
+    ] = False,
+    show_lapses: Annotated[
+        bool,
+        typer.Option("-l", "--show-lapses", help="Display card number of lapses"),
+    ] = False,
+    show_deck: Annotated[
+        bool,
+        typer.Option("-D", "--show-deck", help="Display deck"),
+    ] = False,
 ) -> None:
     """List cards that match QUERY in a tabular format.
 
@@ -525,12 +621,20 @@ def list_models() -> None:
 
 
 @main.command("list-notes")
-@click.argument("query", required=False, nargs=-1)
-@click.option("-c", "--show-cards", is_flag=True, help="Print card specs")
-@click.option("-r", "--show-raw-fields", is_flag=True, help="Print raw field data")
-@click.option("-v", "--verbose", is_flag=True, help="Print note details")
 def list_notes(
-    query: tuple[str, ...], show_cards: bool, show_raw_fields: bool, verbose: bool
+    query: QueryArgument = None,
+    show_cards: Annotated[
+        bool,
+        typer.Option("-c", "--show-cards", help="Print card specs"),
+    ] = False,
+    show_raw_fields: Annotated[
+        bool,
+        typer.Option("-r", "--show-raw-fields", help="Print raw field data"),
+    ] = False,
+    verbose: Annotated[
+        bool,
+        typer.Option("-v", "--verbose", help="Print note details"),
+    ] = False,
 ) -> None:
     """List notes that match QUERY.
 
@@ -549,22 +653,24 @@ def list_notes(
 
 
 @main.command()
-@click.argument("query", required=False, nargs=-1)
-@click.option(
-    "-m",
-    "--check-markdown-consistency",
-    is_flag=True,
-    help="Check for Markdown consistency",
-)
-@click.option(
-    "-n",
-    "--cmc-range",
-    default=7,
-    type=int,
-    help="Number of days backwards to check consistency",
-)
 def review(
-    query: tuple[str, ...], check_markdown_consistency: bool, cmc_range: int
+    query: QueryArgument = None,
+    check_markdown_consistency: Annotated[
+        bool,
+        typer.Option(
+            "-m",
+            "--check-markdown-consistency",
+            help="Check for Markdown consistency",
+        ),
+    ] = False,
+    cmc_range: Annotated[
+        int,
+        typer.Option(
+            "-n",
+            "--cmc-range",
+            help="Number of days backwards to check consistency",
+        ),
+    ] = 7,
 ) -> None:
     """Review/Edit notes that match QUERY.
 
@@ -605,14 +711,17 @@ def review(
 
 
 @main.command()
-@click.argument("query", nargs=-1, required=True)
-@click.option(
-    "--force-multiple",
-    "-f",
-    is_flag=True,
-    help="Allow editing multiple notes (will edit them one by one)",
-)
-def edit(query: tuple[str, ...], force_multiple: bool) -> None:
+def edit(
+    query: RequiredQueryArgument,
+    force_multiple: Annotated[
+        bool,
+        typer.Option(
+            "--force-multiple",
+            "-f",
+            help="Allow editing multiple notes (will edit them one by one)",
+        ),
+    ] = False,
+) -> None:
     """Edit notes that match QUERY directly.
 
     This command allows direct editing of notes matching the provided query
@@ -703,26 +812,35 @@ def sync() -> None:
 
 
 @main.command()
-@click.argument("query", required=False, nargs=-1)
-@click.option("-a", "--add-tags", help="Add specified tags to matched notes.")
-@click.option("-r", "--remove-tags", help="Remove specified tags from matched notes.")
-@click.option(
-    "-c", "--sort-by-count", is_flag=True, help="When listing tags, sort by note count"
-)
-@click.option("-s", "--simple", is_flag=True, help="Only list available tags")
-@click.option(
-    "-p",
-    "--purge",
-    is_flag=True,
-    help="If specified, then the command will remove all unused tags",
-)
 def tag(
-    query: tuple[str, ...],
-    add_tags: str | None,
-    remove_tags: str | None,
-    simple: bool,
-    sort_by_count: bool,
-    purge: bool,
+    query: QueryArgument = None,
+    add_tags: Annotated[
+        str | None,
+        typer.Option("-a", "--add-tags", help="Add specified tags to matched notes."),
+    ] = None,
+    remove_tags: Annotated[
+        str | None,
+        typer.Option(
+            "-r", "--remove-tags", help="Remove specified tags from matched notes."
+        ),
+    ] = None,
+    sort_by_count: Annotated[
+        bool,
+        typer.Option(
+            "-c", "--sort-by-count", help="When listing tags, sort by note count"
+        ),
+    ] = False,
+    simple: Annotated[
+        bool, typer.Option("-s", "--simple", help="Only list available tags")
+    ] = False,
+    purge: Annotated[
+        bool,
+        typer.Option(
+            "-p",
+            "--purge",
+            help="If specified, then the command will remove all unused tags",
+        ),
+    ] = False,
 ) -> None:
     """List all tags or add/remove tags from notes that match the query.
 
@@ -776,7 +894,7 @@ def tag(
         n_notes = len(list(a.find_notes(query_str)))
         if n_notes == 0:
             console.print("No matching notes!")
-            raise click.Abort()
+            raise typer.Abort()
 
         console.print(f"The operation will be applied to {n_notes} matched notes:")
         a.list_note_questions(query_str)
@@ -788,7 +906,7 @@ def tag(
             console.print(f"Remove tags: [red]{remove_tags}")
 
         if not console.confirm("Continue?"):
-            raise click.Abort()
+            raise typer.Abort()
 
         if add_tags is not None:
             a.change_tags(query_str, add_tags)
@@ -798,9 +916,10 @@ def tag(
 
 
 @main.command()
-@click.argument("position", type=int, required=True, nargs=1)
-@click.argument("query", required=True, nargs=-1)
-def reposition(position: int, query: tuple[str, ...]) -> None:
+def reposition(
+    position: Annotated[int, typer.Argument(metavar="POSITION")],
+    query: RequiredQueryArgument,
+) -> None:
     """Reposition cards that match QUERY.
 
     Sets the new position to POSITION and shifts other cards.
@@ -813,45 +932,49 @@ def reposition(position: int, query: tuple[str, ...]) -> None:
         cids = list(a.col.find_cards(query_str))
         if not cids:
             console.print(f"No matching cards for query: {query_str}!")
-            raise click.Abort()
+            raise typer.Abort()
 
         for cid in cids:
             card = a.col.get_card(cid)
             if card.type != 0:
                 console.print("Can only reposition new cards!")
-                raise click.Abort()
+                raise typer.Abort()
 
         _ = a.col.sched.reposition_new_cards(cids, position, 1, False, True)
         a.modified = True
 
 
 @main.command()
-@click.argument(
-    "target-file", type=click.Path(exists=False, resolve_path=True, path_type=Path)
-)
-@click.option(
-    "-m", "--include-media", is_flag=True, help="Include media files in backup."
-)
-@click.option(
-    "-l",
-    "--legacy",
-    is_flag=True,
-    help="Support older Anki versions (slower/larger files)",
-)
-def backup(target_file: Path, include_media: bool, legacy: bool) -> None:
+def backup(
+    target_file: Annotated[
+        Path, typer.Argument(metavar="TARGET_FILE", resolve_path=True)
+    ],
+    include_media: Annotated[
+        bool,
+        typer.Option("-m", "--include-media", help="Include media files in backup."),
+    ] = False,
+    legacy: Annotated[
+        bool,
+        typer.Option(
+            "-l",
+            "--legacy",
+            help="Support older Anki versions (slower/larger files)",
+        ),
+    ] = False,
+) -> None:
     """Backup Anki database to specified target file."""
     with Anki(**cfg) as a:
         target_filename = str(target_file)
 
         if not target_filename.endswith(".colpkg"):
             console.print("[yellow]Warning: Target should have .colpkg extension!")
-            raise click.Abort()
+            raise typer.Abort()
 
         if target_file.exists():
             console.print("[yellow]Warning: Target file already exists!")
             console.print(f"[yellow]  {target_file}")
             if not console.confirm("Do you want to overwrite it?"):
-                raise click.Abort()
+                raise typer.Abort()
 
         with suppress_stdout():
             a.col.export_collection_package(target_filename, include_media, legacy)

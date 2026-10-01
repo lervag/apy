@@ -2,8 +2,8 @@
 
 from typing import Any
 
-import click
 import readchar
+import typer
 from rich.console import Console
 from rich.prompt import Confirm, IntPrompt, Prompt
 
@@ -28,7 +28,7 @@ class ApyConsole(Console):
         result: int
 
         if suffix is not None:
-            result = click.prompt(prompt, prompt_suffix=suffix, type=int)
+            result = typer.prompt(prompt, prompt_suffix=suffix, type=int)
         else:
             result = IntPrompt(console=self).ask(prompt, **kwargs)
 

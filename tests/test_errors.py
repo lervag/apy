@@ -1,7 +1,7 @@
 """Test errors and warnings"""
 
 import pytest
-from click import Abort
+from typer import Abort
 
 from apyanki.anki import Anki
 

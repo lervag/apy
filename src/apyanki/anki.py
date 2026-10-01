@@ -12,11 +12,11 @@ from pathlib import Path
 from types import TracebackType
 from typing import TYPE_CHECKING, Any, Self
 
-from click import Abort
 from rich.markdown import Markdown
 from rich.progress import Progress, SpinnerColumn, TextColumn
 from rich.table import Table
 from rich.text import Text
+from typer import Abort
 
 from apyanki import cards
 from apyanki.config import cfg

@@ -12,7 +12,7 @@ from types import TracebackType
 from typing import Any, TypeVar
 
 import readchar
-from click import Abort
+from typer import Abort
 
 from apyanki.console import console
 
