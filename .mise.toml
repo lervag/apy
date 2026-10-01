@@ -30,3 +30,11 @@ description = "Update type check baseline"
 run = """
 uv run pyrefly check --baseline pyrefly-baseline.json --update-baseline
 """
+
+[tasks.build-and-publish]
+description = "Build new dist for publishing"
+run = """
+rm -rf dist
+uv build
+UV_PUBLISH_TOKEN=$(pass pypi | grep pypi- | cut -b 3-) uv publish
+"""
