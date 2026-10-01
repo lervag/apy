@@ -1,7 +1,5 @@
 """Classes and functions for interacting with and creating notes"""
 
-from __future__ import annotations
-
 import json
 import os
 import re

@@ -47,11 +47,37 @@ project-includes = ["src", "tests"]
 search-path = ["src", "."]
 
 [tool.pyrefly.errors]
-implicit-any-parameter = true
-unannotated-return = true
+bad-dataclass-descriptor = true
+deprecated = true
+division-by-zero = true
+empty-body = true
+implicit-abstract-class = true
 implicit-any-attribute = true
-unused-ignore = true
+implicit-any-parameter = true
+implicit-import = true
+invalid-abstract-method = true
+invalid-cast = true
+missing-attribute-patch-target = true
+missing-override-decorator = true
+no-any-return-explicit = true
+non-exhaustive-match = true
+not-required-key-access = true
+redundant-cast = true
+redundant-condition = true
+regex = true
+string-as-iterable = true
+unannotated-return = true
+unimported-directive = true
+unknown-attribute-type = true
+unnecessary-comparison = true
+unnecessary-type-conversion = true
 unreachable = true
+unsafe-overlap = true
+unsupported-dynamic-base = true
+untyped-class-decorator = true
+untyped-function-decorator = true
+unused-ignore = true
+unused-type-ignore = true
 
 [tool.pytest]
 filterwarnings = ["ignore::DeprecationWarning:html5lib.*:"]
@@ -62,9 +88,8 @@ line-length = 88
 target-version = "py314"
 
 [tool.ruff.lint]
-extend-select = ["TID252"]
+extend-select = ["C416", "E", "TID252", "W"]
 ignore = [
-  "E265",  # block comment should start with '# '
   "E501",  # line too long (handled by formatter)
 ]
 

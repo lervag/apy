@@ -6,6 +6,7 @@ import tempfile
 from collections.abc import Iterator
 from pathlib import Path
 from types import TracebackType
+from typing import override
 
 import pytest
 
@@ -64,6 +65,7 @@ class AnkiSimple(AnkiTest):
         shutil.copy2(testDir + "/data/test_base/Test/collection.anki2", self.tmppath)
         super().__init__(Anki(collection_db_path=self.tmppath))
 
+    @override
     def __exit__(
         self,
         exception_type: type[BaseException] | None,

@@ -451,7 +451,7 @@ def rename(old_name: str, new_name: str) -> None:
 @main.command("list-cards")
 @click.argument("query", required=False, nargs=-1)
 @click.option("-v", "--verbose", is_flag=True, help="Print details for each card")
-def list_cards(query: str, verbose: bool) -> None:
+def list_cards(query: tuple[str, ...], verbose: bool) -> None:
     """List cards that match QUERY.
 
     The default QUERY is "tag:marked OR -flag:0". This default can be
@@ -462,13 +462,10 @@ def list_cards(query: str, verbose: bool) -> None:
       "query": "tag:marked OR tag:leech"
     }
     """
-    if query:
-        query = " ".join(query)
-    else:
-        query = cfg["query"]
+    query_str = " ".join(query) if query else cfg["query"]
 
     with Anki(**cfg) as a:
-        a.list_cards(query, verbose)
+        a.list_cards(query_str, verbose)
 
 
 @main.command("list-cards-table")
@@ -482,7 +479,7 @@ def list_cards(query: str, verbose: bool) -> None:
 @click.option("-l", "--show-lapses", is_flag=True, help="Display card number of lapses")
 @click.option("-D", "--show-deck", is_flag=True, help="Display deck")
 def list_cards_table(
-    query: str,
+    query: tuple[str, ...],
     show_answer: bool,
     show_model: bool,
     show_due: bool,
@@ -502,14 +499,11 @@ def list_cards_table(
       "query": "tag:marked OR tag:leech"
     }
     """
-    if query:
-        query = " ".join(query)
-    else:
-        query = cfg["query"]
+    query_str = " ".join(query) if query else cfg["query"]
 
     with Anki(**cfg) as a:
         a.list_cards_as_table(
-            query,
+            query_str,
             {
                 "show_answer": show_answer,
                 "show_model": show_model,
@@ -536,7 +530,7 @@ def list_models() -> None:
 @click.option("-r", "--show-raw-fields", is_flag=True, help="Print raw field data")
 @click.option("-v", "--verbose", is_flag=True, help="Print note details")
 def list_notes(
-    query: str, show_cards: bool, show_raw_fields: bool, verbose: bool
+    query: tuple[str, ...], show_cards: bool, show_raw_fields: bool, verbose: bool
 ) -> None:
     """List notes that match QUERY.
 
@@ -548,13 +542,10 @@ def list_notes(
       "query": "tag:marked OR tag:leech"
     }
     """
-    if query:
-        query = " ".join(query)
-    else:
-        query = cfg["query"]
+    query_str = " ".join(query) if query else cfg["query"]
 
     with Anki(**cfg) as a:
-        a.list_notes(query, show_cards, show_raw_fields, verbose)
+        a.list_notes(query_str, show_cards, show_raw_fields, verbose)
 
 
 @main.command()
@@ -572,7 +563,9 @@ def list_notes(
     type=int,
     help="Number of days backwards to check consistency",
 )
-def review(query: str, check_markdown_consistency: bool, cmc_range: int) -> None:
+def review(
+    query: tuple[str, ...], check_markdown_consistency: bool, cmc_range: int
+) -> None:
     """Review/Edit notes that match QUERY.
 
     The default QUERY is "tag:marked OR -flag:0". This default can be
@@ -583,13 +576,10 @@ def review(query: str, check_markdown_consistency: bool, cmc_range: int) -> None
       "query": "tag:marked OR tag:leech"
     }
     """
-    if query:
-        query = " ".join(query)
-    else:
-        query = cfg["query"]
+    query_str = " ".join(query) if query else cfg["query"]
 
     with Anki(**cfg) as a:
-        notes = list(a.find_notes(query))
+        notes = list(a.find_notes(query_str))
 
         # Add inconsistent notes
         if check_markdown_consistency:
@@ -622,7 +612,7 @@ def review(query: str, check_markdown_consistency: bool, cmc_range: int) -> None
     is_flag=True,
     help="Allow editing multiple notes (will edit them one by one)",
 )
-def edit(query: str, force_multiple: bool) -> None:
+def edit(query: tuple[str, ...], force_multiple: bool) -> None:
     """Edit notes that match QUERY directly.
 
     This command allows direct editing of notes matching the provided query
@@ -645,14 +635,14 @@ def edit(query: str, force_multiple: bool) -> None:
     # Edit a note containing specific text
     apy edit "front:error"
     """
-    query = " ".join(query)
+    query_str = " ".join(query)
 
     with Anki(**cfg) as a:
-        notes = list(a.find_notes(query))
+        notes = list(a.find_notes(query_str))
 
         # Handle no matches
         if not notes:
-            console.print(f"No notes found matching query: {query}")
+            console.print(f"No notes found matching query: {query_str}")
             return
 
         # Handle multiple matches
@@ -727,7 +717,7 @@ def sync() -> None:
     help="If specified, then the command will remove all unused tags",
 )
 def tag(
-    query: str,
+    query: tuple[str, ...],
     add_tags: str | None,
     remove_tags: str | None,
     simple: bool,
@@ -765,10 +755,7 @@ def tag(
       # Remove all unused tags
       apy tag --purge
     """
-    if query:
-        query = " ".join(query)
-    else:
-        query = cfg["query"]
+    query_str = " ".join(query) if query else cfg["query"]
 
     with Anki(**cfg) as a:
         if purge:
@@ -786,13 +773,13 @@ def tag(
             a.list_tags(sort_by_count, simple)
             return
 
-        n_notes = len(list(a.find_notes(query)))
+        n_notes = len(list(a.find_notes(query_str)))
         if n_notes == 0:
             console.print("No matching notes!")
             raise click.Abort()
 
         console.print(f"The operation will be applied to {n_notes} matched notes:")
-        a.list_note_questions(query)
+        a.list_note_questions(query_str)
         console.print("")
 
         if add_tags is not None:
@@ -804,28 +791,28 @@ def tag(
             raise click.Abort()
 
         if add_tags is not None:
-            a.change_tags(query, add_tags)
+            a.change_tags(query_str, add_tags)
 
         if remove_tags is not None:
-            a.change_tags(query, remove_tags, add=False)
+            a.change_tags(query_str, remove_tags, add=False)
 
 
 @main.command()
 @click.argument("position", type=int, required=True, nargs=1)
 @click.argument("query", required=True, nargs=-1)
-def reposition(position: int, query: str) -> None:
+def reposition(position: int, query: tuple[str, ...]) -> None:
     """Reposition cards that match QUERY.
 
     Sets the new position to POSITION and shifts other cards.
 
     Note that repositioning only works with new cards!
     """
-    query = " ".join(query)
+    query_str = " ".join(query)
 
     with Anki(**cfg) as a:
-        cids = list(a.col.find_cards(query))
+        cids = list(a.col.find_cards(query_str))
         if not cids:
-            console.print(f"No matching cards for query: {query}!")
+            console.print(f"No matching cards for query: {query_str}!")
             raise click.Abort()
 
         for cid in cids:

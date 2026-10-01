@@ -1,8 +1,7 @@
 """Extension to avoid converting markdown within math blocks"""
 
-from __future__ import annotations
-
 import re
+from typing import override
 
 from markdown import Markdown
 from markdown.extensions import Extension
@@ -14,6 +13,7 @@ class MathProtectExtension(Extension):
         super().__init__()
         self.markdown_latex_mode: str = markdown_latex_mode
 
+    @override
     def extendMarkdown(self, md: Markdown) -> None:
         md.preprocessors.register(
             MathPreprocessor(md, self.markdown_latex_mode),
@@ -42,6 +42,7 @@ class MathPreprocessor(Preprocessor):
 
         self.pattern = re.compile(r"\$\$(.*?)\$\$|\$(.*?)\$", re.DOTALL)
 
+    @override
     def run(self, lines: list[str]) -> list[str]:
         def replacer(match: re.Match[str]) -> str:
             display, inline = match.group(1, 2)

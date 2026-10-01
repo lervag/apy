@@ -1,7 +1,5 @@
 """Utility functions for working with Anki cards"""
 
-from __future__ import annotations
-
 import re
 from typing import TYPE_CHECKING
 
