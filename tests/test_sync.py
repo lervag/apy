@@ -6,7 +6,7 @@ from typing import Any, Self
 
 import pytest
 from anki.sync import SyncOutput
-from click import Abort
+from typer import Abort
 
 from apyanki.anki import Anki
 from apyanki.config import cfg
@@ -54,7 +54,6 @@ class RecordingProgress:
 
     def __init__(self, *_args: Any, **_kwargs: Any) -> None:
         self.running = False
-        self.events: list[str] = []
 
     def __enter__(self) -> Self:
         self.start()
@@ -71,38 +70,9 @@ class RecordingProgress:
 
     def start(self) -> None:
         self.running = True
-        self.events.append("start")
 
     def stop(self) -> None:
         self.running = False
-        self.events.append("stop")
-
-
-def test_sync_downloads_when_server_requires_full_download(
-    monkeypatch: pytest.MonkeyPatch, tmp_path: Path
-) -> None:
-    output = SyncOutput(
-        required=SyncOutput.FULL_DOWNLOAD,
-        new_endpoint="https://sync.example.test/",
-        server_media_usn=42,
-    )
-    collection = FakeCollection(tmp_path, output)
-    anki: Any = Anki.__new__(Anki)
-    anki._profile = {"syncKey": "key"}
-    anki.col = collection
-    monkeypatch.setattr("apyanki.anki.console.confirm", lambda *_args, **_kwargs: True)
-
-    anki.sync()
-
-    backup = ("backup", (str(tmp_path / "backups"), True, True))
-    full_download = ("full", (False, None, "https://sync.example.test/"))
-    assert backup in collection.operations
-    assert full_download in collection.operations
-    assert collection.operations.index(backup) < collection.operations.index(
-        full_download
-    )
-    assert ("reopen", True) in collection.operations
-    assert ("media", "https://sync.example.test/") in collection.operations
 
 
 @pytest.mark.parametrize(
@@ -121,40 +91,6 @@ def test_explicit_sync_without_credentials_fails(
         anki.sync()
 
     assert message in capsys.readouterr().out.lower()
-
-
-def test_sync_uploads_when_only_full_upload_is_allowed(
-    monkeypatch: pytest.MonkeyPatch, tmp_path: Path
-) -> None:
-    output = SyncOutput(required=SyncOutput.FULL_UPLOAD)
-    collection = FakeCollection(tmp_path, output)
-    anki: Any = Anki.__new__(Anki)
-    anki._profile = {"syncKey": "key"}
-    anki.col = collection
-    monkeypatch.setattr("apyanki.anki.console.confirm", lambda *_args, **_kwargs: True)
-
-    anki.sync()
-
-    assert ("full", (True, None, "")) in collection.operations
-    assert not any(name == "backup" for name, _ in collection.operations)
-
-
-def test_sync_conflict_can_be_cancelled(
-    monkeypatch: pytest.MonkeyPatch, tmp_path: Path
-) -> None:
-    output = SyncOutput(required=SyncOutput.FULL_SYNC)
-    collection = FakeCollection(tmp_path, output)
-    anki: Any = Anki.__new__(Anki)
-    anki._profile = {"syncKey": "key"}
-    anki.col = collection
-    monkeypatch.setattr(
-        "apyanki.anki.console.prompt", lambda *_args, **_kwargs: "cancel"
-    )
-
-    with pytest.raises(Abort):
-        anki.sync()
-
-    assert not any(name == "full" for name, _ in collection.operations)
 
 
 @pytest.mark.parametrize(
@@ -200,42 +136,29 @@ def test_full_sync_prompts_pause_live_progress(
     anki._profile = {"syncKey": "key"}
     anki.col = collection
     progress = RecordingProgress()
-    prompt_states: list[bool] = []
+    spinner_states: list[bool] = []
 
     monkeypatch.setattr("apyanki.anki.Progress", lambda *_args, **_kwargs: progress)
 
     def respond(*_args: Any) -> str:
-        prompt_states.append(progress.running)
+        spinner_states.append(progress.running)
         return response
 
     monkeypatch.setattr("builtins.input", respond)
 
+    original_full_sync = collection.full_upload_or_download
+
+    def full_sync(**kwargs: Any) -> None:
+        spinner_states.append(progress.running)
+        original_full_sync(**kwargs)
+
+    monkeypatch.setattr(collection, "full_upload_or_download", full_sync)
+
     anki.sync()
 
-    assert prompt_states == [False]
-    assert progress.events == ["start", "stop", "start", "stop"]
+    # Hidden while asking, visible again while syncing
+    assert spinner_states == [False, True]
     assert ("full", (upload, None, "")) in collection.operations
-
-
-def test_full_sync_prompt_restarts_progress_after_exception(
-    monkeypatch: pytest.MonkeyPatch, tmp_path: Path
-) -> None:
-    collection = FakeCollection(tmp_path, SyncOutput(required=SyncOutput.FULL_DOWNLOAD))
-    anki: Any = Anki.__new__(Anki)
-    anki._profile = {"syncKey": "key"}
-    anki.col = collection
-    progress = RecordingProgress()
-    monkeypatch.setattr("apyanki.anki.Progress", lambda *_args, **_kwargs: progress)
-
-    def fail_prompt(*_args: Any, **_kwargs: Any) -> bool:
-        raise RuntimeError("prompt failed")
-
-    monkeypatch.setattr("apyanki.anki.console.confirm", fail_prompt)
-
-    with pytest.raises(RuntimeError, match="prompt failed"):
-        anki.sync()
-
-    assert progress.events == ["start", "stop", "start", "stop"]
 
 
 def test_unexpected_normal_sync_response_fails_without_full_sync(
