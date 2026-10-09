@@ -211,6 +211,10 @@ class Anki:
                 console.print(output.server_message)
 
             if output.required != output.NO_CHANGES:
+                # Hide the tasks before stopping so no stale rows are left behind,
+                # and so restarting does not erase the prompt and its answer.
+                for task in (t1, t2):
+                    progress.update(task, visible=False)
                 progress.stop()
                 try:
                     if output.required == output.FULL_DOWNLOAD:
@@ -241,6 +245,8 @@ class Anki:
                         )
                         raise Abort()
                 finally:
+                    for task in (t1, t2):
+                        progress.update(task, visible=True)
                     progress.start()
 
                 if not confirmed:
