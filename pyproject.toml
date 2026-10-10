@@ -15,7 +15,7 @@ dependencies = [
   "anki==26.9.3",
   "beautifulsoup4==4.15.0",
   "html5lib==1.1",
-  "markdown==3.10.3",
+  "markdown==3.11",
   "markdownify==1.2.3",
   "readchar==4.2.2",
   "rich==15.0.0",
