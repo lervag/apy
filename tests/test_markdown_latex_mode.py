@@ -1,3 +1,4 @@
+import pytest
 from bs4 import BeautifulSoup
 
 from apyanki import fields
@@ -104,6 +105,64 @@ def test_markdown_to_mathjax_empty() -> None:
         input = "a $$$$ b"
         expected = r"a \[\] b"
 
+        note = a.add_notes_single([input, ""], markdown=True)
+        soup = BeautifulSoup(note.n.fields[0], "html.parser")
+        assert soup.text == expected
+
+
+@pytest.mark.parametrize(
+    ("mode", "input", "expected"),
+    [
+        ("latex", r"$$a \\ b$$", r"[$$]a \\ b[/$$]"),
+        ("latex", r"$a \{ b \}$", r"[$]a \{ b \}[/$]"),
+        ("latex", r"$\{x : x_{i*}\}$", r"[$]\{x : x_{i*}\}[/$]"),
+        ("mathjax", r"$$a \\ b$$", r"\[a \\ b\]"),
+        ("mathjax", r"$a \{ b \}$", r"\(a \{ b \}\)"),
+    ],
+)
+def test_markdown_math_keeps_backslashes(mode: str, input: str, expected: str) -> None:
+    """LaTeX escapes inside $-math must be passed through unchanged"""
+    cfg["markdown_latex_mode"] = mode
+
+    with AnkiEmpty() as a:
+        note = a.add_notes_single([input, ""], markdown=True)
+        soup = BeautifulSoup(note.n.fields[0], "html.parser")
+        assert soup.text == expected
+
+
+def test_markdown_escapes_latex_outside_math() -> None:
+    """MathJax delimiters written directly in Markdown still work"""
+    cfg["markdown_latex_mode"] = "mathjax"
+
+    with AnkiEmpty() as a:
+        input = r"\[ a \\ b \] and $c \\ d$"
+        expected = r"\[ a \\ b \] and \(c \\ d\)"
+
+        note = a.add_notes_single([input, ""], markdown=True)
+        soup = BeautifulSoup(note.n.fields[0], "html.parser")
+        assert soup.text == expected
+
+
+@pytest.mark.parametrize(
+    ("input", "expected"),
+    [
+        ("Use `echo $HOME $PATH` here", "Use echo $HOME $PATH here"),
+        ("Use ``echo `$a` $b`` here", "Use echo `$a` $b here"),
+        (r"Use `a\\b` and `f(x*})`", r"Use a\\b and f(x*})"),
+        (
+            '```\nprintf("a\\\\n");\nx = {\\(y\\)}\n```',
+            'printf("a\\\\n");\nx = {\\(y\\)}\n',
+        ),
+        ("$a$ `$b$` $c$", "[$]a[/$] $b$ [$]c[/$]"),
+        (r"Not code: \`$x$\`", "Not code: `[$]x[/$]`"),
+        ("Tick ` alone\n\nthen $x$ and `y`", "Tick ` alone\nthen [$]x[/$] and y"),
+    ],
+)
+def test_markdown_code_is_left_untouched(input: str, expected: str) -> None:
+    """Math conversion and LaTeX escapes must not touch code"""
+    cfg["markdown_latex_mode"] = "latex"
+
+    with AnkiEmpty() as a:
         note = a.add_notes_single([input, ""], markdown=True)
         soup = BeautifulSoup(note.n.fields[0], "html.parser")
         assert soup.text == expected
