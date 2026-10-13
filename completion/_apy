@@ -17,7 +17,7 @@ __model() {
   case "$words[1]" in
     edit-css)
       opts=( \
-        '(-m --model)'{-m,--model}'[Specify model]:model:_apy_models' \
+        '(-m --model-name)'{-m,--model-name}'[Specify model]:model:_apy_models' \
         '(-s --sync-after)'{-s,--sync-after}'[Synchronize after edit]' \
         $opts_help \
         );;
@@ -41,26 +41,29 @@ _apy() {
 
   opts=( \
     $opts_help
-    '(-b --base)'{-b,--base}'[Set base directory]:Anki base directory:_files -/' \
+    '(-b --base-path)'{-b,--base-path}'[Set Anki base directory]:Anki base directory:_files -/' \
+    '(-p --profile-name)'{-p,--profile-name}'[Specify name of Anki profile to use]:profile:' \
+    '(- *)'{-V,--version}'[Show apy version]' \
     )
 
   subcmds=( \
     'add:Add notes interactively from terminal' \
-    'add-from-file:Add notes from Markdown file (alias for update-from-file)' \
+    'add-from-file:Add new notes from Markdown file' \
     'add-single:Add a single note from command line arguments' \
     'backup:Backup Anki database to specified target file' \
     'check-media:Check media' \
     'edit:Edit notes that match QUERY directly' \
+    'export-to-file:Export notes that match QUERY to Markdown file' \
     'info:Print some basic statistics' \
     'list-cards:List cards that match QUERY' \
     'list-cards-table:List cards that match QUERY in table format' \
     'list-models:List available models' \
     'list-notes:List notes that match QUERY' \
     'model:Interact with the models' \
-    'reposition:Reposition new cards that match QUERY' \
+    'reposition:Reposition cards that match QUERY' \
     'review:Review/Edit notes that match QUERY [default: marked/flagged]' \
     'sync:Synchronize collection with AnkiWeb' \
-    'tag:Add or remove tags from notes that match QUERY' \
+    'tag:List all tags or add/remove tags from notes that match QUERY' \
     'update-from-file:Update existing or add new notes from Markdown file' \
     )
 
@@ -81,6 +84,7 @@ _apy() {
         );;
     add-single)
       opts=( \
+        '(-p --parse-markdown)'{-p,--parse-markdown}'[Parse input as Markdown]' \
         '(-s --preset)'{-s,--preset}'[Specify a preset]:preset:' \
         '(-t --tags)'{-t,--tags}'[Specify tags]:tags:_apy_tags' \
         '(-m --model)'{-m,--model}'[Specify model]:model:_apy_models' \
@@ -88,19 +92,18 @@ _apy() {
         '::Fields' \
         $opts_help \
         );;
-    add-from-file|update-from-file)
+    add-from-file)
       opts=( \
         '::Markdown input file:_files -g "*.md"' \
         '(-t --tags)'{-t,--tags}'[Specify tags]:tags:_apy_tags' \
         '(-d --deck)'{-d,--deck}'[Specify deck]:deck:' \
-        '(-u --update-file)'{-u,--update-file}'[Update original file with note IDs]' \
         $opts_help \
         );;
     backup)
       opts=( \
-        '::Target file' \
-        '(-m --include-media)'{-m,--include-media}'[Include media files]:media:' \
-        '(-l --legacy)'{-l,--legacy}'[Support older Anki Versions]:legacy:' \
+        '::Target file:_files -g "*.colpkg"' \
+        '(-m --include-media)'{-m,--include-media}'[Include media files]' \
+        '(-l --legacy)'{-l,--legacy}'[Support older Anki versions]' \
         $opts_help \
         );;
     edit)
@@ -109,12 +112,18 @@ _apy() {
         '(-f --force-multiple)'{-f,--force-multiple}'[Allow editing multiple notes]' \
         $opts_help \
         );;
+    export-to-file)
+      opts=( \
+        '::Markdown output file:_files -g "*.md"' \
+        '::Query' \
+        $opts_help \
+        );;
     info)
       opts=( $opts_help );;
     list-cards)
       opts=( \
         '::Query' \
-        '(-v --verbose)'{-v,--verbose}'[Print note details]' \
+        '(-v --verbose)'{-v,--verbose}'[Print details for each card]' \
         $opts_help \
         );;
     list-cards-table)
@@ -127,7 +136,7 @@ _apy() {
         '(-t --show-type)'{-t,--show-type}'[Display card type]' \
         '(-e --show-ease)'{-e,--show-ease}'[Display card ease]' \
         '(-l --show-lapses)'{-l,--show-lapses}'[Display card number of lapses]' \
-        '(-l --show-deck)'{-l,--show-lapses}'[Display deck]' \
+        '(-D --show-deck)'{-D,--show-deck}'[Display deck]' \
         $opts_help \
         );;
     list-models)
@@ -159,8 +168,19 @@ _apy() {
       opts=( \
         '(-a --add-tags)'{-a,--add-tags}'[Add specified tags]:tags:' \
         '(-r --remove-tags)'{-r,--remove-tags}'[Remove specified tags]:tags:_apy_tags' \
+        '(-c --sort-by-count)'{-c,--sort-by-count}'[When listing tags, sort by note count]' \
+        '(-s --simple)'{-s,--simple}'[Only list available tags]' \
+        '(-p --purge)'{-p,--purge}'[Remove all unused tags]' \
         $opts_help \
         '::Query' \
+        );;
+    update-from-file)
+      opts=( \
+        '::Markdown input file:_files -g "*.md"' \
+        '(-t --tags)'{-t,--tags}'[Specify tags]:tags:_apy_tags' \
+        '(-d --deck)'{-d,--deck}'[Specify deck]:deck:' \
+        '(-l --link-duplicates)'{-l,--link-duplicates}'[Link duplicates to existing notes]' \
+        $opts_help \
         );;
     *)
       opts=( $opts_help );;
