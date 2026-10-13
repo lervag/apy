@@ -1,5 +1,6 @@
-"""Extension to avoid converting markdown within math blocks"""
+"""Extension to avoid converting markdown within math and LaTeX blocks"""
 
+import html
 import re
 from typing import override
 
@@ -7,15 +8,16 @@ from markdown import Markdown
 from markdown.extensions import Extension
 from markdown.preprocessors import Preprocessor
 
-# Code and math in Markdown text. Code is matched first, so that $ inside
-# code is not taken as math. Only the "display" and "inline" groups are math.
-MATH_OR_CODE_PATTERN = re.compile(
+# Code, raw LaTeX and math in Markdown text. Code is matched first, so that
+# e.g. $ inside code is not taken as math. Raw LaTeX blocks are passed to
+# Anki's LaTeX renderer, so neither math nor Markdown is processed inside them.
+PROTECTED_PATTERN = re.compile(
     r"""
-    ^(?P<fence>`{3,}|~{3,})[^\n]*\n.*?^(?P=fence)[ \t]*$   # fenced code block
+    ^(?P<fence>`{3,}|~{3,})[^\n]*\n.*?^(?P=fence)[ \t]*$
     | (?<!\\)(?P<ticks>`+)(?:(?!\n[ \t]*\n).)+?(?<!`)(?P=ticks)(?!`)
-                                                         # inline code span
-    | \$\$(?P<display>.*?)\$\$                             # display math
-    | \$(?P<inline>.*?)\$                                  # inline math
+    | (?P<latex>\[latex\].*?\[/latex\])
+    | \$\$(?P<display>.*?)\$\$
+    | \$(?P<inline>.*?)\$
     """,
     re.DOTALL | re.MULTILINE | re.VERBOSE,
 )
@@ -56,15 +58,17 @@ class MathPreprocessor(Preprocessor):
     @override
     def run(self, lines: list[str]) -> list[str]:
         def replacer(match: re.Match[str]) -> str:
-            display, inline = match.group("display", "inline")
-            if display is not None:
-                math = self.fmt_display.format(math=display)
+            latex, display, inline = match.group("latex", "display", "inline")
+            if latex is not None:
+                raw = latex
+            elif display is not None:
+                raw = self.fmt_display.format(math=display)
             elif inline is not None:
-                math = self.fmt_inline.format(math=inline)
+                raw = self.fmt_inline.format(math=inline)
             else:
                 return match.group(0)
-            return self.md.htmlStash.store(math)
+            return self.md.htmlStash.store(html.escape(raw, quote=False))
 
         lines_joined = "\n".join(lines)
-        lines_processed = MATH_OR_CODE_PATTERN.sub(replacer, lines_joined)
+        lines_processed = PROTECTED_PATTERN.sub(replacer, lines_joined)
         return lines_processed.split("\n")

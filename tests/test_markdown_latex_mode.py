@@ -166,3 +166,39 @@ def test_markdown_code_is_left_untouched(input: str, expected: str) -> None:
         note = a.add_notes_single([input, ""], markdown=True)
         soup = BeautifulSoup(note.n.fields[0], "html.parser")
         assert soup.text == expected
+
+
+@pytest.mark.parametrize("mode", ["latex", "mathjax"])
+@pytest.mark.parametrize(
+    ("input", "expected"),
+    [
+        (
+            "[latex]\n\\begin{align*}\n  a_i &= b \\\\\n  c &= *d*\n\\end{align*}\n[/latex]",
+            "[latex]\n\\begin{align*}\n  a_i &= b \\\\\n  c &= *d*\n\\end{align*}\n[/latex]",
+        ),
+        ("[latex]let $u$ be $x_1 < y$[/latex]", "[latex]let $u$ be $x_1 < y$[/latex]"),
+        ("**Q** [latex]$x$[/latex]", "Q [latex]$x$[/latex]"),
+    ],
+)
+def test_markdown_latex_blocks_are_raw(mode: str, input: str, expected: str) -> None:
+    """[latex]…[/latex] blocks are passed to Anki without any processing"""
+    cfg["markdown_latex_mode"] = mode
+
+    with AnkiEmpty() as a:
+        note = a.add_notes_single([input, ""], markdown=True)
+        soup = BeautifulSoup(note.n.fields[0], "html.parser")
+        assert soup.text == expected
+
+
+@pytest.mark.parametrize(
+    ("mode", "expected"),
+    [("latex", "[$]a<b[/$] and [$]c<d[/$]"), ("mathjax", r"\(a<b\) and \(c<d\)")],
+)
+def test_markdown_math_with_less_than(mode: str, expected: str) -> None:
+    """Math with < must not be parsed as an HTML tag"""
+    cfg["markdown_latex_mode"] = mode
+
+    with AnkiEmpty() as a:
+        note = a.add_notes_single(["$a<b$ and $c<d$", ""], markdown=True)
+        soup = BeautifulSoup(note.n.fields[0], "html.parser")
+        assert soup.text == expected

@@ -16,7 +16,7 @@ from markdown.extensions.footnotes import FootnoteExtension
 from markdownify import markdownify as to_md
 
 from apyanki.config import cfg
-from apyanki.markdown_math import MATH_OR_CODE_PATTERN, MathProtectExtension
+from apyanki.markdown_math import PROTECTED_PATTERN, MathProtectExtension
 
 if TYPE_CHECKING:
     from anki.models import NotetypeDict
@@ -201,7 +201,7 @@ def _convert_markdown_to_field(text: str) -> str:
     # Note: convert newlines to <br> to make text readable in the Anki viewer
     original_encoded = base64.b64encode(text.replace("\n", "<br />").encode()).decode()
 
-    text = _escape_latex_outside_math_and_code(text)
+    text = _escape_latex_in_markdown(text)
 
     # Fix whitespaces in input
     text = text.replace("\xc2\xa0", " ").replace("\xa0", " ")
@@ -234,11 +234,11 @@ def _convert_markdown_to_field(text: str) -> str:
     return str(soup)
 
 
-def _escape_latex_outside_math_and_code(text: str) -> str:
+def _escape_latex_in_markdown(text: str) -> str:
     """Escape common LaTeX constructs so Markdown does not consume them.
 
-    Math ($…$ and $$…$$) and code are skipped, because they are passed through
-    to the HTML untouched.
+    Math ($…$ and $$…$$), raw LaTeX blocks ([latex]…[/latex]) and code are
+    skipped, because they are passed through to the HTML untouched.
     """
 
     def escape(segment: str) -> str:
@@ -257,7 +257,7 @@ def _escape_latex_outside_math_and_code(text: str) -> str:
 
     parts: list[str] = []
     end = 0
-    for match in MATH_OR_CODE_PATTERN.finditer(text):
+    for match in PROTECTED_PATTERN.finditer(text):
         parts += [escape(text[end : match.start()]), match.group(0)]
         end = match.end()
     parts.append(escape(text[end:]))
