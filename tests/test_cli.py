@@ -262,3 +262,18 @@ def test_cli_export_to_file() -> None:
 
         result = runner.invoke(main, ["-b", tmpdirname, "update-from-file", exported])
         assert result.exit_code == 0
+
+
+def test_cli_review_markdown_consistency() -> None:
+    """Test 'apy review -m' only reviews notes with inconsistent Markdown."""
+    runner = CliRunner()
+
+    with tempfile.TemporaryDirectory() as tmpdirname:
+        shutil.copytree(test_collection_dir, tmpdirname, dirs_exist_ok=True)
+
+        # This note has consistent Markdown, so there is nothing to review
+        result = runner.invoke(
+            main, ["-b", tmpdirname, "review", "-m", "nid:1561760131558"]
+        )
+        assert result.exit_code == 0
+        assert "No notes with inconsistent Markdown found." in result.output

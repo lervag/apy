@@ -146,8 +146,7 @@ _apy() {
     review)
       opts=( \
         '::Query' \
-        '(-m --check-markdown-consistency)'{-m,----check-markdown-consistency}'[Check for Markdown consistency]' \
-        '(-n --cmc-range)'{-n,--cmc-range}'[Number of days to check]:range:' \
+        '(-m --check-markdown-consistency)'{-m,--check-markdown-consistency}'[Only review notes with inconsistent Markdown]' \
         $opts_help \
         );;
     reposition)

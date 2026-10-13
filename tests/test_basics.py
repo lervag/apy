@@ -45,3 +45,14 @@ def test_add_single_with_markdown() -> None:
         assert "data-original-markdown" in note.n.fields[0]
         assert "<strong>" in note.n.fields[0]
         assert "<code>" in note.n.fields[1]
+
+
+def test_inconsistent_markdown() -> None:
+    """Test detection of notes with inconsistent Markdown fields"""
+    with AnkiEmpty() as a:
+        note = a.add_notes_single(["**Front**", "Back"], markdown=True)
+        assert note.has_inconsistent_markdown() is False
+
+        note.n.fields[0] = note.n.fields[0].replace("Front", "Changed")
+        _ = a.col.update_note(note.n)
+        assert note.has_inconsistent_markdown() is True

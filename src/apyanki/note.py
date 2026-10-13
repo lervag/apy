@@ -273,8 +273,8 @@ class Note:
         """Delete the note"""
         self.a.delete_notes(self.n.id)
 
-    def has_consistent_markdown(self) -> bool:
-        """Check if markdown fields are consistent with html values"""
+    def has_inconsistent_markdown(self) -> bool:
+        """Check if any markdown field is inconsistent with its html value"""
         return any(check_if_inconsistent_markdown(f) for f in self.n.values())
 
     def change_model(self) -> Note | None:

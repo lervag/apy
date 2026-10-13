@@ -84,8 +84,7 @@ complete -f -c apy -n '__fish_apy_using_command tag' -l purge -s p -d 'Remove al
 
 # review options
 complete -f -c apy -n '__fish_apy_using_command review' -l help -s h -d 'Show help'
-complete -f -c apy -n '__fish_apy_using_command review' -l check-markdown-consistency -s m -d 'Check for Markdown consistency'
-complete -f -c apy -n '__fish_apy_using_command review' -l cmc-range -s n -d 'Number of days backwards to check consistency'
+complete -f -c apy -n '__fish_apy_using_command review' -l check-markdown-consistency -s m -d 'Only review notes with inconsistent Markdown'
 
 # edit options
 complete -f -c apy -n '__fish_apy_using_command edit' -l help -s h -d 'Show help'

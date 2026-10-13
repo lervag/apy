@@ -699,17 +699,9 @@ def review(
         typer.Option(
             "-m",
             "--check-markdown-consistency",
-            help="Check for Markdown consistency",
+            help="Only review notes with inconsistent Markdown fields",
         ),
     ] = False,
-    cmc_range: Annotated[
-        int,
-        typer.Option(
-            "-n",
-            "--cmc-range",
-            help="Number of days backwards to check consistency",
-        ),
-    ] = 7,
 ) -> None:
     """Review/Edit notes that match QUERY.
 
@@ -720,19 +712,27 @@ def review(
     {
       "query": "tag:marked OR tag:leech"
     }
+
+    With --check-markdown-consistency, only notes with Markdown fields whose
+    HTML no longer matches the original Markdown are reviewed. In this case,
+    the default QUERY is "deck:*", i.e. all notes. Use a QUERY to limit the
+    check, e.g. to a single deck, as it may be slow for large collections.
     """
-    query_str = " ".join(query) if query else cfg["query"]
+    if query:
+        query_str = " ".join(query)
+    elif check_markdown_consistency:
+        query_str = "deck:*"
+    else:
+        query_str = cfg["query"]
 
     with Anki(**cfg) as a:
         notes = list(a.find_notes(query_str))
 
-        # Add inconsistent notes
         if check_markdown_consistency:
-            notes += [
-                n
-                for n in a.find_notes(f"rated:{cmc_range}")
-                if not n.has_consistent_markdown()
-            ]
+            notes = [n for n in notes if n.has_inconsistent_markdown()]
+            if not notes:
+                console.print("No notes with inconsistent Markdown found.")
+                return
 
         i = 0
         number_of_notes = len(notes)
