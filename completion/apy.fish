@@ -33,6 +33,7 @@ complete -f -c apy -n '__fish_apy_no_subcommand' -a backup -d 'Backup Anki datab
 complete -f -c apy -n '__fish_apy_no_subcommand' -a check-media -d 'Check media'
 complete -f -c apy -n '__fish_apy_no_subcommand' -a edit -d 'Edit notes that match query directly'
 complete -f -c apy -n '__fish_apy_no_subcommand' -a export-to-file -d 'Export notes that match query to Markdown file'
+complete -f -c apy -n '__fish_apy_no_subcommand' -a fix-markdown -d 'Fix notes that match query with inconsistent Markdown'
 complete -f -c apy -n '__fish_apy_no_subcommand' -a info -d 'Print some basic statistics'
 complete -f -c apy -n '__fish_apy_no_subcommand' -a list-cards -d 'List cards that match query'
 complete -f -c apy -n '__fish_apy_no_subcommand' -a list-cards-table -d 'List cards that match query in a tabular format'
@@ -73,6 +74,10 @@ complete -f -c apy -n '__fish_apy_using_command update-from-file' -l link-duplic
 # export-to-file options
 complete -f -c apy -n '__fish_apy_using_command export-to-file' -l help -s h -d 'Show help'
 complete -f -c apy -n '__fish_apy_using_command export-to-file' -k -a "(__fish_complete_suffix .md)"
+
+# fix-markdown options
+complete -f -c apy -n '__fish_apy_using_command fix-markdown' -l help -s h -d 'Show help'
+complete -f -c apy -n '__fish_apy_using_command fix-markdown' -l dry-run -s n -d 'Only report what would be fixed'
 
 # list-cards options
 complete -f -c apy -n '__fish_apy_using_command list-cards' -l help -s h -d 'Show help'

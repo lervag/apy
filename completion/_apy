@@ -54,6 +54,7 @@ _apy() {
     'check-media:Check media' \
     'edit:Edit notes that match QUERY directly' \
     'export-to-file:Export notes that match QUERY to Markdown file' \
+    'fix-markdown:Fix notes that match QUERY with inconsistent Markdown' \
     'info:Print some basic statistics' \
     'list-cards:List cards that match QUERY' \
     'list-cards-table:List cards that match QUERY in table format' \
@@ -116,6 +117,12 @@ _apy() {
       opts=( \
         '::Markdown output file:_files -g "*.md"' \
         '::Query' \
+        $opts_help \
+        );;
+    fix-markdown)
+      opts=( \
+        '::Query' \
+        '(-n --dry-run)'{-n,--dry-run}'[Only report what would be fixed]' \
         $opts_help \
         );;
     info)

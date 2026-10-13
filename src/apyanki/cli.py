@@ -1,6 +1,7 @@
 """A script to interact with the Anki database"""
 
 import os
+import shlex
 from pathlib import Path
 from typing import Annotated, Literal, override
 
@@ -436,6 +437,52 @@ def check_media() -> None:
     """Check media."""
     with Anki(**cfg) as a:
         a.check_media()
+
+
+@main.command("fix-markdown")
+def fix_markdown(
+    query: RequiredQueryArgument,
+    dry_run: Annotated[
+        bool,
+        typer.Option("-n", "--dry-run", help="Only report what would be fixed."),
+    ] = False,
+) -> None:
+    """Fix notes that match QUERY with inconsistent Markdown fields.
+
+    A Markdown field is inconsistent when its HTML differs from what its
+    original Markdown renders to now. Often, this is only because of changes
+    in the Markdown or code highlighting libraries, and the field can safely
+    be re-rendered.
+
+    This command only re-renders fields where this does not change the content,
+    i.e. the visible text, code blocks, and link and image targets. Other
+    inconsistent fields, e.g. fields that were edited in Anki, are left
+    unchanged and can be reviewed with `apy review -m QUERY`.
+
+    Use 'deck:*' as QUERY to check all notes. Remember to quote it to prevent
+    shell expansion. Consider making a backup with `apy backup` first.
+    """
+    query_str = " ".join(query)
+
+    with Anki(**cfg) as a:
+        n_fields, fixed_notes, unfixable_notes = a.fix_markdown(query_str, dry_run)
+
+        if dry_run:
+            console.print(
+                f"Would fix {n_fields} fields in {len(fixed_notes)} notes "
+                "(dry run, nothing was changed)."
+            )
+        else:
+            console.print(
+                f"[green]Fixed {n_fields} fields in {len(fixed_notes)} notes."
+            )
+
+        if unfixable_notes:
+            console.print(
+                f"[yellow]{len(unfixable_notes)} notes have inconsistent Markdown "
+                "that cannot be fixed automatically. Review them with:"
+            )
+            console.print(f"  apy review -m {shlex.join(query)}")
 
 
 @main.command()

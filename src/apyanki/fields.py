@@ -134,6 +134,31 @@ def check_if_inconsistent_markdown(field: str) -> bool:
     return False
 
 
+def fix_inconsistent_markdown(field: str) -> str | None:
+    """Re-render an inconsistent Markdown field if this keeps its content.
+
+    The content is the visible text (ignoring whitespace outside code blocks),
+    the code blocks and the link and image targets. Inconsistencies that only
+    change the HTML markup, e.g. due to newer versions of the Markdown or
+    Pygments libraries, can therefore be fixed safely.
+
+    Returns: The field itself if it is not inconsistent Markdown, the
+    re-rendered field if the fix is safe, or None if it would change the
+    content.
+    """
+    if not check_if_generated_from_markdown(field):
+        return field
+
+    new_field = _convert_markdown_to_field(_convert_field_to_markdown(field))
+    if new_field == field:
+        return field
+
+    if _content_fingerprint(field) != _content_fingerprint(new_field):
+        return None
+
+    return new_field
+
+
 def img_paths_from_field(field_html: str) -> list[Path]:
     """Gather image filenames from <img> tags in field html.
 
@@ -262,6 +287,25 @@ def _escape_latex_in_markdown(text: str) -> str:
         end = match.end()
     parts.append(escape(text[end:]))
     return "".join(parts)
+
+
+def _content_fingerprint(html: str) -> tuple[str, list[str], list[str]]:
+    """Extract the content of field HTML, see fix_inconsistent_markdown."""
+    soup = BeautifulSoup(html, "html.parser")
+    targets = [
+        str(tag[attr])
+        for tag in soup.find_all(True)
+        for attr in ("src", "href")
+        if tag.has_attr(attr)
+    ]
+
+    code_blocks: list[str] = []
+    for pre in soup.find_all("pre"):
+        code_blocks.append(pre.get_text().rstrip())
+        _ = pre.decompose()
+
+    text = re.sub(r"\s+", "", soup.get_text())
+    return text, code_blocks, targets
 
 
 def _latex_to_mdlatex(text: str) -> str:

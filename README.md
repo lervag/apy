@@ -19,6 +19,7 @@ Anki. It does not require Anki to be running at the same time.
 - [Usage](#usage)
 - [Examples of adding new notes](#examples-of-adding-new-notes)
 - [Editing existing notes in a file](#editing-existing-notes-in-a-file)
+- [Fixing inconsistent Markdown](#fixing-inconsistent-markdown)
 - [Configuration](#configuration)
 - [Zsh completion](#zsh-completion)
 - [Fish completion](#fish-completion)
@@ -264,6 +265,36 @@ repository. See `apy update-from-file --help` for more details.
 
 To edit just a single note or a few, `apy edit QUERY` is a quicker
 alternative: it opens each matching note in your editor in the same format.
+
+## Fixing inconsistent Markdown
+
+Notes added with Markdown store the original Markdown together with the
+generated HTML. A note has _inconsistent Markdown_ when the stored HTML differs
+from what the Markdown renders to now. There are two typical causes:
+
+- The libraries that render Markdown and highlight code have changed. The
+  content is the same, only the HTML markup differs.
+- The note was edited in Anki after it was added, or the Markdown relies on
+  older `apy` behaviour. Re-rendering the Markdown would change the content.
+
+`apy fix-markdown` re-renders the fields of the first kind and leaves the rest
+unchanged. A field is only re-rendered if this keeps its visible text, code
+blocks and link and image targets. Use `apy review -m` to review the remaining
+notes one by one:
+
+```sh
+# Make a backup first
+apy backup -m ~/anki-backup.colpkg
+
+# See what would be fixed
+apy fix-markdown --dry-run 'deck:*'
+
+# Fix the safe cases
+apy fix-markdown 'deck:*'
+
+# Review the remaining notes with inconsistent Markdown
+apy review -m 'deck:*'
+```
 
 ## Configuration
 

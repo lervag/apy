@@ -21,6 +21,7 @@ from typer import Abort
 from apyanki import cards
 from apyanki.config import cfg
 from apyanki.console import console
+from apyanki.fields import fix_inconsistent_markdown
 from apyanki.note import Note, NoteData, markdown_file_to_notes
 from apyanki.utilities import cd, choose, edit_file, suppress_stdout
 
@@ -442,6 +443,52 @@ class Anki:
             _ = self.col.tags.bulk_remove(note_ids, tags)
 
         self.modified = True
+
+    def fix_markdown(
+        self,
+        query: str,
+        dry_run: bool = False,
+    ) -> tuple[int, list[Note], list[Note]]:
+        """Fix inconsistent Markdown fields where this is safe.
+
+        See fields.fix_inconsistent_markdown for which fields are fixed.
+
+        Returns: The number of fixed fields, the fixed notes, and the notes
+        with inconsistent fields that could not be fixed.
+        """
+        n_fixed_fields = 0
+        fixed_notes: list[Note] = []
+        unfixable_notes: list[Note] = []
+
+        with Progress(
+            TextColumn("{task.description}"),
+            SpinnerColumn(spinner_name="point", finished_text=""),
+            console=console,
+            transient=True,
+        ) as progress:
+            _ = progress.add_task("Checking Markdown fields [green]…", total=None)
+            for note in self.find_notes(query):
+                is_fixed = False
+                is_unfixable = False
+                for i, field in enumerate(note.n.fields):
+                    new_field = fix_inconsistent_markdown(field)
+                    if new_field is None:
+                        is_unfixable = True
+                    elif new_field != field:
+                        note.n.fields[i] = new_field
+                        n_fixed_fields += 1
+                        is_fixed = True
+
+                if is_fixed:
+                    fixed_notes.append(note)
+                if is_unfixable:
+                    unfixable_notes.append(note)
+
+        if fixed_notes and not dry_run:
+            _ = self.col.update_notes([note.n for note in fixed_notes])
+            self.modified = True
+
+        return n_fixed_fields, fixed_notes, unfixable_notes
 
     def purge_unused_tags(self) -> OpChangesWithCount:
         """Purge all unused tags"""
