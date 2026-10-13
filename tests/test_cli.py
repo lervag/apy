@@ -238,3 +238,27 @@ def test_link_duplicates() -> None:
             ids_after_link = json.load(f)
 
         assert ids_after_link["note1"] == original_nid
+
+
+def test_cli_export_to_file() -> None:
+    """Test 'apy export-to-file' writes notes that can be read back."""
+    runner = CliRunner()
+
+    with tempfile.TemporaryDirectory() as tmpdirname:
+        shutil.copytree(test_collection_dir, tmpdirname, dirs_exist_ok=True)
+        shutil.copy(test_data_dir + "basic.md", tmpdirname)
+        result = runner.invoke(
+            main, ["-b", tmpdirname, "update-from-file", f"{tmpdirname}/basic.md"]
+        )
+        assert result.exit_code == 0
+
+        exported = f"{tmpdirname}/exported.md"
+        result = runner.invoke(
+            main, ["-b", tmpdirname, "export-to-file", exported, "deck:*"]
+        )
+        assert result.exit_code == 0
+        assert "Exported" in result.output
+        assert "nid:" in Path(exported).read_text()
+
+        result = runner.invoke(main, ["-b", tmpdirname, "update-from-file", exported])
+        assert result.exit_code == 0

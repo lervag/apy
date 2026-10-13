@@ -295,6 +295,45 @@ def update_from_file(
         _added_notes_postprocessing(a, notes, "Updated/added")
 
 
+@main.command("export-to-file")
+def export_to_file(
+    file: Annotated[Path, typer.Argument(metavar="FILE", dir_okay=False)],
+    query: RequiredQueryArgument,
+) -> None:
+    """Export notes that match QUERY to a Markdown file.
+
+    The notes are written in the same format that `update-from-file` reads,
+    including the `nid` of each note. This makes it possible to edit existing
+    notes in bulk with your editor of choice:
+
+    \b
+        apy export-to-file notes.md deck:Spanish tag:verbs
+        # edit notes.md
+        apy update-from-file notes.md
+
+    Notes that are removed from the file are left untouched in Anki, and new
+    notes without a `nid` are added.
+
+    To export every note in the collection, use the query 'deck:*'. Remember
+    to quote it to prevent shell expansion.
+    """
+    query_str = " ".join(query)
+
+    if file.exists():
+        console.print("[yellow]Warning: Target file already exists!")
+        console.print(f"[yellow]  {file}")
+        if not console.confirm("Do you want to overwrite it?"):
+            raise typer.Abort()
+
+    with Anki(**cfg) as a:
+        n_notes = a.export_notes_to_file(query_str, str(file))
+
+    if n_notes == 0:
+        console.print(f"[yellow]No notes found matching query: {query_str}")
+    else:
+        console.print(f"[green]Exported {n_notes} notes to {file}")
+
+
 # Create an alias for backward compatibility
 @main.command("add-from-file")
 def add_from_file(

@@ -323,3 +323,57 @@ def test_update_file_with_mixed_notes(collection: str) -> None:
     # Clean up
     Path("test_initial.md").unlink()
     Path("test_update_mix.md").unlink()
+
+
+def test_export_and_update_roundtrip(collection: str) -> None:
+    """Test that exported notes can be edited and read back with update."""
+    with Path("test.md").open("w") as f:
+        f.write(
+            textwrap.dedent(
+                """\
+            model: Basic
+            tags: export
+
+            # Note 1
+            ## Front
+            First question?
+
+            ## Back
+            First answer.
+
+            # Note 2
+            ## Front
+            Second question?
+
+            ## Back
+            Second answer.
+            """
+            )
+        )
+
+    with Anki(collection_db_path=collection) as a:
+        added = a.add_notes_from_file("test.md")
+        nids = sorted(note.n.id for note in added)
+        n_notes_before = a.col.note_count()
+
+        assert a.export_notes_to_file("tag:export", "export.md") == 2
+        assert a.export_notes_to_file("tag:nonexistent", "empty.md") == 0
+        assert not Path("empty.md").exists()
+
+        content = Path("export.md").read_text()
+        for nid in nids:
+            assert f"nid: {nid}" in content
+
+        content = content.replace("Second answer.", "Edited answer.")
+        Path("export.md").write_text(content)
+
+        updated = a.add_notes_from_file("export.md", respect_note_ids=True)
+        assert sorted(note.n.id for note in updated) == nids
+        assert a.col.note_count() == n_notes_before
+
+        edited = next(note for note in updated if "Second" in note.n.fields[0])
+        assert "Edited answer." in edited.n.fields[1]
+        assert edited.n.tags == ["export"]
+
+    Path("test.md").unlink()
+    Path("export.md").unlink()

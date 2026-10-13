@@ -18,6 +18,7 @@ Anki. It does not require Anki to be running at the same time.
 - [Install instructions](#install-instructions)
 - [Usage](#usage)
 - [Examples of adding new notes](#examples-of-adding-new-notes)
+- [Editing existing notes in a file](#editing-existing-notes-in-a-file)
 - [Configuration](#configuration)
 - [Zsh completion](#zsh-completion)
 - [Fish completion](#fish-completion)
@@ -102,6 +103,10 @@ apy list-cards -v tag:leech
 
 # Review and possibly edit file with given cid
 apy review cid:12345678
+
+# Export notes to a Markdown file, edit it, and write the changes back
+apy export-to-file notes.md deck:Spanish
+apy update-from-file notes.md
 ```
 
 `apy` can be combined with editor specific configuration and workflows to
@@ -193,6 +198,72 @@ Or {{c3::REPLACE}} here.
 ## Back Extra
 Extra information goes here.
 ```
+
+## Editing existing notes in a file
+
+`apy export-to-file` and `apy update-from-file` can be combined to edit
+existing notes in bulk with your editor of choice:
+
+```sh
+# Write all notes that match the query to notes.md
+apy export-to-file notes.md deck:Spanish tag:verbs
+
+# Edit notes.md, e.g. fix typos, change tags, or add new notes
+
+# Write the changes back to Anki
+apy update-from-file notes.md
+```
+
+The query has the same syntax as a search in the Anki browser. It is required,
+so that you don't accidentally export a large collection. To export every note
+in your collection, use `deck:*` (quoted, to prevent shell expansion):
+
+```sh
+apy export-to-file all-notes.md 'deck:*'
+```
+
+For large collections, it may be more convenient to export and edit one deck
+at a time. Also note that the exported file only contains the note content; it
+is not a backup of your collection. Use `apy backup` for that.
+
+The exported file uses the same format as described in the previous section.
+Each note has a `nid` line that links it to the note in your Anki collection,
+for example:
+
+```md
+# Note
+model: Basic
+tags: verbs
+nid: 1619153168151
+deck: Spanish
+
+## Front
+hablar
+
+## Back
+to speak
+```
+
+When you run `apy update-from-file`:
+
+- Notes with a `nid` are updated with the fields, tags and deck from the file.
+- Notes without a `nid` are added as new notes, and their new `nid` is written
+  back to the file.
+- Notes that you remove from the file are left untouched in Anki. Use the Anki
+  app or `apy review` to delete notes.
+
+Keep the `nid` lines as they are: if you change or remove one, `apy` will try
+to add the note as a new note instead of updating the existing one. Notes that
+were not created from Markdown, e.g. notes added in the Anki app, are exported
+with `markdown: false`, so that their fields are kept as HTML rather than
+converted from Markdown.
+
+Note that `apy update-from-file` also accepts files with `external-ids`, which
+is useful if you want to share note files with others, e.g. in a Git
+repository. See `apy update-from-file --help` for more details.
+
+To edit just a single note or a few, `apy edit QUERY` is a quicker
+alternative: it opens each matching note in your editor in the same format.
 
 ## Configuration
 

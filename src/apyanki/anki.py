@@ -487,6 +487,18 @@ class Anki:
                 print_raw=show_raw_fields, list_cards=show_cards, verbose=verbose
             )
 
+    def export_notes_to_file(self, query: str, filename: str) -> int:
+        """Write notes that match a query to a Markdown file."""
+        notes = sorted(self.find_notes(query), key=lambda n: n.n.id)
+        if not notes:
+            return 0
+
+        _ = Path(filename).write_text(
+            "\n".join(note.to_markdown(check_consistency=False) for note in notes),
+            encoding="utf8",
+        )
+        return len(notes)
+
     def list_cards(self, query: str, verbose: bool) -> None:
         """List cards that match a query"""
         for cid in self.col.find_cards(query):

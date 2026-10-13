@@ -57,7 +57,16 @@ class Note:
 
     @override
     def __repr__(self) -> str:
-        """Convert note to Markdown format"""
+        """Convert note to Markdown format."""
+        return self.to_markdown()
+
+    def to_markdown(self, check_consistency: bool = True) -> str:
+        """Convert note to Markdown format.
+
+        With check_consistency, fields with inconsistent Markdown also include
+        the current HTML for inspection. This is useful for interactive edits,
+        but should be disabled when the output is read back unchanged.
+        """
         lines = [
             "# Note",
             f"model: {self.model_name}",
@@ -75,7 +84,7 @@ class Note:
 
         for name, field in self.n.items():
             lines.append(f"## {name}")
-            lines.append(convert_field_to_text(field))
+            lines.append(convert_field_to_text(field, check_consistency))
             lines.append("")
 
         return "\n".join(lines)
