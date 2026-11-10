@@ -108,7 +108,7 @@ def test_auto_sync_without_credentials_warns_and_preserves_mutation(
     anki.modified = True
     anki._profile = profile
     anki.col = SimpleNamespace(close=lambda: operations.append("close"))
-    monkeypatch.setitem(cfg, "auto_sync", True)
+    monkeypatch.setattr(cfg, "auto_sync", True)
 
     anki.__exit__(None, None, None)
 

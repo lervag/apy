@@ -2,6 +2,7 @@
 
 import os
 import shlex
+from dataclasses import fields
 from pathlib import Path
 from typing import Annotated, Literal, override
 
@@ -85,10 +86,10 @@ def callback(
         raise typer.Exit()
 
     if base_path:
-        cfg["base_path"] = os.path.abspath(os.path.expanduser(base_path))
+        cfg.base_path = os.path.abspath(os.path.expanduser(base_path))
 
     if profile_name:
-        cfg["profile_name"] = profile_name
+        cfg.profile_name = profile_name
 
     if ctx.invoked_subcommand is None:
         info()
@@ -133,15 +134,15 @@ def add_single(
         # Add a note to deck "MyDeck" with tags 'my-tag' and 'new-tag'
         apy add-single -t "my-tag new-tag" -d MyDeck myfront myback
     """
-    with Anki(**cfg) as a:
-        tags_preset: str = " ".join(cfg["presets"][preset]["tags"])
+    with Anki(base_path=cfg.base_path, profile_name=cfg.profile_name) as a:
+        tags_preset: str = " ".join(cfg.presets[preset].tags)
         if not tags:
             tags = tags_preset
         else:
             tags += " " + tags_preset
 
         if not model_name:
-            model_name = cfg["presets"][preset]["model"]
+            model_name = cfg.presets[preset].model
 
         _ = a.add_notes_single(fields or [], parse_markdown, tags, model_name, deck)
 
@@ -173,7 +174,7 @@ def add(
         # Ask for the model and the deck for each new card
         apy add -m ASK -d ask
     """
-    with Anki(**cfg) as a:
+    with Anki(base_path=cfg.base_path, profile_name=cfg.profile_name) as a:
         notes = a.add_notes_with_editor(tags, model_name, deck)
         _added_notes_postprocessing(a, notes, "Added")
 
@@ -284,7 +285,7 @@ def update_from_file(
             "note2": "1619153168152"
         }
     """
-    with Anki(**cfg) as a:
+    with Anki(base_path=cfg.base_path, profile_name=cfg.profile_name) as a:
         notes = a.add_notes_from_file(
             str(file),
             tags,
@@ -326,7 +327,7 @@ def export_to_file(
         if not console.confirm("Do you want to overwrite it?"):
             raise typer.Abort()
 
-    with Anki(**cfg) as a:
+    with Anki(base_path=cfg.base_path, profile_name=cfg.profile_name) as a:
         n_notes = a.export_notes_to_file(query_str, str(file))
 
     if n_notes == 0:
@@ -390,7 +391,7 @@ def add_from_file(
         ## Back
         New note content
     """
-    with Anki(**cfg) as a:
+    with Anki(base_path=cfg.base_path, profile_name=cfg.profile_name) as a:
         notes = a.add_notes_from_file(str(file), tags, deck)
         _added_notes_postprocessing(a, notes, "Added")
 
@@ -435,7 +436,7 @@ def _added_notes_postprocessing(
 @main.command("check-media")
 def check_media() -> None:
     """Check media."""
-    with Anki(**cfg) as a:
+    with Anki(base_path=cfg.base_path, profile_name=cfg.profile_name) as a:
         a.check_media()
 
 
@@ -464,7 +465,7 @@ def fix_markdown(
     """
     query_str = " ".join(query)
 
-    with Anki(**cfg) as a:
+    with Anki(base_path=cfg.base_path, profile_name=cfg.profile_name) as a:
         n_fields, fixed_notes, unfixable_notes = a.fix_markdown(query_str, dry_run)
 
         if dry_run:
@@ -489,13 +490,13 @@ def fix_markdown(
 def info() -> None:
     """Print some basic statistics."""
     if cfg_file.exists():
-        for key in cfg:
+        for key in (f.name for f in fields(cfg)):
             console.print(f"Config loaded:     {key}")
         console.print(f"Config file:       {cfg_file}")
     else:
         console.print("Config file:       Not found")
 
-    with Anki(**cfg) as a:
+    with Anki(base_path=cfg.base_path, profile_name=cfg.profile_name) as a:
         scheduler = 3 if a.col.v3_scheduler() else a.col.sched_ver()
         console.print(f"Collection path:   {a.col.path}")
         console.print(f"Scheduler version: {scheduler}")
@@ -593,7 +594,7 @@ def edit_css(
     ] = False,
 ) -> None:
     """Edit the CSS template for the specified model."""
-    with Anki(**cfg) as a:
+    with Anki(base_path=cfg.base_path, profile_name=cfg.profile_name) as a:
         a.edit_model_css(model_name)
 
         if a.modified and sync_after:
@@ -607,7 +608,7 @@ def rename(
     new_name: Annotated[str, typer.Argument(metavar="NEW_NAME")],
 ) -> None:
     """Rename model from old_name to new_name."""
-    with Anki(**cfg) as a:
+    with Anki(base_path=cfg.base_path, profile_name=cfg.profile_name) as a:
         a.rename_model(old_name, new_name)
 
 
@@ -629,9 +630,9 @@ def list_cards(
       "query": "tag:marked OR tag:leech"
     }
     """
-    query_str = " ".join(query) if query else cfg["query"]
+    query_str = " ".join(query) if query else cfg.query
 
-    with Anki(**cfg) as a:
+    with Anki(base_path=cfg.base_path, profile_name=cfg.profile_name) as a:
         a.list_cards(query_str, verbose)
 
 
@@ -681,9 +682,9 @@ def list_cards_table(
       "query": "tag:marked OR tag:leech"
     }
     """
-    query_str = " ".join(query) if query else cfg["query"]
+    query_str = " ".join(query) if query else cfg.query
 
-    with Anki(**cfg) as a:
+    with Anki(base_path=cfg.base_path, profile_name=cfg.profile_name) as a:
         a.list_cards_as_table(
             query_str,
             {
@@ -702,7 +703,7 @@ def list_cards_table(
 @main.command("list-models")
 def list_models() -> None:
     """List available models."""
-    with Anki(**cfg) as a:
+    with Anki(base_path=cfg.base_path, profile_name=cfg.profile_name) as a:
         a.list_models()
 
 
@@ -732,9 +733,9 @@ def list_notes(
       "query": "tag:marked OR tag:leech"
     }
     """
-    query_str = " ".join(query) if query else cfg["query"]
+    query_str = " ".join(query) if query else cfg.query
 
-    with Anki(**cfg) as a:
+    with Anki(base_path=cfg.base_path, profile_name=cfg.profile_name) as a:
         a.list_notes(query_str, show_cards, show_raw_fields, verbose)
 
 
@@ -770,9 +771,9 @@ def review(
     elif check_markdown_consistency:
         query_str = "deck:*"
     else:
-        query_str = cfg["query"]
+        query_str = cfg.query
 
-    with Anki(**cfg) as a:
+    with Anki(base_path=cfg.base_path, profile_name=cfg.profile_name) as a:
         notes = list(a.find_notes(query_str))
 
         if check_markdown_consistency:
@@ -832,7 +833,7 @@ def edit(
     """
     query_str = " ".join(query)
 
-    with Anki(**cfg) as a:
+    with Anki(base_path=cfg.base_path, profile_name=cfg.profile_name) as a:
         notes = list(a.find_notes(query_str))
 
         # Handle no matches
@@ -893,7 +894,7 @@ def edit(
 @main.command()
 def sync() -> None:
     """Synchronize collection with AnkiWeb."""
-    with Anki(**cfg) as a:
+    with Anki(base_path=cfg.base_path, profile_name=cfg.profile_name) as a:
         a.sync()
 
 
@@ -959,9 +960,9 @@ def tag(
       # Remove all unused tags
       apy tag --purge
     """
-    query_str = " ".join(query) if query else cfg["query"]
+    query_str = " ".join(query) if query else cfg.query
 
-    with Anki(**cfg) as a:
+    with Anki(base_path=cfg.base_path, profile_name=cfg.profile_name) as a:
         if purge:
             changes = a.purge_unused_tags()
             if changes.count > 0:
@@ -1014,7 +1015,7 @@ def reposition(
     """
     query_str = " ".join(query)
 
-    with Anki(**cfg) as a:
+    with Anki(base_path=cfg.base_path, profile_name=cfg.profile_name) as a:
         cids = list(a.col.find_cards(query_str))
         if not cids:
             console.print(f"No matching cards for query: {query_str}!")
@@ -1049,7 +1050,7 @@ def backup(
     ] = False,
 ) -> None:
     """Backup Anki database to specified target file."""
-    with Anki(**cfg) as a:
+    with Anki(base_path=cfg.base_path, profile_name=cfg.profile_name) as a:
         target_filename = str(target_file)
 
         if not target_filename.endswith(".colpkg"):

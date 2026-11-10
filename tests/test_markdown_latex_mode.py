@@ -2,7 +2,7 @@ import pytest
 from bs4 import BeautifulSoup
 
 from apyanki import fields
-from apyanki.config import cfg
+from apyanki.config import MarkdownLatexMode, cfg
 from tests.common import AnkiEmpty
 
 
@@ -25,7 +25,7 @@ def test_latex_to_mdlatex() -> None:
 
 
 def test_markdown_to_latex_1() -> None:
-    cfg["markdown_latex_mode"] = "latex"
+    cfg.markdown_latex_mode = "latex"
 
     with AnkiEmpty() as a:
         note = a.add_notes_single(
@@ -38,7 +38,7 @@ def test_markdown_to_latex_1() -> None:
 
 
 def test_markdown_to_latex_2() -> None:
-    cfg["markdown_latex_mode"] = "latex"
+    cfg.markdown_latex_mode = "latex"
 
     with AnkiEmpty() as a:
         input = r"$\mathbb{R}_+$ and $\mathbb{R}_+$"
@@ -50,7 +50,7 @@ def test_markdown_to_latex_2() -> None:
 
 
 def test_markdown_to_latex_3() -> None:
-    cfg["markdown_latex_mode"] = "latex"
+    cfg.markdown_latex_mode = "latex"
 
     with AnkiEmpty() as a:
         input = r"$$\mathbb{R}_+$$ and $$\mathbb{R}_+$$"
@@ -62,7 +62,7 @@ def test_markdown_to_latex_3() -> None:
 
 
 def test_markdown_to_mathjax_1() -> None:
-    cfg["markdown_latex_mode"] = "mathjax"
+    cfg.markdown_latex_mode = "mathjax"
 
     with AnkiEmpty() as a:
         note = a.add_notes_single(
@@ -75,7 +75,7 @@ def test_markdown_to_mathjax_1() -> None:
 
 
 def test_markdown_to_mathjax_2() -> None:
-    cfg["markdown_latex_mode"] = "mathjax"
+    cfg.markdown_latex_mode = "mathjax"
 
     with AnkiEmpty() as a:
         input = r"$\mathbb{R}_+$ and $$\mathbb{R}_+$$"
@@ -87,7 +87,7 @@ def test_markdown_to_mathjax_2() -> None:
 
 
 def test_markdown_to_mathjax_many() -> None:
-    cfg["markdown_latex_mode"] = "mathjax"
+    cfg.markdown_latex_mode = "mathjax"
 
     with AnkiEmpty() as a:
         input = " ".join(f"${i}$" for i in range(12))
@@ -99,7 +99,7 @@ def test_markdown_to_mathjax_many() -> None:
 
 
 def test_markdown_to_mathjax_empty() -> None:
-    cfg["markdown_latex_mode"] = "mathjax"
+    cfg.markdown_latex_mode = "mathjax"
 
     with AnkiEmpty() as a:
         input = "a $$$$ b"
@@ -120,9 +120,13 @@ def test_markdown_to_mathjax_empty() -> None:
         ("mathjax", r"$a \{ b \}$", r"\(a \{ b \}\)"),
     ],
 )
-def test_markdown_math_keeps_backslashes(mode: str, input: str, expected: str) -> None:
+def test_markdown_math_keeps_backslashes(
+    mode: MarkdownLatexMode,
+    input: str,
+    expected: str,
+) -> None:
     """LaTeX escapes inside $-math must be passed through unchanged"""
-    cfg["markdown_latex_mode"] = mode
+    cfg.markdown_latex_mode = mode
 
     with AnkiEmpty() as a:
         note = a.add_notes_single([input, ""], markdown=True)
@@ -132,7 +136,7 @@ def test_markdown_math_keeps_backslashes(mode: str, input: str, expected: str) -
 
 def test_markdown_escapes_latex_outside_math() -> None:
     """MathJax delimiters written directly in Markdown still work"""
-    cfg["markdown_latex_mode"] = "mathjax"
+    cfg.markdown_latex_mode = "mathjax"
 
     with AnkiEmpty() as a:
         input = r"\[ a \\ b \] and $c \\ d$"
@@ -160,7 +164,7 @@ def test_markdown_escapes_latex_outside_math() -> None:
 )
 def test_markdown_code_is_left_untouched(input: str, expected: str) -> None:
     """Math conversion and LaTeX escapes must not touch code"""
-    cfg["markdown_latex_mode"] = "latex"
+    cfg.markdown_latex_mode = "latex"
 
     with AnkiEmpty() as a:
         note = a.add_notes_single([input, ""], markdown=True)
@@ -180,9 +184,13 @@ def test_markdown_code_is_left_untouched(input: str, expected: str) -> None:
         ("**Q** [latex]$x$[/latex]", "Q [latex]$x$[/latex]"),
     ],
 )
-def test_markdown_latex_blocks_are_raw(mode: str, input: str, expected: str) -> None:
+def test_markdown_latex_blocks_are_raw(
+    mode: MarkdownLatexMode,
+    input: str,
+    expected: str,
+) -> None:
     """[latex]…[/latex] blocks are passed to Anki without any processing"""
-    cfg["markdown_latex_mode"] = mode
+    cfg.markdown_latex_mode = mode
 
     with AnkiEmpty() as a:
         note = a.add_notes_single([input, ""], markdown=True)
@@ -194,9 +202,9 @@ def test_markdown_latex_blocks_are_raw(mode: str, input: str, expected: str) -> 
     ("mode", "expected"),
     [("latex", "[$]a<b[/$] and [$]c<d[/$]"), ("mathjax", r"\(a<b\) and \(c<d\)")],
 )
-def test_markdown_math_with_less_than(mode: str, expected: str) -> None:
+def test_markdown_math_with_less_than(mode: MarkdownLatexMode, expected: str) -> None:
     """Math with < must not be parsed as an HTML tag"""
-    cfg["markdown_latex_mode"] = mode
+    cfg.markdown_latex_mode = mode
 
     with AnkiEmpty() as a:
         note = a.add_notes_single(["$a<b$ and $c<d$", ""], markdown=True)

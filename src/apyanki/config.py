@@ -2,8 +2,66 @@
 
 import json
 import os
+import sys
+from dataclasses import dataclass, field, fields
 from pathlib import Path
-from typing import Any
+from typing import Any, Literal, get_args
+
+type MarkdownLatexMode = Literal["mathjax", "latex"]
+
+
+@dataclass
+class Preset:
+    """A preset combination of model and tags for `apy add-single`"""
+
+    model: str = "Basic"
+    tags: list[str] = field(default_factory=list)
+
+
+@dataclass
+class Config:
+    """The apy configuration; field names match the keys in apy.json"""
+
+    base_path: str | None = None
+    profile_name: str | None = None
+    auto_sync: bool = False
+    img_viewers: dict[str, list[str]] = field(
+        default_factory=lambda: {"svg": ["display", "-density", "300"]}
+    )
+    img_viewers_default: list[str] = field(default_factory=lambda: ["feh"])
+    markdown_models: list[str] = field(default_factory=lambda: ["Basic"])
+    markdown_pygments_style: str = "friendly"
+    markdown_latex_mode: MarkdownLatexMode = "mathjax"
+    presets: dict[str, Preset] = field(default_factory=dict)
+    query: str = "tag:marked OR -flag:0"
+    review_show_cards: bool = False
+    review_verbose: bool = False
+    pngCommands: list[list[str]] | None = None
+    svgCommands: list[list[str]] | None = None
+
+    def __post_init__(self) -> None:
+        valid_modes = get_args(MarkdownLatexMode.__value__)
+        if self.markdown_latex_mode not in valid_modes:
+            raise ValueError(
+                f"markdown_latex_mode must be one of {valid_modes}, "
+                f"got {self.markdown_latex_mode!r}"
+            )
+        if "default" not in self.presets:
+            self.presets["default"] = Preset()
+
+    @classmethod
+    def from_dict(cls, data: dict[str, Any]) -> Config:
+        """Create config from parsed JSON; raises TypeError/ValueError if invalid"""
+        known = {f.name for f in fields(cls)}
+        for key in data.keys() - known:
+            _warn(f"ignoring unknown config key '{key}'")
+
+        kwargs = {k: v for k, v in data.items() if k in known}
+        if "presets" in kwargs:
+            kwargs["presets"] = {
+                name: Preset(**preset) for name, preset in kwargs["presets"].items()
+            }
+        return cls(**kwargs)
 
 
 def get_base_path() -> str | None:
@@ -31,52 +89,32 @@ def get_base_path() -> str | None:
     return None
 
 
-# Parse configuration file (if it exists)
-cfg: dict[str, Any]
-cfg_path = os.environ.get("APY_CONFIG", "~/.config/apy/apy.json")
-cfg_file = Path(cfg_path).expanduser()
-if cfg_file.exists():
-    with cfg_file.open(encoding="utf8") as f:
-        cfg = json.load(f)
-else:
-    cfg = {}
+def _warn(message: str) -> None:
+    print(f"Warning: {message}", file=sys.stderr)
 
 
-CFG_DEFAULT_VALUES: dict[str, Any] = {
-    "base_path": None,
-    "img_viewers": {
-        "svg": ["display", "-density", "300"],
-    },
-    "img_viewers_default": ["feh"],
-    "markdown_models": ["Basic"],
-    "markdown_pygments_style": "friendly",
-    "markdown_latex_mode": "mathjax",
-    "presets": {},
-    "profile_name": None,
-    "query": "tag:marked OR -flag:0",
-    "review_show_cards": False,
-    "review_verbose": False,
-    "auto_sync": False,
-}
+def load_config(cfg_file: Path) -> Config:
+    """Load config from file or fall back to defaults if unreadable"""
+    config = Config()
+    if cfg_file.exists():
+        try:
+            with cfg_file.open(encoding="utf8") as f:
+                data = json.load(f)
+            if not isinstance(data, dict):
+                raise TypeError("expected a JSON object at the top level")
+            config = Config.from_dict(data)
+        except (OSError, ValueError, TypeError, AttributeError) as error:
+            _warn(f"ignoring unreadable config file {cfg_file}: {error}")
 
-# Ensure that cfg has required keys
-for required, default in CFG_DEFAULT_VALUES.items():
-    if required not in cfg:
-        cfg[required] = default
+    if config.base_path is None:
+        config.base_path = get_base_path()
 
+    # Ensure base path is a proper absolute path
+    if config.base_path:
+        config.base_path = os.path.abspath(os.path.expanduser(config.base_path))
 
-if cfg["base_path"] is None:
-    cfg["base_path"] = get_base_path()
+    return config
 
 
-# Ensure base path is a proper absolute path
-if cfg["base_path"]:
-    cfg["base_path"] = os.path.abspath(os.path.expanduser(cfg["base_path"]))
-
-
-# Ensure that default preset is defined
-if "default" not in cfg["presets"]:
-    cfg["presets"]["default"] = {
-        "model": "Basic",
-        "tags": [],
-    }
+cfg_file = Path(os.environ.get("APY_CONFIG", "~/.config/apy/apy.json")).expanduser()
+cfg = load_config(cfg_file)

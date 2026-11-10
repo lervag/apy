@@ -205,9 +205,7 @@ class Note:
 
         with cd(self.a.col.media.dir()):
             for file in images:
-                view_cmd = cfg["img_viewers"].get(
-                    file.suffix[1:], cfg["img_viewers_default"]
-                )
+                view_cmd = cfg.img_viewers.get(file.suffix[1:], cfg.img_viewers_default)
                 _ = Popen([*view_cmd, file], stdout=DEVNULL, stderr=DEVNULL)
 
     def edit(self) -> None:
@@ -502,8 +500,8 @@ class Note:
         )
 
         print_raw_fields = False
-        verbose = cfg["review_verbose"]
-        show_cards = cfg["review_show_cards"]
+        verbose = cfg.review_verbose
+        show_cards = cfg.review_show_cards
         refresh = True
         while True:
             if refresh:
@@ -597,12 +595,12 @@ class Note:
 
             if action == "Show cards":
                 show_cards = not show_cards
-                cfg["review_show_cards"] = show_cards
+                cfg.review_show_cards = show_cards
                 continue
 
             if action == "Show details":
                 verbose = not verbose
-                cfg["review_verbose"] = verbose
+                cfg.review_verbose = verbose
                 continue
 
 

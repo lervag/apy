@@ -207,7 +207,7 @@ def _convert_field_to_markdown(field: str, check_consistency: bool = False) -> s
         consistency_text = ""
 
     # Apply latex translation based on specified latex mode
-    if cfg["markdown_latex_mode"] == "latex":
+    if cfg.markdown_latex_mode == "latex":
         text = _latex_to_mdlatex(text)
     else:
         text = _mathjax_to_mdlatex(text)
@@ -239,13 +239,13 @@ def _convert_markdown_to_field(text: str) -> str:
             CodeHiliteExtension(
                 noclasses=True,
                 linenums=False,
-                pygments_style=cfg["markdown_pygments_style"],
+                pygments_style=cfg.markdown_pygments_style,
                 guess_lang=False,
             ),
             DefListExtension(),
             FencedCodeExtension(),
             FootnoteExtension(),
-            MathProtectExtension(cfg["markdown_latex_mode"]),
+            MathProtectExtension(cfg.markdown_latex_mode),
         ],
         output_format="html",
     )

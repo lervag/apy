@@ -39,7 +39,6 @@ class Anki:
         base_path: str | None = None,
         collection_db_path: str | None = None,
         profile_name: str | None = None,
-        **_kwargs: dict[str, Any],
     ) -> None:
         self.modified: bool = False
 
@@ -140,10 +139,10 @@ class Anki:
 
         # Update LaTeX commands
         # * Idea based on Anki addon #1546037973 ("Edit LaTeX build process")
-        if "pngCommands" in cfg:
-            latex.pngCommands = cfg["pngCommands"]
-        if "svgCommands" in cfg:
-            latex.svgCommands = cfg["svgCommands"]
+        if cfg.pngCommands is not None:
+            latex.pngCommands = cfg.pngCommands
+        if cfg.svgCommands is not None:
+            latex.svgCommands = cfg.svgCommands
 
     def __enter__(self) -> Self:
         return self
@@ -156,7 +155,7 @@ class Anki:
     ) -> None:
         try:
             if self.modified:
-                if cfg["auto_sync"]:
+                if cfg.auto_sync:
                     if self._profile is None:
                         console.print("[yellow]Auto-sync skipped: no Anki profile.")
                     elif not self._profile.get("syncKey"):
@@ -652,7 +651,7 @@ class Anki:
 
             input_strings += [f"tags: {tags}"]
 
-            if model_name not in cfg["markdown_models"]:
+            if model_name not in cfg.markdown_models:
                 input_strings += ["markdown: false"]
 
             input_strings += ["\n# Note\n"]
