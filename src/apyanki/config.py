@@ -2,6 +2,7 @@
 
 import json
 import os
+import sys
 from pathlib import Path
 from typing import Any
 
@@ -36,8 +37,12 @@ cfg: dict[str, Any]
 cfg_path = os.environ.get("APY_CONFIG", "~/.config/apy/apy.json")
 cfg_file = Path(cfg_path).expanduser()
 if cfg_file.exists():
-    with cfg_file.open(encoding="utf8") as f:
-        cfg = json.load(f)
+    try:
+        with cfg_file.open(encoding="utf8") as f:
+            cfg = json.load(f)
+    except (OSError, json.JSONDecodeError) as error:
+        print(f"Warning: ignoring unreadable config file {cfg_file}: {error}", file=sys.stderr)
+        cfg = {}
 else:
     cfg = {}
 
