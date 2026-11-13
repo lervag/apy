@@ -31,11 +31,11 @@ apy = "apyanki.cli:main"
 
 [dependency-groups]
 dev = [
-  "pytest==9.1.1",
+  "pytest==9.2.0",
   "pyrefly==1.4.0",
-  "ruff==0.17.2",
+  "ruff==0.17.3",
   "types-beautifulsoup4==4.12.0.20250516",
-  "types-markdown==3.10.2.20261007",
+  "types-markdown==3.11.2.20261029",
 ]
 
 [build-system]
