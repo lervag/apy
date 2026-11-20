@@ -19,7 +19,7 @@ dependencies = [
   "markdownify==1.2.3",
   "readchar==4.2.2",
   "rich==15.0.0",
-  "typer==0.27.3",
+  "typer==0.28.0",
 ]
 
 [project.urls]
