@@ -19,7 +19,7 @@ dependencies = [
   "markdownify==1.2.3",
   "readchar==4.2.2",
   "rich==15.0.0",
-  "typer==0.28.0",
+  "typer==0.29.1",
 ]
 
 [project.urls]
@@ -33,9 +33,9 @@ apy = "apyanki.cli:main"
 dev = [
   "pytest==9.2.0",
   "pyrefly==1.4.1",
-  "ruff==0.17.4",
+  "ruff==0.17.5",
   "types-beautifulsoup4==4.12.0.20250516",
-  "types-markdown==3.11.2.20261029",
+  "types-markdown==3.11.3.20261108",
 ]
 
 [build-system]
